@@ -229,6 +229,18 @@ class Spectrometer(object):
 
         return ind_l + np.argmax(data[ind_l:ind_r])
 
+    def noise_params(self):
+        """Calculate noise parameters.
+
+        Returns:
+            Mean and standard deviation of noise fluctuations for each shot.
+        """
+        noise = self.data_raw[:, slice(*self.noise_range)]
+        mean = noise.mean(axis=1)
+        std = noise.std(axis=1)
+
+        return mean, std
+
 
 # TODO: currently, this class works with SACLA timing tool data -> generalize to SwissFEL PSEN
 class PsenSetup(object):
