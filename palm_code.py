@@ -240,9 +240,6 @@ class PsenSetup(object):
         data = np.genfromtxt(self.root_path + filename, delimiter=',', skip_header=2)
         self.tags = data[:, 0]  # first column is a tags list
 
-        if remove_nans:
-            data = data[~np.isnan(data).any(axis=1)]
-
         if method == 'derivative':
             data = data[:, 1]  # second column are timing edge derivative values (pixel)
         elif method == 'fitting':
@@ -253,3 +250,8 @@ class PsenSetup(object):
             raise RuntimeError("Method '{}' is not recognised".format(method))
 
         self.data = data*self.ttcalib  # convert to fs
+
+        if remove_nans:
+            idx = ~np.isnan(data)
+            self.tags = self.tags[idx]
+            self.data = self.data[idx]
