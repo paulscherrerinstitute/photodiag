@@ -202,12 +202,32 @@ class Spectrometer(object):
         self.time = np.empty(0)
         self.interp_data = np.empty(0)
         self.interp_energy = np.arange(8800, 9312)
-        self.photon_peak_range = [0, 500]
+        self.noise_range = [0, 500]
+        self.noise_mean = 0
+        self.noise_std = 0
         self.t0 = 0
         self.energy = np.empty(0)
 
-    def detect_photon_peak(self, pp_range=None):
-        pass
+    def detect_photon_peak(self, noise_thr=3):
+        """Estimate position of the photon peak.
+
+        Under assumption that the photon peak is the first peak encontered above the specified noise
+        threshold level.
+
+        Args:
+            noise_thr: Number of noise standard deviations above which the signal is considered to be
+                detectable (default is 3-sigma).
+
+        Returns:
+            Index of the photon peak position.
+        """
+        data = self.data_raw.mean()
+        data_above_thr = np.greater(data, noise_thr*self.noise_std)
+
+        ind_l = np.argmax(data_above_thr)
+        ind_r = ind_l + np.argmin(data_above_thr[ind_l:])
+
+        return ind_l + np.argmax(data[ind_l:ind_r])
 
 
 # TODO: currently, this class works with SACLA timing tool data -> generalize to SwissFEL PSEN
