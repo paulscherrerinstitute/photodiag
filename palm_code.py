@@ -24,7 +24,7 @@ class PalmSetup(object):
                              first_ind=self.hdf5_data_range[0], last_ind=self.hdf5_data_range[1])
 
     # TODO: after clarification of hdf5 file structure and data format, refactor to a separate function
-    def _read_hdf5_data(self, filename, tags, first_ind=2000, last_ind=4000):
+    def _read_hdf5_data(self, filename, tags=None, first_ind=2000, last_ind=4000):
         import h5py
         with h5py.File(self.root_path + filename) as f:
             self._tags = f['/tags'][:]
@@ -32,6 +32,20 @@ class PalmSetup(object):
             for spectr_name, spectr in self.spectrometers.items():
                 spectr.time_raw = f['/{}/time'.format(spectr_name)][first_ind:last_ind] * 1e9  # convert to fs
                 spectr.data_raw = -f['/{}/data'.format(spectr_name)][:, first_ind:last_ind]  # flip a signal
+
+    @staticmethod
+    def _get_energy_from_filename(filename):
+        """Parse filename and return energy value (first float number encountered). This method is likely to
+        be changed to adapt to a format of PALM callibration files in the future.
+
+        Args:
+            filename: file name to be parsed.
+
+        Returns:
+            energy in keV as a float number.
+        """
+        import re
+        return float(re.findall('\d+\.\d+', filename)[0])
 
     def analyse_palm_data(self, stages='all', tags=None):
         """Analyse palm data.
