@@ -235,7 +235,7 @@ class Spectrometer(object):
         Returns:
             Index of the photon peak position.
         """
-        data = self.data_raw.mean()
+        data = self.data_raw.mean(axis=0)
         data_above_thr = np.greater(data, noise_thr*self.noise_std)
 
         ind_l = np.argmax(data_above_thr)
