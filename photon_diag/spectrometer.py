@@ -19,7 +19,7 @@ class Spectrometer:
         self.calib_b = b
         self.calib_data = {}
 
-        self.internal_time = []
+        self.internal_time = np.empty(0)
         self.time = np.empty(0)
 
         self.interp_energy = np.arange(8700, 9300)
@@ -40,12 +40,14 @@ class Spectrometer:
             energy: calibration energy used in data acquisition
             calib_waveforms: calibration data as a 2D array
         """
-        _, noise_std = self._noise_params(calib_waveforms)
+        noise = calib_waveforms[:, slice(*self.noise_range)]
+        self.noise_mean = noise.mean(axis=1)
+        self.noise_std = noise.std(axis=1)
 
         data_avg = calib_waveforms.mean(axis=0)
         data_avg = data_avg - data_avg[slice(*self.noise_range)].mean()
 
-        t0, ampl = self._detect_photon_peak(data_avg, noise_std.mean())
+        t0, ampl = self._detect_photon_peak(data_avg, self.noise_std.mean())
         data_avg = data_avg / ampl
 
         self.calib_data[energy] = (data_avg, t0)
@@ -122,21 +124,6 @@ class Spectrometer:
         output_data = output_data - noise_thr * np.mean(self.noise_std)
 
         return output_data
-
-    def _noise_params(self, data):
-        """Extract noise parameters for each single waveform.
-
-        Args:
-            data: data as a 2D array
-
-        Returns:
-            mean and standard deviation of noise fluctuations for each shot
-        """
-        noise = data[:, slice(*self.noise_range)]
-        self.noise_mean = noise.mean(axis=1)
-        self.noise_std = noise.std(axis=1)
-
-        return self.noise_mean, self.noise_std
 
     @staticmethod
     def _detect_photon_peak(waveform, noise_std, noise_thr=3):
