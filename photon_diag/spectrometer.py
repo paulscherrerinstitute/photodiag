@@ -5,20 +5,18 @@ from scipy.optimize import curve_fit
 class Spectrometer:
     """Class describing a single eTOF spectrometer.
     """
-    def __init__(self, path, a=None, b=None, c=None):
+    def __init__(self, path, a=None, b=None):
         """ Initialize Spectrometer object.
 
         Args:
             path: path to data in hdf5 file
             a: calibration constant 'a'
-            b: calibration constant 'b' (currently unused)
-            c: calibration constant 'c'
+            b: calibration constant 'b'
         """
         self.path = path
 
         self.calib_a = a
         self.calib_b = b
-        self.calib_c = c
         self.calib_data = {}
 
         self.internal_time = []
@@ -61,8 +59,8 @@ class Spectrometer:
         Returns:
             calibration constants and a goodness of fit
         """
-        def fit_func(time, a, c):
-            return (a / time) ** 2 + c
+        def fit_func(time, a, b):
+            return (a / time) ** 2 + b
 
         if bkg_en not in self.calib_data.keys():
             raise Exception('Can not find background energy')
@@ -89,7 +87,7 @@ class Spectrometer:
 
         popt, pcov = curve_fit(fit_func, time_delays, pulse_energies)
 
-        self.calib_a, self.calib_c = popt
+        self.calib_a, self.calib_b = popt
         self.t0 = np.round(np.mean(calib_t0)).astype(int)
 
         return popt, time_delays, pulse_energies
@@ -107,7 +105,7 @@ class Spectrometer:
             interpolated output data
         """
         self.time = self.internal_time[self.t0 + 1:] - self.internal_time[self.t0]
-        self.energy = self.calib_c + (self.calib_a / self.time) ** 2
+        self.energy = (self.calib_a / self.time) ** 2 + self.calib_b
 
         output_data = input_data[:, self.t0 + 1:]
 
