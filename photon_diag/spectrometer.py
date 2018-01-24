@@ -5,7 +5,6 @@ from scipy.optimize import curve_fit
 class Spectrometer:
     """Class describing a single eTOF spectrometer.
     """
-
     def __init__(self, path, a=None, b=None, c=None):
         """ Initialize Spectrometer object.
 

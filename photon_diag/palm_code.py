@@ -3,17 +3,13 @@ import re
 
 import h5py
 import numpy as np
-# TODO: consider to use pandas for certain operations
-# import pandas as pd
 
-from photon_diag.psen_code import PsenSetup
 from photon_diag.spectrometer import Spectrometer
 
 
 class PalmSetup:
     """Class describing the photon arrival and length monitor (PALM) setup.
     """
-
     def __init__(self, home_dir):
         """Initialize PALM setup object and optionally restore a particular state from the past.
 
@@ -30,7 +26,7 @@ class PalmSetup:
 
         self.hdf5_range = [0, 4000]
         self.tags = []
-        # self.energy_range = [8600, 9400]
+        self.energy_range = [8600, 9400]
 
     def calibrate(self, folder_name, bkg_en=None, etofs=None, overwrite=True):
         """General routine for a calibration process of the electron time of flight (eTOF) etofs.
@@ -50,7 +46,7 @@ class PalmSetup:
         if etofs is None:
             calibrated_etofs = self.spectrometers.values()
         else:
-            calibrated_etofs = etofs  # TODO: is there even need to calibrate etofs separately?
+            calibrated_etofs = etofs
 
         if overwrite:
             for etof in calibrated_etofs:
@@ -65,7 +61,6 @@ class PalmSetup:
                         if not overwrite and energy in etof.calib_data.keys():
                             continue
 
-                        # TODO: Ask Pavle about the etof internal time
                         etof.internal_time = self._get_internal_time(entry.path, etof.path, *self.hdf5_range)
                         _, calib_waveforms = self._get_tags_and_data(entry.path, etof.path, *self.hdf5_range)
                         etof.add_calibration_point(energy, calib_waveforms)
@@ -76,7 +71,6 @@ class PalmSetup:
 
         return calib_results
 
-    # TODO: process streaming data
     def process_hdf5_file(self, filename):
         """Load data for all registered spectrometers from an hdf5 file. This method is to be changed
         in order to adapt to a format of PALM data files in the future.
