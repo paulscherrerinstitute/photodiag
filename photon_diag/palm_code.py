@@ -117,10 +117,6 @@ class PalmSetup:
 
             results = self._cross_corr_analysis(prep_data)
 
-        elif method == 'deconv':
-            # prepare data
-            results = self._deconvolution_analysis(prep_data)
-
         else:
             raise RuntimeError(f"Method '{method}' is not recognised")
 
@@ -215,26 +211,6 @@ class PalmSetup:
 
         return lags, delays, pulse_lengths
 
-    def _deconvolution_analysis(self, input_data, iterations=200):
-        """Perform analysis to determine temporal profile of photon pulses.
-
-        Args:
-            input_data: data to be analysed
-            iterations: number of iterations for the deconvolution analysis
-
-        Returns:
-            result(s) of deconvolution
-        """
-        # TODO: generalize for different streaking field phases (=etof_key)
-        data_str = input_data['1']
-        data_nonstr = input_data['0']
-
-        deconv_result = np.empty_like(data_str)
-        for i, (x, y) in enumerate(zip(data_nonstr, data_str)):
-            deconv_result[i] = richardson_lucy_deconv(x, y, iterations=iterations)
-
-        return deconv_result
-
     @staticmethod
     def _peak_params(x, y):
         """Calculate discrete waveform's peak mean and variance.
@@ -318,42 +294,3 @@ class PalmSetup:
         pulse_length = np.real(np.lib.scimath.sqrt(var1[ind] - var3[ind]))
 
         return pulse_length
-
-
-def richardson_lucy_deconv(streaked_signal, base_signal, iterations=200, noise=0.3):
-    """Deconvolve eTOF waveforms using Richardson-Lucy algorithm, extracting pulse profile in a time domain.
-
-    The assumption is that the streaked waveform was created by convolving an with a point-spread function
-    PSF and possibly by adding noise.
-
-    Args:
-        streaked_signal: waveform after streaking
-        base_signal: waveform without effect of streaking
-        iterations: number of Richardson-Lucy algorithm iterations
-        noise: noise level in the units of waveform intensity
-
-    Returns:
-        pulse profile in a time domain
-    """
-    from numpy import conjugate, real, ones
-    from numpy.fft import fft, ifft, fftshift
-
-    # TODO: check the implementation of 'weight' parameter, for now keep it == 1
-    # TODO: implement stability enforcement
-    weight = ones(streaked_signal.shape)
-
-    otf = fft(fftshift(base_signal))  # optical transfer function
-    time_profile = streaked_signal.copy()
-    time_profile.clip(min=0)
-
-    weighted_signal = streaked_signal.copy() + noise
-    weighted_signal = weight * weighted_signal.clip(min=0)
-
-    scale = real(ifft(conjugate(otf)*fft(weight)))
-
-    for _ in range(iterations):
-        relative_psf = weighted_signal / (real(ifft(otf*fft(time_profile))) + noise)
-        time_profile *= real(ifft(conjugate(otf)*fft(relative_psf))) / scale
-        time_profile.clip(min=0)
-
-    return time_profile
