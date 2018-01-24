@@ -6,7 +6,7 @@ setup(
     author='Ivan Usov',
     author_email='ivan.usov@psi.ch',
     description='Photon diagnostics tools at SwissFel',
-    license='',
+    license='GNU GPLv3',
     url='',
     packages=['photon_diag'],
     install_requires=['h5py', 'numpy', 'scipy'],
