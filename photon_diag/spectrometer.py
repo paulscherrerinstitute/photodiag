@@ -34,14 +34,14 @@ class Spectrometer:
         """Perform electron time of flight (eTOF) to pulse energy transformation (ns -> eV) of data through
         the spectrometer's calibration constants and a photon peak position followed by 1D interpolation.
 
-                Args:
-                    input_data: data to be processed
-                    noise_thr:
-                    jacobian: apply jacobian corrections of spectrometer's time to energy transformation
+        Args:
+            input_data: data to be processed
+            noise_thr:
+            jacobian: apply jacobian corrections of spectrometer's time to energy transformation
 
-                Returns:
-                    interpolated output data
-                """
+        Returns:
+            interpolated output data
+        """
         self.time = self.internal_time[self.t0 + 1:] - self.internal_time[self.t0]
         self.energy = (self.calib_a / self.time) ** 2 + self.calib_b
 

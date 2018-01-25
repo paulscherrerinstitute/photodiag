@@ -28,6 +28,33 @@ class PalmSetup:
         self.tags = []
         self.energy_range = [8600, 9400]
 
+    def __call__(self, waveforms, method='xcorr', jacobian=False, noise_thr=7):
+        """Main function to analyse PALM data that pipelines separate stages of data processing.
+
+        Args:
+            waveforms: dictionary with waveforms from streaked and non-streaked spectrometers
+            method: (optional) {'xcorr' (default), 'deconv'}
+            jacobian: (optional) apply jacobian corrections of spectrometer's time to energy transformation
+            noise_thr:
+
+        Returns:
+            pulse lengths and arrival times per pulse
+        """
+        prep_data = {}
+        if method == 'xcorr':
+            for etof_key, data in waveforms.items():
+                etof = self.spectrometers[etof_key]
+                # TODO: it can be ok to detect photon peaks from bulk data for a calibration check
+                # self._detect_photon_peaks()
+                prep_data[etof_key] = etof(data, jacobian=jacobian, noise_thr=noise_thr)
+
+            results = self._cross_corr_analysis(prep_data)
+
+        else:
+            raise RuntimeError(f"Method '{method}' is not recognised")
+
+        return results, prep_data
+
     def calibrate(self, folder_name, bkg_en=None, etofs=None, overwrite=True):
         """General routine for a calibration process of the electron time of flight (eTOF) etofs.
 
@@ -91,34 +118,7 @@ class PalmSetup:
             # data_raw[etof_key] = np.expand_dims(data[1, :], axis=0)
             time_raw[etof_key] = self._get_internal_time(filepath, etof.path, *self.hdf5_range)
 
-        results, prep_data = self.process(data_raw)
-
-        return results, prep_data
-
-    def process(self, waveforms, method='xcorr', jacobian=False, noise_thr=7):
-        """Main function to analyse PALM data that pipelines separate stages of data processing.
-
-        Args:
-            waveforms: dictionary with waveforms from streaked and non-streaked spectrometers
-            method: (optional) {'xcorr' (default), 'deconv'}
-            jacobian: (optional) apply jacobian corrections of spectrometer's time to energy transformation
-            noise_thr:
-
-        Returns:
-            pulse lengths and arrival times per pulse
-        """
-        prep_data = {}
-        if method == 'xcorr':
-            for etof_key, data in waveforms.items():
-                etof = self.spectrometers[etof_key]
-                # TODO: it can be ok to detect photon peaks from bulk data for a calibration check
-                # self._detect_photon_peaks()
-                prep_data[etof_key] = etof(data, jacobian=jacobian, noise_thr=noise_thr)
-
-            results = self._cross_corr_analysis(prep_data)
-
-        else:
-            raise RuntimeError(f"Method '{method}' is not recognised")
+        results, prep_data = self(data_raw)
 
         return results, prep_data
 
