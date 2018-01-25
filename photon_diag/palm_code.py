@@ -113,7 +113,7 @@ class PalmSetup:
                 etof = self.spectrometers[etof_key]
                 # TODO: it can be ok to detect photon peaks from bulk data for a calibration check
                 # self._detect_photon_peaks()
-                prep_data[etof_key] = etof.prepare(data, jacobian=jacobian, noise_thr=noise_thr)
+                prep_data[etof_key] = etof(data, jacobian=jacobian, noise_thr=noise_thr)
 
             results = self._cross_corr_analysis(prep_data)
 
