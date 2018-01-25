@@ -140,7 +140,18 @@ class Spectrometer:
         """
         above_thr = np.greater(waveform, noise_thr * noise_std)
 
+        # TODO: the code could be improved once the following issue is resolved,
+        # https://github.com/numpy/numpy/issues/2269
+        if not above_thr.any():
+            # no values above the noise threshold in the waveform
+            raise Exception('Can not detect a photon peak')
+
         ind_l = np.argmax(above_thr)
+
+        if not above_thr[ind_l:].any():
+            # no values below the noise threshold along the peak
+            raise Exception('Can not detect a photon peak')
+
         ind_r = ind_l + np.argmin(above_thr[ind_l:])
 
         position = ind_l + np.argmax(waveform[ind_l:ind_r])
