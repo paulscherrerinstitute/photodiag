@@ -30,14 +30,14 @@ class Spectrometer:
         self.t0 = np.empty(0)
         self.energy = np.empty(0)
 
-    def __call__(self, input_data, noise_thr=7, jacobian=False):
+    def __call__(self, input_data, jacobian=False, noise_thr=7):
         """Perform electron time of flight (eTOF) to pulse energy transformation (ns -> eV) of data through
         the spectrometer's calibration constants and a photon peak position followed by 1D interpolation.
 
         Args:
             input_data: data to be processed
-            noise_thr:
             jacobian: apply jacobian corrections of spectrometer's time to energy transformation
+            noise_thr:
 
         Returns:
             interpolated output data
@@ -65,7 +65,7 @@ class Spectrometer:
         """Add calibration point for a specified X-ray energy.
 
         Args:
-            energy: calibration energy used in data acquisition
+            energy: X-ray energy used in data acquisition
             calib_waveforms: calibration data as a 2D array
         """
         noise = calib_waveforms[:, slice(*self.noise_range)]
@@ -93,7 +93,7 @@ class Spectrometer:
             return (a / time) ** 2 + b
 
         if bkg_en not in self.calib_data.keys():
-            raise Exception('Can not find background energy')
+            raise Exception('Can not find data for background energy')
 
         calib_waveforms = []
         calib_t0 = []
@@ -127,10 +127,10 @@ class Spectrometer:
         """Estimate position and amplitude of a photon peak.
 
         Under assumption that the photon peak is the first peak encontered above the specified noise_std
-        threshold level.
+        threshold level (= noise_thr * noise_std).
 
         Args:
-            waveform:
+            waveform: waveform of interest
             noise_std: noise level in waveform units
             noise_thr: number of noise_std standard deviations above which the signal is considered to be
                 detectable (default is 3-sigma)

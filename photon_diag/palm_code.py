@@ -33,7 +33,7 @@ class PalmSetup:
 
         Args:
             waveforms: dictionary with waveforms from streaked and non-streaked spectrometers
-            method: (optional) {'xcorr' (default), 'deconv'}
+            method: (optional) currently, only one method is available {'xcorr' (default)}
             jacobian: (optional) apply jacobian corrections of spectrometer's time to energy transformation
             noise_thr:
 
@@ -136,9 +136,9 @@ class PalmSetup:
             time: internal electron time-of-flight reference.
         """
         with h5py.File(filepath) as h5f:
-            time = h5f[f'/{etof_path}/time'][first_ind:last_ind] * 1e9  # convert to fs
+            time = h5f[f'/{etof_path}/time'][first_ind:last_ind]
 
-        return time
+        return time * 1e9  # convert to fs
 
     @staticmethod
     def _get_tags_and_data(filepath, etof_path, first_ind=None, last_ind=None):
@@ -178,7 +178,7 @@ class PalmSetup:
         """
         energy = float(re.findall('\d+\.\d+', filename)[0])
 
-        return 1000*energy  # convert to eV
+        return energy * 1000  # convert to eV
 
     def _cross_corr_analysis(self, input_data):
         """Perform analysis to determine arrival times via cross correlation.
