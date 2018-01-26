@@ -77,7 +77,7 @@ class PalmSetup:
 
         if overwrite:
             for etof in calibrated_etofs:
-                etof.calib_data = {}
+                etof.calib_data.drop(etof.calib_data.index[:], inplace=True)
 
         with os.scandir(calib_folder) as it:
             for entry in it:
@@ -85,7 +85,7 @@ class PalmSetup:
                     energy = self._get_energy_from_filename(entry.path)
 
                     for etof in calibrated_etofs:
-                        if not overwrite and energy in etof.calib_data.keys():
+                        if not overwrite and energy in etof.calib_data.index:
                             continue
 
                         etof.internal_time = self._get_internal_time(entry.path, etof.path, *self.hdf5_range)
@@ -280,8 +280,8 @@ class PalmSetup:
         data_str = input_data['1'].copy()
         data_nonstr = input_data['0'].copy()
 
-        thr1 = np.mean(self.spectrometers['1'].noise_std)
-        thr3 = np.mean(self.spectrometers['0'].noise_std)
+        # thr1 = np.mean(self.spectrometers['1'].noise_std)
+        # thr3 = np.mean(self.spectrometers['0'].noise_std)
 
         data_str = self._truncate_largest_peak(data_str, 0)
         data_nonstr = self._truncate_largest_peak(data_nonstr, 0)

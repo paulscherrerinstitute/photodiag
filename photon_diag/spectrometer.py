@@ -1,4 +1,5 @@
 import numpy as np
+import pandas as pd
 from scipy.optimize import curve_fit
 
 
@@ -17,16 +18,19 @@ class Spectrometer:
 
         self.calib_a = a
         self.calib_b = b
-        self.calib_data = {}
+
+        # index of self.calib_data DataFrame is 'energy'
+        self.calib_data = pd.DataFrame(data={'waveform': np.array([], dtype=float),
+                                             't0': np.array([], dtype=int),
+                                             'noise_mean': np.array([], dtype=float),
+                                             'noise_std': np.array([], dtype=float)})
 
         self.internal_time = np.empty(0)
         self.time = np.empty(0)
 
         self.interp_energy = np.arange(8700, 9300)
         self.noise_range = [0, 2000]
-        self.data_range = [3000, 4000]
-        self.noise_mean = None
-        self.noise_std = None
+        self.data_range = [2900, 4000]
         self.t0 = np.empty(0)
         self.energy = np.empty(0)
 
@@ -57,7 +61,7 @@ class Spectrometer:
         output_data = np.apply_along_axis(interpolate_row, 1, output_data[:, ::-1],
                                           self.energy[::-1], self.interp_energy)
 
-        output_data = output_data - noise_thr * np.mean(self.noise_std)
+        output_data = output_data - noise_thr * self.calib_data.noise_std.mean()
 
         return output_data
 
@@ -69,16 +73,19 @@ class Spectrometer:
             calib_waveforms: calibration data as a 2D array
         """
         noise = calib_waveforms[:, slice(*self.noise_range)]
-        self.noise_mean = noise.mean(axis=1)
-        self.noise_std = noise.std(axis=1)
+        noise_mean = noise.mean(axis=1).mean()
+        noise_std = noise.std(axis=1).mean()
 
         data_avg = calib_waveforms.mean(axis=0)
         data_avg = data_avg - data_avg[slice(*self.noise_range)].mean()
 
-        t0, ampl = self._detect_photon_peak(data_avg, self.noise_std.mean())
+        t0, ampl = self._detect_photon_peak(data_avg, noise_std)
         data_avg = data_avg / ampl
 
-        self.calib_data[energy] = (data_avg, t0)
+        self.calib_data.loc[energy] = {'waveform': data_avg,
+                                       't0': t0,
+                                       'noise_mean': noise_mean,
+                                       'noise_std': noise_std}
 
     def fit_calibration_curve(self, bkg_en=None):
         """Perform fitting of calibration data.
@@ -89,36 +96,29 @@ class Spectrometer:
         Returns:
             calibration constants and a goodness of fit
         """
-        def fit_func(time, a, b):
-            return (a / time) ** 2 + b
-
-        if bkg_en not in self.calib_data.keys():
-            raise Exception('Can not find data for background energy')
-
-        calib_waveforms = []
-        calib_t0 = []
-        pulse_energies = []
-        for en, (waveform, t0) in self.calib_data.items():
-            calib_waveforms.append(waveform)
-            calib_t0.append(t0)
-            pulse_energies.append(en)
+        cd = self.calib_data
+        calib_t0 = cd.t0
+        calib_wf = cd.waveform
 
         if bkg_en is not None:
-            bkg_ind = pulse_energies.index(bkg_en)
-            bkg_waveform = np.array(calib_waveforms[bkg_ind])
-            del calib_waveforms[bkg_ind]
-            del calib_t0[bkg_ind]
-            del pulse_energies[bkg_ind]
-            calib_waveforms = np.array(calib_waveforms)
-            calib_waveforms -= bkg_waveform
+            if bkg_en not in cd.index:
+                raise Exception('Can not find data for background energy')
 
-        calib_peak_pos = self.data_range[0] + np.argmax(calib_waveforms[:, slice(*self.data_range)], axis=1)
+            calib_t0 = calib_t0.loc[cd.index != bkg_en]
+            calib_wf = calib_wf.loc[cd.index != bkg_en] - calib_wf.loc[bkg_en]
+
+        calib_peak_pos = self.data_range[0] + calib_wf.apply(lambda x: x[slice(*self.data_range)].argmax())
+
         time_delays = self.internal_time[calib_peak_pos] - self.internal_time[calib_t0]
+        pulse_energies = calib_wf.index
+
+        def fit_func(time, a, b):
+            return (a / time) ** 2 + b
 
         popt, pcov = curve_fit(fit_func, time_delays, pulse_energies)
 
         self.calib_a, self.calib_b = popt
-        self.t0 = np.round(np.mean(calib_t0)).astype(int)
+        self.t0 = np.round(cd.t0.mean()).astype(int)
 
         return popt, time_delays, pulse_energies
 
