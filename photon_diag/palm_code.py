@@ -135,7 +135,7 @@ class PalmSetup:
         Returns:
             time: internal electron time-of-flight reference.
         """
-        with h5py.File(filepath) as h5f:
+        with h5py.File(filepath, 'r') as h5f:
             time = h5f[f'/{etof_path}/time'][first_ind:last_ind]
 
         return time * 1e9  # convert to fs
@@ -153,7 +153,7 @@ class PalmSetup:
         Returns:
             tags and data
         """
-        with h5py.File(filepath) as h5f:
+        with h5py.File(filepath, 'r') as h5f:
             tags = h5f['/tags'][:]
 
             # eliminate repeated tags
