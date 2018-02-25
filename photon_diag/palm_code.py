@@ -24,7 +24,7 @@ class PalmSetup:
         self.spectrometers = {'1': Spectrometer(path='SAROP11-PALMK118:CH2_BUFFER'),
                               '0': Spectrometer(path='SAROP11-PALMK118:CH1_BUFFER')}
 
-        self.hdf5_range = [0, 4000]
+        self.hdf5_range = [0, 2000]
         self.tags = []
         self.energy_range = [8600, 9400]
 

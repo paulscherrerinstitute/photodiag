@@ -28,9 +28,9 @@ class Spectrometer:
         self.internal_time = np.empty(0)
         self.time = np.empty(0)
 
-        self.interp_energy = np.arange(8700, 9300)
-        self.noise_range = [0, 2000]
-        self.data_range = [2900, 4000]
+        self.interp_energy = np.arange(2, 120)
+        self.noise_range = [1500, 2000]
+        self.data_range = [300, 1000]
         self.t0 = np.empty(0)
         self.energy = np.empty(0)
 
