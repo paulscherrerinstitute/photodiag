@@ -21,8 +21,8 @@ class PalmSetup:
         """
         self.home_dir = home_dir
 
-        self.spectrometers = {'1': Spectrometer(path='C1'),
-                              '0': Spectrometer(path='C3')}
+        self.spectrometers = {'1': Spectrometer(path='SAROP11-PALMK118:CH2_BUFFER'),
+                              '0': Spectrometer(path='SAROP11-PALMK118:CH1_BUFFER')}
 
         self.hdf5_range = [0, 4000]
         self.tags = []
@@ -154,14 +154,8 @@ class PalmSetup:
             tags and data
         """
         with h5py.File(filepath, 'r') as h5f:
-            tags = h5f['/tags'][:]
-
-            # eliminate repeated tags
-            _, ind, counts = np.unique(tags, return_index=True, return_counts=True)
-            idx = ind[counts == 1]
-            tags = tags[idx]
-
-            data = -h5f[f'/{etof_path}/data'][idx, first_ind:last_ind]
+            tags = h5f['/pulse_id'][:]
+            data = -h5f[f'/{etof_path}/data'][:, first_ind:last_ind]
 
         return tags, data
 
