@@ -200,7 +200,7 @@ class PalmSetup:
         for i, (x, y) in enumerate(zip(data_nonstr, data_str)):
             corr_results[i, :] = np.correlate(x, y, mode='same')
 
-        corr_results = self._truncate_largest_peak(corr_results, 0)
+        corr_results = self._truncate_highest_peak(corr_results, 0)
 
         size = corr_results.shape[1]
         lags = np.array(range(-int(size/2), int(size/2)))
@@ -231,6 +231,42 @@ class PalmSetup:
         peak_var = np.sum((x - peak_mean[:, np.newaxis])**2 * y, axis=1) / denom
 
         return peak_mean, peak_var
+
+    @staticmethod
+    def _truncate_highest_peak(y, thr):
+        """Truncate the highest peak above a specified threshold.
+
+        Args:
+            y: waveform/graph to be truncated
+            thr: threshold level in ordinate units
+
+        Returns:
+            ordinates of a truncated waveform
+        """
+        def test_fun(y_1d):
+            y_above_thr = (y_1d > thr).astype(int)
+            y_above_thr = np.pad(y_above_thr, (1,), 'constant')
+            inout = np.diff(y_above_thr)
+
+            ind_in = np.argwhere(inout == 1).flatten()
+            ind_out = np.argwhere(inout == -1).flatten()
+
+            if ind_in.size == 0:
+                y_1d[:] = 0
+
+            else:
+                ind_max = np.argmax(y_1d)
+                ind_max_height = np.argmax((ind_out > ind_max) & (ind_max > ind_in))
+
+                y_1d[:ind_in[ind_max_height]] = 0
+                y_1d[ind_out[ind_max_height]:] = 0
+
+        if y.ndim == 1:
+            test_fun(y)
+        else:
+            np.apply_along_axis(test_fun, 1, y)
+
+        return y
 
     @staticmethod
     def _truncate_largest_peak(y, thr):
@@ -283,8 +319,8 @@ class PalmSetup:
         # thr1 = np.mean(self.spectrometers['1'].noise_std)
         # thr3 = np.mean(self.spectrometers['0'].noise_std)
 
-        data_str = self._truncate_largest_peak(data_str, 0)
-        data_nonstr = self._truncate_largest_peak(data_nonstr, 0)
+        data_str = self._truncate_highest_peak(data_str, 0)
+        data_nonstr = self._truncate_highest_peak(data_nonstr, 0)
 
         _, var1 = self._peak_params(lags, data_str)
         _, var3 = self._peak_params(lags, data_nonstr)
