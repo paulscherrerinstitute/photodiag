@@ -82,7 +82,7 @@ class PalmSetup:
         with os.scandir(calib_folder) as it:
             for entry in it:
                 if entry.is_file() and entry.name.endswith(('.hdf5', '.h5')):
-                    energy = self._get_energy_from_filename(entry.path)
+                    energy = self._get_energy_from_filename(entry.name)
 
                     for etof in calibrated_etofs:
                         if not overwrite and energy in etof.calib_data.index:
@@ -176,9 +176,9 @@ class PalmSetup:
         Returns:
             energy in eV as a float number
         """
-        energy = float(re.findall('\d+\.\d+', filename)[0])
+        energy = float(re.findall('\d+', filename)[0])
 
-        return energy * 1000  # convert to eV
+        return 1510 - energy
 
     def _cross_corr_analysis(self, input_data):
         """Perform analysis to determine arrival times via cross correlation.
