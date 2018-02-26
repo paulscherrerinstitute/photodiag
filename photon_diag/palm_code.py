@@ -88,7 +88,7 @@ class PalmSetup:
                         if not overwrite and energy in etof.calib_data.index:
                             continue
 
-                        etof.internal_time = self._get_internal_time(entry.path, etof.path, *self.hdf5_range)
+                        etof.internal_time = self._get_internal_time(*self.hdf5_range)
                         _, calib_waveforms = self._get_tags_and_data(entry.path, etof.path, *self.hdf5_range)
                         etof.add_calibration_point(energy, calib_waveforms)
 
@@ -116,29 +116,26 @@ class PalmSetup:
             self.tags, data = self._get_tags_and_data(filepath, etof.path, *self.hdf5_range)
             data_raw[etof_key] = data
             # data_raw[etof_key] = np.expand_dims(data[1, :], axis=0)
-            time_raw[etof_key] = self._get_internal_time(filepath, etof.path, *self.hdf5_range)
+            time_raw[etof_key] = self._get_internal_time(*self.hdf5_range)
 
         results, prep_data = self(data_raw)
 
         return results, prep_data
 
     @staticmethod
-    def _get_internal_time(filepath, etof_path, first_ind=None, last_ind=None):
-        """Read PALM internal time from an hdf5 file.
+    def _get_internal_time(first_ind=None, last_ind=None):
+        """Get PALM internal time in spectrometer readout units. Current setup produces 2000 points (for a
+        span of 400 ns).
 
         Args:
-            filepath: path to an hdf5 file
-            etof_path: location of data in hdf5 file
             first_ind: (optional) index of a first element to read
             last_ind: (optional) index of a last element to read
 
         Returns:
             time: internal electron time-of-flight reference.
         """
-        with h5py.File(filepath, 'r') as h5f:
-            time = h5f[f'/{etof_path}/time'][first_ind:last_ind]
 
-        return time * 1e9  # convert to fs
+        return np.arange(0, 2000)[first_ind:last_ind]
 
     @staticmethod
     def _get_tags_and_data(filepath, etof_path, first_ind=None, last_ind=None):
