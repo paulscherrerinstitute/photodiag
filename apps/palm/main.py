@@ -5,7 +5,7 @@ import numpy as np
 from bokeh.io import curdoc
 from bokeh.layouts import column, row, gridplot
 from bokeh.models import ColumnDataSource, Slider, Range1d, Spacer, Plot, \
-    LinearAxis, DataRange1d, Line, CustomJS
+    LinearAxis, DataRange1d, Line, CustomJS, MultiLine, Circle
 from bokeh.models.annotations import Title
 from bokeh.models.grids import Grid
 from bokeh.models.tickers import BasicTicker
@@ -37,6 +37,64 @@ HDF5_DATASET_PATH = '/entry/data/data'
 hdf5_file_data = []
 
 
+# Calibration averaged waveforms per photon energy
+calib_wf_plot = Plot(
+    title=Title(text="Calibration waveforms"),
+    x_range=DataRange1d(),
+    y_range=DataRange1d(),
+    plot_height=WAVEFORM_CANVAS_HEIGHT,
+    plot_width=WAVEFORM_CANVAS_WIDTH,
+    toolbar_location='right',
+    logo=None,
+)
+
+# ---- tools
+calib_wf_plot.add_tools(PanTool(), WheelZoomTool(), SaveTool(), ResetTool())
+
+# ---- axes
+calib_wf_plot.add_layout(LinearAxis(), place='below')
+calib_wf_plot.add_layout(LinearAxis(major_label_orientation='vertical'), place='left')
+
+# ---- grid lines
+calib_wf_plot.add_layout(Grid(dimension=0, ticker=BasicTicker()))
+calib_wf_plot.add_layout(Grid(dimension=1, ticker=BasicTicker()))
+
+# ---- rgba image glyph
+calib_waveform_source = ColumnDataSource(dict(x=[0], y=[0]))
+calib_wf_plot.add_glyph(calib_waveform_source, MultiLine(xs='x', ys='y', line_color='red'))
+
+
+# Calibration fit plot
+calib_fit_plot = Plot(
+    title=Title(text="Calibration fit"),
+    x_range=DataRange1d(),
+    y_range=DataRange1d(),
+    plot_height=WAVEFORM_CANVAS_HEIGHT,
+    plot_width=WAVEFORM_CANVAS_WIDTH,
+    toolbar_location='right',
+    logo=None,
+)
+
+# ---- tools
+calib_fit_plot.add_tools(PanTool(), WheelZoomTool(), SaveTool(), ResetTool())
+
+# ---- axes
+calib_fit_plot.add_layout(LinearAxis(), place='below')
+calib_fit_plot.add_layout(LinearAxis(major_label_orientation='vertical'), place='left')
+
+# ---- grid lines
+calib_fit_plot.add_layout(Grid(dimension=0, ticker=BasicTicker()))
+calib_fit_plot.add_layout(Grid(dimension=1, ticker=BasicTicker()))
+
+# ---- calibration points circle glyph
+calib_point_source = ColumnDataSource(dict(x=[0], y=[0]))
+calib_fit_plot.add_glyph(calib_point_source, Circle(x='x', y='y', line_color='blue'))
+
+# ---- calibration fit line glyph
+calib_fit_source = ColumnDataSource(dict(x=[0], y=[0]))
+calib_fit_plot.add_glyph(calib_fit_source, Line(x='x', y='y', line_color='red'))
+
+
 # Streaked and unstreaked waveforms plot
 waveform_plot = Plot(
     title=Title(text="eTOF waveforms"),
@@ -52,7 +110,7 @@ waveform_plot = Plot(
 waveform_plot.add_tools(PanTool(), WheelZoomTool(), SaveTool(), ResetTool())
 
 # ---- axes
-waveform_plot.add_layout(LinearAxis(), place='above')
+waveform_plot.add_layout(LinearAxis(), place='below')
 waveform_plot.add_layout(LinearAxis(major_label_orientation='vertical'), place='left')
 
 # ---- grid lines
@@ -80,7 +138,7 @@ energy_plot = Plot(
 energy_plot.add_tools(PanTool(), WheelZoomTool(), SaveTool(), ResetTool())
 
 # ---- axes
-energy_plot.add_layout(LinearAxis(), place='above')
+energy_plot.add_layout(LinearAxis(), place='below')
 energy_plot.add_layout(LinearAxis(major_label_orientation='vertical'), place='left')
 
 # ---- grid lines
@@ -102,6 +160,50 @@ def intensity_stream_reset_button_callback():
 
 intensity_stream_reset_button = Button(label="Reset", button_type='default', width=250)
 intensity_stream_reset_button.on_click(intensity_stream_reset_button_callback)
+
+
+# Calibration panel
+def calibration_path_update():
+    new_menu = [('None', 'None')]
+    if os.path.isdir(calibration_path.value):
+        with os.scandir(calibration_path.value) as it:
+            for entry in it:
+                if entry.is_file() and entry.name.endswith(('.hdf5', '.h5')):
+                    new_menu.append((entry.name, entry.name))
+
+    background_dropdown.menu = sorted(new_menu)
+
+doc.add_periodic_callback(calibration_path_update, HDF5_FILE_PATH_UPDATE_PERIOD)
+
+
+# ---- calibration folder path text input
+def calibration_path_callback(attr, old, new):
+    calibration_path_update()
+
+calibration_path = TextInput(title="Calibration Folder Path:", value=HDF5_FILE_PATH, width=250)
+calibration_path.on_change('value', calibration_path_callback)
+
+
+# ---- background dropdown menu
+def background_dropdown_callback(selection):
+    background_dropdown.label = f"Background energy: {selection}"
+
+background_dropdown = Dropdown(label="Background energy: None", button_type='primary', menu=[], width=250)
+background_dropdown.on_click(background_dropdown_callback)
+
+
+# ---- load button
+def calibrate_button_callback():
+    pass
+
+calibrate_button = Button(label="Calibrate", button_type='default', width=250)
+calibrate_button.on_click(calibrate_button_callback)
+
+
+# assemble
+tab_calibration = Panel(
+    child=column(calibration_path, background_dropdown, calibrate_button),
+    title="Calibration")
 
 
 # Stream panel
@@ -218,10 +320,12 @@ tab_hdf5file = Panel(
     child=column(hdf5_file_path, saved_runs_dropdown, hdf5_dataset_path, load_file_button, hdf5_pulse_slider),
     title="HDF5 File")
 
-data_source_tabs = Tabs(tabs=[tab_stream, tab_hdf5file])
+data_source_tabs = Tabs(tabs=[tab_calibration, tab_stream, tab_hdf5file])
 
 # Final layouts
-layout_main = column(waveform_plot, energy_plot, intensity_stream_reset_button)
+layout_main = column(row(calib_wf_plot, calib_fit_plot),
+                     row(waveform_plot, energy_plot),
+                     intensity_stream_reset_button)
 final_layout = row(layout_main, data_source_tabs)
 
 doc.add_root(final_layout)
