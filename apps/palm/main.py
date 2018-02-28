@@ -13,6 +13,7 @@ from bokeh.models.tools import PanTool, BoxZoomTool, WheelZoomTool, SaveTool, Re
 from bokeh.models.widgets import Button, Toggle, Panel, Tabs, Dropdown, Select, RadioButtonGroup, TextInput, \
     DataTable, TableColumn
 from tornado import gen
+from photon_diag.palm_code import PalmSetup
 
 import receiver
 
@@ -35,6 +36,8 @@ HDF5_FILE_PATH = '/filepath'
 HDF5_FILE_PATH_UPDATE_PERIOD = 10000  # ms
 HDF5_DATASET_PATH = '/entry/data/data'
 hdf5_file_data = []
+
+palm = PalmSetup('')
 
 
 # Calibration averaged waveforms per photon energy
@@ -79,20 +82,25 @@ calib_fit_plot = Plot(
 calib_fit_plot.add_tools(PanTool(), WheelZoomTool(), SaveTool(), ResetTool())
 
 # ---- axes
-calib_fit_plot.add_layout(LinearAxis(), place='below')
-calib_fit_plot.add_layout(LinearAxis(major_label_orientation='vertical'), place='left')
+calib_fit_plot.add_layout(LinearAxis(axis_label='Spectrometer Peak Position, pix'), place='below')
+calib_fit_plot.add_layout(LinearAxis(axis_label='Photon Energy, eV', major_label_orientation='vertical'),
+                          place='left')
 
 # ---- grid lines
 calib_fit_plot.add_layout(Grid(dimension=0, ticker=BasicTicker()))
 calib_fit_plot.add_layout(Grid(dimension=1, ticker=BasicTicker()))
 
-# ---- calibration points circle glyph
-calib_point_source = ColumnDataSource(dict(x=[0], y=[0]))
-calib_fit_plot.add_glyph(calib_point_source, Circle(x='x', y='y', line_color='blue'))
+# ---- calibration points circle glyphs
+calib_point_source0 = ColumnDataSource(dict(x=[], y=[]))
+calib_fit_plot.add_glyph(calib_point_source0, Circle(x='x', y='y', line_color='blue'))
+calib_point_source1 = ColumnDataSource(dict(x=[], y=[]))
+calib_fit_plot.add_glyph(calib_point_source1, Circle(x='x', y='y', line_color='red'))
 
-# ---- calibration fit line glyph
-calib_fit_source = ColumnDataSource(dict(x=[0], y=[0]))
-calib_fit_plot.add_glyph(calib_fit_source, Line(x='x', y='y', line_color='red'))
+# ---- calibration fit line glyphs
+calib_fit_source0 = ColumnDataSource(dict(x=[], y=[]))
+calib_fit_plot.add_glyph(calib_fit_source0, Line(x='x', y='y', line_color='blue'))
+calib_fit_source1 = ColumnDataSource(dict(x=[], y=[]))
+calib_fit_plot.add_glyph(calib_fit_source1, Line(x='x', y='y', line_color='red'))
 
 
 # Streaked and unstreaked waveforms plot
@@ -194,7 +202,21 @@ background_dropdown.on_click(background_dropdown_callback)
 
 # ---- load button
 def calibrate_button_callback():
-    pass
+    def plot_fit(time, calib_a, calib_b):
+        time_fit = np.linspace(time.min(), time.max(), 100)
+        en_fit = (calib_a / time_fit) ** 2 + calib_b
+        return time_fit, en_fit
+
+    def update_calib_plot(calib_results, circle, line):
+        (a, c), x, y = calib_results
+        x_fit, y_fit = plot_fit(x, a, c)
+        circle.data.update(x=x, y=y)
+        line.data.update(x=x_fit, y=y_fit)
+
+    calib_res = palm.calibrate(folder_name=calibration_path.value)
+    update_calib_plot(calib_res['0'], calib_point_source0, calib_fit_source0)
+    update_calib_plot(calib_res['1'], calib_point_source1, calib_fit_source1)
+
 
 calibrate_button = Button(label="Calibrate", button_type='default', width=250)
 calibrate_button.on_click(calibrate_button_callback)
