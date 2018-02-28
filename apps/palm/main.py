@@ -141,9 +141,14 @@ waveform_plot.add_layout(Grid(dimension=1, ticker=BasicTicker()))
 
 # ---- rgba image glyph
 waveform_source = ColumnDataSource(dict(x_str=[], y_str=[], x_unstr=[], y_unstr=[]))
-waveform_plot.add_glyph(waveform_source, Line(x='x_str', y='y_str', line_color='red'))
 waveform_plot.add_glyph(waveform_source, Line(x='x_unstr', y='y_unstr', line_color='blue'))
+waveform_plot.add_glyph(waveform_source, Line(x='x_str', y='y_str', line_color='red'))
 
+waveform_plot.add_layout(Legend(items=[
+    ("unstreaked", [waveform_plot.renderers[4]]),
+    ("streaked", [waveform_plot.renderers[5]])
+]))
+waveform_plot.legend.click_policy = "hide"
 
 # Streaked and unstreaked waveforms plot
 energy_plot = Plot(
@@ -320,8 +325,8 @@ def hdf5_update(pulse, results, prep_data):
     lags, delays, pulse_lengths = results
     waveform_source.data.update(
         x_str=palm.spectrometers['1'].interp_energy, y_str=prep_data['1'][pulse, :],
-        x_unstr=palm.spectrometers['0'].interp_energy, y_unstr=prep_data['0'][pulse, :]
-    )
+        x_unstr=palm.spectrometers['0'].interp_energy, y_unstr=prep_data['0'][pulse, :])
+
 
 
 def saved_runs_dropdown_callback(selection):
