@@ -25,7 +25,7 @@ current_message = None
 connected = False
 
 # Currently in bokeh it's possible to control only a canvas size, but not a size of the plotting area.
-WAVEFORM_CANVAS_WIDTH = 1000
+WAVEFORM_CANVAS_WIDTH = 750
 WAVEFORM_CANVAS_HEIGHT = 300
 
 APP_FPS = 1
@@ -132,17 +132,17 @@ waveform_plot = Plot(
 waveform_plot.add_tools(PanTool(), WheelZoomTool(), SaveTool(), ResetTool())
 
 # ---- axes
-waveform_plot.add_layout(LinearAxis(), place='below')
-waveform_plot.add_layout(LinearAxis(major_label_orientation='vertical'), place='left')
+waveform_plot.add_layout(LinearAxis(axis_label='Photon Energy, eV'), place='below')
+waveform_plot.add_layout(LinearAxis(axis_label='Intensity', major_label_orientation='vertical'), place='left')
 
 # ---- grid lines
 waveform_plot.add_layout(Grid(dimension=0, ticker=BasicTicker()))
 waveform_plot.add_layout(Grid(dimension=1, ticker=BasicTicker()))
 
 # ---- rgba image glyph
-waveform_source = ColumnDataSource(dict(x_streaked=[0], y_streaked=[0], x_unstreaked=[0], y_unstreaked=[0]))
-waveform_plot.add_glyph(waveform_source, Line(x='x_streaked', y='y_streaked', line_color='red'))
-waveform_plot.add_glyph(waveform_source, Line(x='x_unstreaked', y='y_unstreaked', line_color='blue'))
+waveform_source = ColumnDataSource(dict(x_str=[], y_str=[], x_unstr=[], y_unstr=[]))
+waveform_plot.add_glyph(waveform_source, Line(x='x_str', y='y_str', line_color='red'))
+waveform_plot.add_glyph(waveform_source, Line(x='x_unstr', y='y_unstr', line_color='blue'))
 
 
 # Streaked and unstreaked waveforms plot
@@ -210,7 +210,7 @@ calibration_path.on_change('value', calibration_path_callback)
 def background_dropdown_callback(selection):
     background_dropdown.label = f"Background energy: {selection}"
 
-background_dropdown = Dropdown(label="Background energy: None", button_type='primary', menu=[], width=250)
+background_dropdown = Dropdown(label="Background energy: None", menu=[], width=250)
 background_dropdown.on_click(background_dropdown_callback)
 
 
@@ -315,45 +315,38 @@ hdf5_file_path.on_change('value', hdf5_file_path_callback)
 
 
 # ---- saved runs dropdown menu
+hdf5_update_fun = []
+def hdf5_update(pulse, results, prep_data):
+    lags, delays, pulse_lengths = results
+    waveform_source.data.update(
+        x_str=palm.spectrometers['1'].interp_energy, y_str=prep_data['1'][pulse, :],
+        x_unstr=palm.spectrometers['0'].interp_energy, y_unstr=prep_data['0'][pulse, :]
+    )
+
+
 def saved_runs_dropdown_callback(selection):
+    global hdf5_update_fun
     saved_runs_dropdown.label = selection
+    results, prep_data = palm.process_hdf5_file(filename=os.path.join(hdf5_file_path.value, selection))
+    hdf5_update_fun = partial(hdf5_update, results=results, prep_data=prep_data)
+
+    hdf5_pulse_slider.end = len(results[0])
+    hdf5_pulse_slider_source.data.update(value=[1])
+    hdf5_pulse_slider.value = 1
 
 saved_runs_dropdown = Dropdown(label="Saved Runs", button_type='primary', menu=[], width=250)
 saved_runs_dropdown.on_click(saved_runs_dropdown_callback)
 
-# ---- dataset path text input
-hdf5_dataset_path = TextInput(title="Dataset Path:", value=HDF5_DATASET_PATH, width=250)
-
-
-# ---- load button
-def mx_image(file, dataset, i):
-    import hdf5plugin  # required to be loaded prior to h5py
-    import h5py
-    with h5py.File(file, 'r') as f:
-        return f[dataset][i, :].astype(np.float32)
-
-
-def load_file_button_callback():
-    global hdf5_file_data, current_message
-    file_name = os.path.join(hdf5_file_path.value, saved_runs_dropdown.label)
-    hdf5_file_data = partial(mx_image, file=file_name, dataset=hdf5_dataset_path.value)
-    current_message = hdf5_file_data(i=hdf5_pulse_slider.value)
-    update(current_message)
-
-load_file_button = Button(label="Load", button_type='default', width=250)
-load_file_button.on_click(load_file_button_callback)
-
 
 # ---- pulse number slider
 def hdf5_pulse_slider_callback(attr, old, new):
-    global hdf5_file_data, current_message
-    current_message = hdf5_file_data(i=new['value'][0])
-    update(current_message)
+    global hdf5_update_fun
+    hdf5_update_fun(pulse=new['value'][0])
 
 hdf5_pulse_slider_source = ColumnDataSource(dict(value=[]))
 hdf5_pulse_slider_source.on_change('data', hdf5_pulse_slider_callback)
 
-hdf5_pulse_slider = Slider(start=0, end=99, value=0, step=1, title="Pulse Number",
+hdf5_pulse_slider = Slider(start=1, end=100, value=1, step=1, title="Pulse ID",
                            callback_policy='mouseup')
 
 hdf5_pulse_slider.callback = CustomJS(
@@ -363,7 +356,7 @@ hdf5_pulse_slider.callback = CustomJS(
 
 # assemble
 tab_hdf5file = Panel(
-    child=column(hdf5_file_path, saved_runs_dropdown, hdf5_dataset_path, load_file_button, hdf5_pulse_slider),
+    child=column(hdf5_file_path, saved_runs_dropdown, hdf5_pulse_slider),
     title="HDF5 File")
 
 data_source_tabs = Tabs(tabs=[tab_calibration, tab_stream, tab_hdf5file])
