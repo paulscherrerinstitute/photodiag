@@ -4,7 +4,7 @@ from functools import partial
 import numpy as np
 from bokeh.io import curdoc
 from bokeh.layouts import column, row, gridplot
-from bokeh.models import ColumnDataSource, Slider, Range1d, Spacer, Plot, \
+from bokeh.models import ColumnDataSource, Slider, Range1d, Spacer, Plot, Legend, \
     LinearAxis, DataRange1d, Line, CustomJS, MultiLine, Circle
 from bokeh.models.annotations import Title
 from bokeh.models.grids import Grid
@@ -69,6 +69,11 @@ calib_wf_plot.add_glyph(calib_waveform_source0, MultiLine(xs='xs', ys='ys', line
 calib_waveform_source1 = ColumnDataSource(dict(xs=[], ys=[]))
 calib_wf_plot.add_glyph(calib_waveform_source1, MultiLine(xs='xs', ys='ys', line_color='red'))
 
+calib_wf_plot.add_layout(Legend(items=[
+    ("unstreaked", [calib_wf_plot.renderers[5]]),
+    ("streaked", [calib_wf_plot.renderers[6]])
+]))
+calib_wf_plot.legend.click_policy = "hide"
 
 # Calibration fit plot
 calib_fit_plot = Plot(
@@ -104,6 +109,12 @@ calib_fit_source0 = ColumnDataSource(dict(x=[], y=[]))
 calib_fit_plot.add_glyph(calib_fit_source0, Line(x='x', y='y', line_color='blue'))
 calib_fit_source1 = ColumnDataSource(dict(x=[], y=[]))
 calib_fit_plot.add_glyph(calib_fit_source1, Line(x='x', y='y', line_color='red'))
+
+calib_fit_plot.add_layout(Legend(items=[
+    ("unstreaked", [calib_fit_plot.renderers[5], calib_fit_plot.renderers[7]]),
+    ("streaked", [calib_fit_plot.renderers[6], calib_fit_plot.renderers[8]])
+]))
+calib_fit_plot.legend.click_policy = "hide"
 
 
 # Streaked and unstreaked waveforms plot
