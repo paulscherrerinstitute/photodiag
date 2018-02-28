@@ -52,19 +52,22 @@ calib_wf_plot = Plot(
 )
 
 # ---- tools
-calib_wf_plot.add_tools(PanTool(), WheelZoomTool(), SaveTool(), ResetTool())
+calib_wf_plot.add_tools(PanTool(), BoxZoomTool(), WheelZoomTool(), SaveTool(), ResetTool())
 
 # ---- axes
-calib_wf_plot.add_layout(LinearAxis(), place='below')
-calib_wf_plot.add_layout(LinearAxis(major_label_orientation='vertical'), place='left')
+calib_wf_plot.add_layout(LinearAxis(axis_label='Spectrometer internal time, pix'), place='below')
+calib_wf_plot.add_layout(LinearAxis(axis_label='Normalized Intensity', major_label_orientation='vertical'),
+                         place='left')
 
 # ---- grid lines
 calib_wf_plot.add_layout(Grid(dimension=0, ticker=BasicTicker()))
 calib_wf_plot.add_layout(Grid(dimension=1, ticker=BasicTicker()))
 
-# ---- rgba image glyph
-calib_waveform_source = ColumnDataSource(dict(x=[0], y=[0]))
-calib_wf_plot.add_glyph(calib_waveform_source, MultiLine(xs='x', ys='y', line_color='red'))
+# ---- multiline calibration waveforms glyphs
+calib_waveform_source0 = ColumnDataSource(dict(xs=[], ys=[]))
+calib_wf_plot.add_glyph(calib_waveform_source0, MultiLine(xs='xs', ys='ys', line_color='blue'))
+calib_waveform_source1 = ColumnDataSource(dict(xs=[], ys=[]))
+calib_wf_plot.add_glyph(calib_waveform_source1, MultiLine(xs='xs', ys='ys', line_color='red'))
 
 
 # Calibration fit plot
@@ -79,10 +82,10 @@ calib_fit_plot = Plot(
 )
 
 # ---- tools
-calib_fit_plot.add_tools(PanTool(), WheelZoomTool(), SaveTool(), ResetTool())
+calib_fit_plot.add_tools(PanTool(), BoxZoomTool(), WheelZoomTool(), SaveTool(), ResetTool())
 
 # ---- axes
-calib_fit_plot.add_layout(LinearAxis(axis_label='Spectrometer Peak Position, pix'), place='below')
+calib_fit_plot.add_layout(LinearAxis(axis_label='Spectrometer Peak Shift, pix'), place='below')
 calib_fit_plot.add_layout(LinearAxis(axis_label='Photon Energy, eV', major_label_orientation='vertical'),
                           place='left')
 
@@ -202,6 +205,15 @@ background_dropdown.on_click(background_dropdown_callback)
 
 # ---- load button
 def calibrate_button_callback():
+    calib_res = palm.calibrate(folder_name=calibration_path.value)
+
+    calib_data0 = palm.spectrometers['0'].calib_data
+    calib_data1 = palm.spectrometers['1'].calib_data
+    calib_waveform_source0.data.update(xs=len(calib_data0)*[palm.spectrometers['0'].internal_time],
+                                       ys=palm.spectrometers['0'].calib_data['waveform'].tolist())
+    calib_waveform_source1.data.update(xs=len(calib_data1)*[palm.spectrometers['1'].internal_time],
+                                       ys=palm.spectrometers['1'].calib_data['waveform'].tolist())
+
     def plot_fit(time, calib_a, calib_b):
         time_fit = np.linspace(time.min(), time.max(), 100)
         en_fit = (calib_a / time_fit) ** 2 + calib_b
@@ -212,8 +224,9 @@ def calibrate_button_callback():
         x_fit, y_fit = plot_fit(x, a, c)
         circle.data.update(x=x, y=y)
         line.data.update(x=x_fit, y=y_fit)
+        # a_w.value = round(a, 2)
+        # c_w.value = round(c)
 
-    calib_res = palm.calibrate(folder_name=calibration_path.value)
     update_calib_plot(calib_res['0'], calib_point_source0, calib_fit_source0)
     update_calib_plot(calib_res['1'], calib_point_source1, calib_fit_source1)
 
