@@ -13,7 +13,7 @@ from bokeh.models.tools import PanTool, BoxZoomTool, WheelZoomTool, SaveTool, Re
 from bokeh.models.widgets import Button, Toggle, Panel, Tabs, Dropdown, Select, RadioButtonGroup, TextInput, \
     DataTable, TableColumn
 from tornado import gen
-from palm_code import PalmSetup
+from photon_diag.palm_code import PalmSetup
 
 import receiver
 
@@ -333,9 +333,9 @@ def saved_runs_dropdown_callback(selection):
     results, prep_data = palm.process_hdf5_file(filename=os.path.join(hdf5_file_path.value, selection))
     hdf5_update_fun = partial(hdf5_update, results=results, prep_data=prep_data)
 
-    hdf5_pulse_slider.end = len(results[0])
-    hdf5_pulse_slider_source.data.update(value=[1])
-    hdf5_pulse_slider.value = 1
+    hdf5_pulse_slider.end = len(results[1]) - 1
+    hdf5_pulse_slider.value = 0
+    hdf5_update_fun(0)
 
 saved_runs_dropdown = Dropdown(label="Saved Runs", button_type='primary', menu=[], width=250)
 saved_runs_dropdown.on_click(saved_runs_dropdown_callback)
@@ -344,17 +344,10 @@ saved_runs_dropdown.on_click(saved_runs_dropdown_callback)
 # ---- pulse number slider
 def hdf5_pulse_slider_callback(attr, old, new):
     global hdf5_update_fun
-    hdf5_update_fun(pulse=new['value'][0])
+    hdf5_update_fun(pulse=new)
 
-hdf5_pulse_slider_source = ColumnDataSource(dict(value=[]))
-hdf5_pulse_slider_source.on_change('data', hdf5_pulse_slider_callback)
-
-hdf5_pulse_slider = Slider(start=1, end=100, value=1, step=1, title="Pulse ID",
-                           callback_policy='mouseup')
-
-hdf5_pulse_slider.callback = CustomJS(
-    args=dict(source=hdf5_pulse_slider_source),
-    code="""source.data = {value: [cb_obj.value]}""")
+hdf5_pulse_slider = Slider(start=0, end=99, value=0, step=1, title="Pulse ID")
+hdf5_pulse_slider.on_change('value', hdf5_pulse_slider_callback)
 
 
 # assemble
