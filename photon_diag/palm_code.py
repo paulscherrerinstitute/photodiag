@@ -204,7 +204,7 @@ class PalmSetup:
         corr_results = self._truncate_highest_peak(corr_results, 0)
 
         size = corr_results.shape[1]
-        lags = np.array(range(-int(size/2), int(size/2)))
+        lags = np.linspace(-np.floor(size/2), np.floor((size-1)/2), size)
 
         delays, _ = self._peak_params(lags, corr_results)
 
