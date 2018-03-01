@@ -80,7 +80,6 @@ class Spectrometer:
         data_avg = data_avg - data_avg[slice(*self.noise_range)].mean()
 
         t0, ampl = self._detect_photon_peak(data_avg, noise_std)
-        data_avg = data_avg / ampl
 
         self.calib_data.loc[energy] = {'waveform': data_avg,
                                        't0': t0,

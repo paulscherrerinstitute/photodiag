@@ -56,7 +56,7 @@ calib_wf_plot.add_tools(PanTool(), BoxZoomTool(), WheelZoomTool(), SaveTool(), R
 
 # ---- axes
 calib_wf_plot.add_layout(LinearAxis(axis_label='Spectrometer internal time, pix'), place='below')
-calib_wf_plot.add_layout(LinearAxis(axis_label='Normalized Intensity', major_label_orientation='vertical'),
+calib_wf_plot.add_layout(LinearAxis(axis_label='Intensity', major_label_orientation='vertical'),
                          place='left')
 
 # ---- grid lines
