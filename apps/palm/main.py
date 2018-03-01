@@ -13,7 +13,7 @@ from bokeh.models.tools import PanTool, BoxZoomTool, WheelZoomTool, SaveTool, Re
 from bokeh.models.widgets import Button, Toggle, Panel, Tabs, Dropdown, Select, RadioButtonGroup, TextInput, \
     DataTable, TableColumn
 from tornado import gen
-from photon_diag.palm_code import PalmSetup
+from palm_code import PalmSetup
 
 import receiver
 
@@ -25,8 +25,8 @@ current_message = None
 connected = False
 
 # Currently in bokeh it's possible to control only a canvas size, but not a size of the plotting area.
-WAVEFORM_CANVAS_WIDTH = 750
-WAVEFORM_CANVAS_HEIGHT = 300
+WAVEFORM_CANVAS_WIDTH = 730
+WAVEFORM_CANVAS_HEIGHT = 400
 
 APP_FPS = 1
 stream_t = 0
@@ -173,20 +173,9 @@ energy_plot.add_layout(Grid(dimension=0, ticker=BasicTicker()))
 energy_plot.add_layout(Grid(dimension=1, ticker=BasicTicker()))
 
 # ---- rgba image glyph
-energy_source = ColumnDataSource(dict(time=[0], undulator=[0], monochrom=[0]))
+energy_source = ColumnDataSource(dict(time=[], undulator=[], monochrom=[]))
 energy_plot.add_glyph(energy_source, Line(x='time', y='undulator', line_color='red'))
 energy_plot.add_glyph(energy_source, Line(x='time', y='monochrom', line_color='blue'))
-
-
-# Intensity stream reset button
-def intensity_stream_reset_button_callback():
-    global stream_t
-    stream_t = 1  # keep the latest point in order to prevent full axis reset
-    energy_source.data.update(time=[1], undulator=[energy_source.data['undulator'][-1]],
-                              monochrom=[energy_source.data['monochrom'][-1]])
-
-intensity_stream_reset_button = Button(label="Reset", button_type='default', width=250)
-intensity_stream_reset_button.on_click(intensity_stream_reset_button_callback)
 
 
 # Calibration panel
@@ -292,8 +281,18 @@ stream_button = Toggle(label="Connect", button_type='default', width=250)
 stream_button.on_click(stream_button_callback)
 
 
+# ---- intensity stream reset button
+def intensity_stream_reset_button_callback():
+    global stream_t
+    stream_t = 1  # keep the latest point in order to prevent full axis reset
+    energy_source.data.update(time=[1], undulator=[energy_source.data['undulator'][-1]],
+                              monochrom=[energy_source.data['monochrom'][-1]])
+
+intensity_stream_reset_button = Button(label="Reset", button_type='default', width=250)
+intensity_stream_reset_button.on_click(intensity_stream_reset_button_callback)
+
 # assemble
-tab_stream = Panel(child=column(buffer_slider, stream_button),
+tab_stream = Panel(child=column(buffer_slider, stream_button, intensity_stream_reset_button),
                    title="Stream")
 
 
@@ -326,7 +325,6 @@ def hdf5_update(pulse, results, prep_data):
     waveform_source.data.update(
         x_str=palm.spectrometers['1'].interp_energy, y_str=prep_data['1'][pulse, :],
         x_unstr=palm.spectrometers['0'].interp_energy, y_unstr=prep_data['0'][pulse, :])
-
 
 
 def saved_runs_dropdown_callback(selection):
@@ -364,13 +362,12 @@ tab_hdf5file = Panel(
     child=column(hdf5_file_path, saved_runs_dropdown, hdf5_pulse_slider),
     title="HDF5 File")
 
-data_source_tabs = Tabs(tabs=[tab_calibration, tab_stream, tab_hdf5file])
+data_source_tabs = Tabs(tabs=[tab_calibration, tab_hdf5file, tab_stream])
 
 # Final layouts
-layout_main = column(row(calib_wf_plot, calib_fit_plot),
-                     row(waveform_plot, energy_plot),
-                     intensity_stream_reset_button)
-final_layout = row(layout_main, data_source_tabs)
+layout_main = column(row(calib_wf_plot, Spacer(width=50), calib_fit_plot),
+                     row(waveform_plot, Spacer(width=50), energy_plot))
+final_layout = row(layout_main, Spacer(width=30), data_source_tabs)
 
 doc.add_root(final_layout)
 
