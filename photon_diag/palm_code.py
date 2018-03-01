@@ -28,7 +28,7 @@ class PalmSetup:
         self.tags = []
         self.energy_range = [8600, 9400]
 
-    def __call__(self, waveforms, method='xcorr', jacobian=False, noise_thr=7):
+    def __call__(self, waveforms, method='xcorr', jacobian=False, noise_thr=3):
         """Main function to analyse PALM data that pipelines separate stages of data processing.
 
         Args:
