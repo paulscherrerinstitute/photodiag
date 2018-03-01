@@ -90,6 +90,10 @@ class PalmSetup:
 
                         etof.internal_time = self._get_internal_time(*self.hdf5_range)
                         _, calib_waveforms = self._get_tags_and_data(entry.path, etof.path, *self.hdf5_range)
+
+                        # Filter out bad shots
+                        calib_waveforms = calib_waveforms[(calib_waveforms > -5000).all(axis=1)]
+
                         etof.add_calibration_point(energy, calib_waveforms)
 
         calib_results = {}
@@ -117,6 +121,12 @@ class PalmSetup:
             data_raw[etof_key] = data
             # data_raw[etof_key] = np.expand_dims(data[1, :], axis=0)
             time_raw[etof_key] = self._get_internal_time(*self.hdf5_range)
+
+        # Filter out bad shots
+        good_ind = (data_raw['0'] > -5000).all(axis=1) & (data_raw['1'] > -5000).all(axis=1)
+        data_raw['0'] = data_raw['0'][good_ind, :]
+        data_raw['1'] = data_raw['1'][good_ind, :]
+        self.tags = self.tags[good_ind]
 
         results, prep_data = self(data_raw)
 
