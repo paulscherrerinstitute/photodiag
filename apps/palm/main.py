@@ -323,8 +323,8 @@ hdf5_update_fun = []
 def hdf5_update(pulse, results, prep_data):
     lags, delays, pulse_lengths = results
     waveform_source.data.update(
-        x_str=palm.spectrometers['1'].interp_energy, y_str=prep_data['1'][pulse, :],
-        x_unstr=palm.spectrometers['0'].interp_energy, y_unstr=prep_data['0'][pulse, :])
+        x_str=palm.interp_energy, y_str=prep_data['1'][pulse, :],
+        x_unstr=palm.interp_energy, y_unstr=prep_data['0'][pulse, :])
 
 
 def saved_runs_dropdown_callback(selection):

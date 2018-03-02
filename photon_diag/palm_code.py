@@ -26,7 +26,7 @@ class PalmSetup:
 
         self.hdf5_range = [0, 2000]
         self.tags = []
-        self.energy_range = [8600, 9400]
+        self.interp_energy = np.linspace(1, 120, 500)
 
     def __call__(self, waveforms, method='xcorr', jacobian=False, noise_thr=3):
         """Main function to analyse PALM data that pipelines separate stages of data processing.
@@ -46,7 +46,7 @@ class PalmSetup:
                 etof = self.spectrometers[etof_key]
                 # TODO: it can be ok to detect photon peaks from bulk data for a calibration check
                 # self._detect_photon_peaks()
-                prep_data[etof_key] = etof(data, jacobian=jacobian, noise_thr=noise_thr)
+                prep_data[etof_key] = etof(data, self.interp_energy, jacobian=jacobian, noise_thr=noise_thr)
 
             results = self._cross_corr_analysis(prep_data)
 
@@ -203,8 +203,7 @@ class PalmSetup:
 
         corr_results = self._truncate_highest_peak(corr_results, 0)
 
-        size = corr_results.shape[1]
-        lags = np.linspace(-np.floor(size/2), np.floor((size-1)/2), size)
+        lags = self.interp_energy - self.interp_energy[int(self.interp_energy.size/2)]
 
         delays, _ = self._peak_params(lags, corr_results)
 

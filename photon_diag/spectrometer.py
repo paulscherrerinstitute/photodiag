@@ -28,13 +28,12 @@ class Spectrometer:
         self.internal_time = np.empty(0)
         self.time = np.empty(0)
 
-        self.interp_energy = np.arange(2, 120)
         self.noise_range = [1900, 2000]
         self.data_range = [300, 1000]
         self.t0 = np.empty(0)
         self.energy = np.empty(0)
 
-    def __call__(self, input_data, jacobian=False, noise_thr=3):
+    def __call__(self, input_data, interp_energy, jacobian=False, noise_thr=3):
         """Perform electron time of flight (eTOF) to pulse energy transformation (ns -> eV) of data through
         the spectrometer's calibration constants and a photon peak position followed by 1D interpolation.
 
@@ -59,7 +58,7 @@ class Spectrometer:
             return np.interp(interp_energy, energy, data)
 
         output_data = np.apply_along_axis(interpolate_row, 1, output_data[:, ::-1],
-                                          self.energy[::-1], self.interp_energy)
+                                          self.energy[::-1], interp_energy)
 
         output_data = output_data - noise_thr * self.calib_data.noise_std.mean()
 
