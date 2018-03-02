@@ -11,7 +11,7 @@ from bokeh.models.grids import Grid
 from bokeh.models.tickers import BasicTicker
 from bokeh.models.tools import PanTool, BoxZoomTool, WheelZoomTool, SaveTool, ResetTool
 from bokeh.models.widgets import Button, Toggle, Panel, Tabs, Dropdown, Select, RadioButtonGroup, TextInput, \
-    DataTable, TableColumn
+    DataTable, TableColumn, Div
 from tornado import gen
 from photon_diag.palm_code import PalmSetup
 
@@ -176,6 +176,10 @@ energy_plot.add_layout(Grid(dimension=1, ticker=BasicTicker()))
 energy_source = ColumnDataSource(dict(time=[], undulator=[], monochrom=[]))
 energy_plot.add_glyph(energy_source, Line(x='time', y='undulator', line_color='red'))
 energy_plot.add_glyph(energy_source, Line(x='time', y='monochrom', line_color='blue'))
+
+
+# Fitting equation
+fit_eq_div = Div(text="""Fitting equation:<br><img src="/palm/static/5euwuy.gif">""")
 
 
 # Calibration panel
@@ -358,9 +362,10 @@ tab_hdf5file = Panel(
 data_source_tabs = Tabs(tabs=[tab_calibration, tab_hdf5file, tab_stream])
 
 # Final layouts
-layout_main = column(row(calib_wf_plot, Spacer(width=50), calib_fit_plot),
-                     row(waveform_plot, Spacer(width=50), energy_plot))
-final_layout = row(layout_main, Spacer(width=30), data_source_tabs)
+layout_calib = row(calib_wf_plot, Spacer(width=50), calib_fit_plot)
+layout_results = row(waveform_plot, Spacer(width=50), energy_plot)
+final_layout = column(row(layout_calib, Spacer(width=30), fit_eq_div),
+                      row(layout_results, Spacer(width=30), data_source_tabs))
 
 doc.add_root(final_layout)
 
