@@ -21,8 +21,8 @@ class PalmSetup:
         """
         self.home_dir = home_dir
 
-        self.spectrometers = {'1': Spectrometer(path='SAROP11-PALMK118:CH2_BUFFER'),
-                              '0': Spectrometer(path='SAROP11-PALMK118:CH1_BUFFER')}
+        self.spectrometers = {'1': Spectrometer(chan='SAROP11-PALMK118:CH2_BUFFER'),
+                              '0': Spectrometer(chan='SAROP11-PALMK118:CH1_BUFFER')}
 
         self.hdf5_range = [0, 2000]
         self.tags = []
@@ -89,7 +89,7 @@ class PalmSetup:
                             continue
 
                         etof.internal_time = self._get_internal_time(*self.hdf5_range)
-                        _, calib_waveforms = self._get_tags_and_data(entry.path, etof.path, *self.hdf5_range)
+                        _, calib_waveforms = self._get_tags_and_data(entry.path, etof.chan, *self.hdf5_range)
 
                         # Filter out bad shots
                         calib_waveforms = calib_waveforms[(calib_waveforms > -5000).all(axis=1)]
@@ -117,7 +117,7 @@ class PalmSetup:
         filepath = self.home_dir + filename
 
         for etof_key, etof in self.spectrometers.items():
-            self.tags, data = self._get_tags_and_data(filepath, etof.path, *self.hdf5_range)
+            self.tags, data = self._get_tags_and_data(filepath, etof.chan, *self.hdf5_range)
             data_raw[etof_key] = data
             # data_raw[etof_key] = np.expand_dims(data[1, :], axis=0)
             time_raw[etof_key] = self._get_internal_time(*self.hdf5_range)

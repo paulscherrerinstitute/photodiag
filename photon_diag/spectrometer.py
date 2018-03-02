@@ -6,15 +6,15 @@ from scipy.optimize import curve_fit
 class Spectrometer:
     """Class describing a single eTOF spectrometer.
     """
-    def __init__(self, path, a=None, b=None):
+    def __init__(self, chan, a=None, b=None):
         """ Initialize Spectrometer object.
 
         Args:
-            path: path to data in hdf5 file
+            chan: channel name of the spectrometer data
             a: calibration constant 'a'
             b: calibration constant 'b'
         """
-        self.path = path
+        self.chan = chan
 
         self.calib_a = a
         self.calib_b = b
