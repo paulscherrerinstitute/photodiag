@@ -166,7 +166,7 @@ xcorr_plot = Plot(
 xcorr_plot.add_tools(PanTool(), WheelZoomTool(), SaveTool(), ResetTool())
 
 # ---- axes
-xcorr_plot.add_layout(LinearAxis(axis_label='Lags, eV'), place='below')
+xcorr_plot.add_layout(LinearAxis(axis_label='Delay, eV'), place='below')
 xcorr_plot.add_layout(LinearAxis(axis_label='Xcorr, a.u.', major_label_orientation='vertical'), place='left')
 
 # ---- grid lines
@@ -176,10 +176,44 @@ xcorr_plot.add_layout(Grid(dimension=1, ticker=BasicTicker()))
 # ---- rgba image glyph
 xcorr_source = ColumnDataSource(dict(lags=[], xcorr1=[], xcorr2=[]))
 xcorr_pos_source = ColumnDataSource(dict(pos=[]))
-xcorr_plot.add_glyph(xcorr_source, Line(x='lags', y='xcorr1', line_color='black', line_dash='dashed'))
-xcorr_plot.add_glyph(xcorr_source, Line(x='lags', y='xcorr2', line_color='black'))
+xcorr_plot.add_glyph(xcorr_source, Line(x='lags', y='xcorr1', line_color='purple', line_dash='dashed'))
+xcorr_plot.add_glyph(xcorr_source, Line(x='lags', y='xcorr2', line_color='purple'))
 xcorr_plot.add_glyph(xcorr_pos_source, Ray(x='pos', y=0, length=0, angle_units='deg', angle=90,
-                                           line_color='green', line_width=2))
+                                           line_color='black', line_width=1))
+xcorr_plot.add_glyph(xcorr_pos_source, Ray(x='pos', y=0, length=0, angle_units='deg', angle=-90,
+                                           line_color='black', line_width=1))
+
+
+# Delays plot
+delay_plot = Plot(
+    title=Title(text="Delays"),
+    x_range=DataRange1d(),
+    y_range=DataRange1d(),
+    plot_height=WAVEFORM_CANVAS_HEIGHT,
+    plot_width=WAVEFORM_CANVAS_WIDTH,
+    toolbar_location='right',
+    logo=None,
+)
+
+# ---- tools
+delay_plot.add_tools(PanTool(), WheelZoomTool(), SaveTool(), ResetTool())
+
+# ---- axes
+delay_plot.add_layout(LinearAxis(axis_label='Shot number'), place='below')
+delay_plot.add_layout(LinearAxis(axis_label='Delay, eV', major_label_orientation='vertical'), place='left')
+
+# ---- grid lines
+delay_plot.add_layout(Grid(dimension=0, ticker=BasicTicker()))
+delay_plot.add_layout(Grid(dimension=1, ticker=BasicTicker()))
+
+# ---- rgba image glyph
+delay_source = ColumnDataSource(dict(pulse=[], delay=[]))
+pulse_pos_source = ColumnDataSource(dict(pos=[]))
+delay_plot.add_glyph(delay_source, Line(x='pulse', y='delay', line_color='steelblue'))
+delay_plot.add_glyph(pulse_pos_source, Ray(x='pos', y=0, length=0, angle_units='deg', angle=90,
+                                           line_color='black', line_width=1))
+delay_plot.add_glyph(pulse_pos_source, Ray(x='pos', y=0, length=0, angle_units='deg', angle=-90,
+                                           line_color='black', line_width=1))
 
 
 # Streaked and unstreaked waveforms plot
@@ -363,12 +397,15 @@ def hdf5_update(pulse, results, prep_data):
         x_unstr=palm.interp_energy, y_unstr=prep_data['0'][pulse, :])
     xcorr_source.data.update(lags=lags, xcorr1=corr_res_uncut[pulse, :], xcorr2=corr_results[pulse, :])
     xcorr_pos_source.data.update(pos=[delays[pulse]])
+    pulse_pos_source.data.update(pos=[pulse])
 
 
 def saved_runs_dropdown_callback(selection):
     global hdf5_update_fun
     saved_runs_dropdown.label = selection
     results, prep_data = palm.process_hdf5_file(filename=os.path.join(hdf5_file_path.value, selection))
+    lags, delays, pulse_lengths, corr_res_uncut, corr_results = results
+    delay_source.data.update(pulse=np.arange(len(delays)), delay=delays)
     hdf5_update_fun = partial(hdf5_update, results=results, prep_data=prep_data)
 
     hdf5_pulse_slider.end = len(results[1]) - 1
@@ -399,7 +436,8 @@ data_source_tabs = Tabs(tabs=[tab_calibration, tab_hdf5file, tab_stream])
 layout_calib = row(calib_wf_plot, Spacer(width=50), calib_fit_plot)
 layout_results = row(waveform_plot, Spacer(width=50), xcorr_plot)
 final_layout = column(row(layout_calib, Spacer(width=30), fit_eq_div),
-                      row(layout_results, Spacer(width=30), data_source_tabs))
+                      row(layout_results, Spacer(width=30), data_source_tabs),
+                      row(delay_plot, Spacer(width=50), energy_plot))
 
 doc.add_root(final_layout)
 
