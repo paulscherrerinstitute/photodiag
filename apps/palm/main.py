@@ -5,7 +5,7 @@ import numpy as np
 from bokeh.io import curdoc
 from bokeh.layouts import column, row, gridplot
 from bokeh.models import ColumnDataSource, Slider, Range1d, Spacer, Plot, Legend, \
-    LinearAxis, DataRange1d, Line, CustomJS, MultiLine, Circle
+    LinearAxis, DataRange1d, Line, CustomJS, MultiLine, Circle, Ray
 from bokeh.models.annotations import Title
 from bokeh.models.grids import Grid
 from bokeh.models.tickers import BasicTicker
@@ -149,6 +149,38 @@ waveform_plot.add_layout(Legend(items=[
     ("streaked", [waveform_plot.renderers[5]])
 ]))
 waveform_plot.legend.click_policy = "hide"
+
+
+# Cross-correlation plot
+xcorr_plot = Plot(
+    title=Title(text="Cross-correlation"),
+    x_range=DataRange1d(),
+    y_range=DataRange1d(),
+    plot_height=WAVEFORM_CANVAS_HEIGHT,
+    plot_width=WAVEFORM_CANVAS_WIDTH,
+    toolbar_location='right',
+    logo=None,
+)
+
+# ---- tools
+xcorr_plot.add_tools(PanTool(), WheelZoomTool(), SaveTool(), ResetTool())
+
+# ---- axes
+xcorr_plot.add_layout(LinearAxis(axis_label='Lags, eV'), place='below')
+xcorr_plot.add_layout(LinearAxis(axis_label='Xcorr, a.u.', major_label_orientation='vertical'), place='left')
+
+# ---- grid lines
+xcorr_plot.add_layout(Grid(dimension=0, ticker=BasicTicker()))
+xcorr_plot.add_layout(Grid(dimension=1, ticker=BasicTicker()))
+
+# ---- rgba image glyph
+xcorr_source = ColumnDataSource(dict(lags=[], xcorr1=[], xcorr2=[]))
+xcorr_pos_source = ColumnDataSource(dict(pos=[]))
+xcorr_plot.add_glyph(xcorr_source, Line(x='lags', y='xcorr1', line_color='black', line_dash='dashed'))
+xcorr_plot.add_glyph(xcorr_source, Line(x='lags', y='xcorr2', line_color='black'))
+xcorr_plot.add_glyph(xcorr_pos_source, Ray(x='pos', y=0, length=0, angle_units='deg', angle=90,
+                                           line_color='green', line_width=2))
+
 
 # Streaked and unstreaked waveforms plot
 energy_plot = Plot(
@@ -325,10 +357,12 @@ hdf5_file_path.on_change('value', hdf5_file_path_callback)
 # ---- saved runs dropdown menu
 hdf5_update_fun = []
 def hdf5_update(pulse, results, prep_data):
-    lags, delays, pulse_lengths = results
+    lags, delays, pulse_lengths, corr_res_uncut, corr_results = results
     waveform_source.data.update(
         x_str=palm.interp_energy, y_str=prep_data['1'][pulse, :],
         x_unstr=palm.interp_energy, y_unstr=prep_data['0'][pulse, :])
+    xcorr_source.data.update(lags=lags, xcorr1=corr_res_uncut[pulse, :], xcorr2=corr_results[pulse, :])
+    xcorr_pos_source.data.update(pos=[delays[pulse]])
 
 
 def saved_runs_dropdown_callback(selection):
@@ -363,7 +397,7 @@ data_source_tabs = Tabs(tabs=[tab_calibration, tab_hdf5file, tab_stream])
 
 # Final layouts
 layout_calib = row(calib_wf_plot, Spacer(width=50), calib_fit_plot)
-layout_results = row(waveform_plot, Spacer(width=50), energy_plot)
+layout_results = row(waveform_plot, Spacer(width=50), xcorr_plot)
 final_layout = column(row(layout_calib, Spacer(width=30), fit_eq_div),
                       row(layout_results, Spacer(width=30), data_source_tabs))
 

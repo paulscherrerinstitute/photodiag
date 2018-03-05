@@ -201,6 +201,7 @@ class PalmSetup:
         for i, (x, y) in enumerate(zip(data_nonstr, data_str)):
             corr_results[i, :] = np.correlate(x, y, mode='same')
 
+        corr_res_uncut = corr_results.copy()
         corr_results = self._truncate_highest_peak(corr_results, 0)
 
         lags = self.interp_energy - self.interp_energy[int(self.interp_energy.size/2)]
@@ -209,7 +210,7 @@ class PalmSetup:
 
         pulse_lengths = self._peak_center_of_mass(input_data, lags)
 
-        return lags, delays, pulse_lengths
+        return lags, delays, pulse_lengths, corr_res_uncut, corr_results
 
     @staticmethod
     def _peak_params(x, y):
