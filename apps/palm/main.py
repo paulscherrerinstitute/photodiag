@@ -5,7 +5,7 @@ import numpy as np
 from bokeh.io import curdoc
 from bokeh.layouts import column, row, gridplot
 from bokeh.models import ColumnDataSource, Slider, Range1d, Spacer, Plot, Legend, \
-    LinearAxis, DataRange1d, Line, CustomJS, MultiLine, Circle, Ray
+    LinearAxis, DataRange1d, Line, CustomJS, MultiLine, Circle, Span
 from bokeh.models.annotations import Title
 from bokeh.models.grids import Grid
 from bokeh.models.tickers import BasicTicker
@@ -178,11 +178,8 @@ xcorr_source = ColumnDataSource(dict(lags=[], xcorr1=[], xcorr2=[]))
 xcorr_pos_source = ColumnDataSource(dict(pos=[]))
 xcorr_plot.add_glyph(xcorr_source, Line(x='lags', y='xcorr1', line_color='purple', line_dash='dashed'))
 xcorr_plot.add_glyph(xcorr_source, Line(x='lags', y='xcorr2', line_color='purple'))
-xcorr_plot.add_glyph(xcorr_pos_source, Ray(x='pos', y=0, length=0, angle_units='deg', angle=90,
-                                           line_color='black', line_width=1))
-xcorr_plot.add_glyph(xcorr_pos_source, Ray(x='pos', y=0, length=0, angle_units='deg', angle=-90,
-                                           line_color='black', line_width=1))
-
+xcorr_plot_pos = Span(location=0, dimension='height')
+xcorr_plot.add_layout(xcorr_plot_pos)
 
 # Delays plot
 delay_plot = Plot(
@@ -210,11 +207,8 @@ delay_plot.add_layout(Grid(dimension=1, ticker=BasicTicker()))
 delay_source = ColumnDataSource(dict(pulse=[], delay=[]))
 pulse_pos_source = ColumnDataSource(dict(pos=[]))
 delay_plot.add_glyph(delay_source, Line(x='pulse', y='delay', line_color='steelblue'))
-delay_plot.add_glyph(pulse_pos_source, Ray(x='pos', y=0, length=0, angle_units='deg', angle=90,
-                                           line_color='black', line_width=1))
-delay_plot.add_glyph(pulse_pos_source, Ray(x='pos', y=0, length=0, angle_units='deg', angle=-90,
-                                           line_color='black', line_width=1))
-
+delay_plot_pos = Span(location=0, dimension='height')
+delay_plot.add_layout(delay_plot_pos)
 
 # Streaked and unstreaked waveforms plot
 energy_plot = Plot(
@@ -396,8 +390,8 @@ def hdf5_update(pulse, results, prep_data):
         x_str=palm.interp_energy, y_str=prep_data['1'][pulse, :],
         x_unstr=palm.interp_energy, y_unstr=prep_data['0'][pulse, :])
     xcorr_source.data.update(lags=lags, xcorr1=corr_res_uncut[pulse, :], xcorr2=corr_results[pulse, :])
-    xcorr_pos_source.data.update(pos=[delays[pulse]])
-    pulse_pos_source.data.update(pos=[pulse])
+    xcorr_plot_pos.location = delays[pulse]
+    delay_plot_pos.location = pulse
 
 
 def saved_runs_dropdown_callback(selection):
