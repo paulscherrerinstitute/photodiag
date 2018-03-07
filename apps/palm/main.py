@@ -243,6 +243,10 @@ energy_plot.add_glyph(energy_source, Line(x='time', y='monochrom', line_color='b
 fit_eq_div = Div(text="""Fitting equation:<br><br><img src="/palm/static/5euwuy.gif">""")
 
 
+# Calibration constants
+calib_const_div = Div(text="")
+
+
 # Calibration panel
 def calibration_path_update():
     new_menu = [('None', 'None')]
@@ -299,6 +303,13 @@ def calibrate_button_callback():
 
     update_calib_plot(calib_res['0'], calib_point_source0, calib_fit_source0)
     update_calib_plot(calib_res['1'], calib_point_source1, calib_fit_source1)
+    calib_const_div.text = f"""
+    a_str = {palm.spectrometers['1'].calib_a:.2f}<br>
+    b_str = {palm.spectrometers['1'].calib_b:.2f}<br>
+    <br>
+    a_unstr = {palm.spectrometers['0'].calib_a:.2f}<br>
+    b_unstr = {palm.spectrometers['0'].calib_b:.2f}
+    """
 
 
 calibrate_button = Button(label="Calibrate", button_type='default', width=250)
@@ -430,7 +441,8 @@ data_source_tabs = Tabs(tabs=[tab_calibration, tab_hdf5file, tab_stream])
 # Final layouts
 layout_calib = row(calib_wf_plot, Spacer(width=50), calib_fit_plot)
 layout_results = row(waveform_plot, Spacer(width=50), xcorr_plot)
-final_layout = column(row(layout_calib, Spacer(width=30), fit_eq_div),
+layout_fit_res = column(fit_eq_div, calib_const_div)
+final_layout = column(row(layout_calib, Spacer(width=30), layout_fit_res),
                       row(layout_results, Spacer(width=30), data_source_tabs),
                       row(delay_plot, Spacer(width=50), energy_plot))
 
