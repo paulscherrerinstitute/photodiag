@@ -90,8 +90,9 @@ calib_fit_plot = Plot(
 calib_fit_plot.add_tools(PanTool(), BoxZoomTool(), WheelZoomTool(), SaveTool(), ResetTool())
 
 # ---- axes
-calib_fit_plot.add_layout(LinearAxis(axis_label='Spectrometer Peak Shift, pix'), place='below')
-calib_fit_plot.add_layout(LinearAxis(axis_label='Photon Energy, eV', major_label_orientation='vertical'),
+calib_fit_plot.add_layout(LinearAxis(axis_label='Spectrometer peak shift, pix'), place='below')
+calib_fit_plot.add_layout(LinearAxis(axis_label='Drift tube electron energy, eV',
+                                     major_label_orientation='vertical'),
                           place='left')
 
 # ---- grid lines
@@ -132,7 +133,7 @@ waveform_plot = Plot(
 waveform_plot.add_tools(PanTool(), WheelZoomTool(), SaveTool(), ResetTool())
 
 # ---- axes
-waveform_plot.add_layout(LinearAxis(axis_label='Photon Energy, eV'), place='below')
+waveform_plot.add_layout(LinearAxis(axis_label='Photon energy, eV'), place='below')
 waveform_plot.add_layout(LinearAxis(axis_label='Intensity', major_label_orientation='vertical'), place='left')
 
 # ---- grid lines
@@ -239,7 +240,7 @@ energy_plot.add_glyph(energy_source, Line(x='time', y='monochrom', line_color='b
 
 
 # Fitting equation
-fit_eq_div = Div(text="""Fitting equation:<br><img src="/palm/static/5euwuy.gif">""")
+fit_eq_div = Div(text="""Fitting equation:<br><br><img src="/palm/static/5euwuy.gif">""")
 
 
 # Calibration panel
