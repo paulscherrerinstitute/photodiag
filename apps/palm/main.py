@@ -3,19 +3,14 @@ from functools import partial
 
 import numpy as np
 from bokeh.io import curdoc
-from bokeh.layouts import column, row, gridplot
-from bokeh.models import ColumnDataSource, Slider, Range1d, Spacer, Plot, Legend, \
-    LinearAxis, DataRange1d, Line, CustomJS, MultiLine, Circle, Span
-from bokeh.models.annotations import Title
-from bokeh.models.grids import Grid
-from bokeh.models.tickers import BasicTicker
-from bokeh.models.tools import PanTool, BoxZoomTool, WheelZoomTool, SaveTool, ResetTool
-from bokeh.models.widgets import Button, Toggle, Panel, Tabs, Dropdown, Select, RadioButtonGroup, TextInput, \
-    DataTable, TableColumn, Div
+from bokeh.layouts import column, row
+from bokeh.models import BasicTicker, BoxZoomTool, Button, Circle, ColumnDataSource, CustomJS, \
+    DataRange1d, Div, Dropdown, Grid, Legend, Line, LinearAxis, MultiLine, Panel, PanTool, Plot, \
+    ResetTool, SaveTool, Slider, Spacer, Span, Tabs, TextInput, Title, Toggle, WheelZoomTool
 from tornado import gen
-from photon_diag.palm_code import PalmSetup
 
 import receiver
+from photon_diag.palm_code import PalmSetup
 
 doc = curdoc()
 doc.title = "PALM"
