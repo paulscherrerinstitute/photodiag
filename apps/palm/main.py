@@ -257,7 +257,7 @@ doc.add_periodic_callback(calibration_path_update, HDF5_FILE_PATH_UPDATE_PERIOD)
 
 
 # ---- calibration folder path text input
-def calibration_path_callback(attr, old, new):
+def calibration_path_callback(_attr, _old, _new):
     calibration_path_update()
 
 calibration_path = TextInput(title="Calibration Folder Path:", value=HDF5_FILE_PATH, width=250)
@@ -319,7 +319,7 @@ tab_calibration = Panel(
 
 # Stream panel
 # ---- image buffer slider
-def buffer_slider_callback(attr, old, new):
+def buffer_slider_callback(_attr, _old, new):
     message = receiver.data_buffer[round(new['value'][0])]
     doc.add_next_tick_callback(partial(update, message=message))
 
@@ -382,7 +382,7 @@ doc.add_periodic_callback(hdf5_file_path_update, HDF5_FILE_PATH_UPDATE_PERIOD)
 
 
 # ---- folder path text input
-def hdf5_file_path_callback(attr, old, new):
+def hdf5_file_path_callback(_attr, _old, _new):
     hdf5_file_path_update()
 
 hdf5_file_path = TextInput(title="Folder Path:", value=HDF5_FILE_PATH, width=250)
@@ -392,7 +392,7 @@ hdf5_file_path.on_change('value', hdf5_file_path_callback)
 # ---- saved runs dropdown menu
 hdf5_update_fun = []
 def hdf5_update(pulse, results, prep_data):
-    lags, delays, pulse_lengths, corr_res_uncut, corr_results = results
+    lags, delays, _pulse_lengths, corr_res_uncut, corr_results = results
     waveform_source.data.update(
         x_str=palm.interp_energy, y_str=prep_data['1'][pulse, :],
         x_unstr=palm.interp_energy, y_unstr=prep_data['0'][pulse, :])
@@ -405,7 +405,7 @@ def saved_runs_dropdown_callback(selection):
     global hdf5_update_fun
     saved_runs_dropdown.label = selection
     results, prep_data = palm.process_hdf5_file(filename=os.path.join(hdf5_file_path.value, selection))
-    lags, delays, pulse_lengths, corr_res_uncut, corr_results = results
+    _lags, delays, _pulse_lengths, _corr_res_uncut, _corr_results = results
     delay_source.data.update(pulse=np.arange(len(delays)), delay=delays)
     hdf5_update_fun = partial(hdf5_update, results=results, prep_data=prep_data)
 
@@ -418,7 +418,7 @@ saved_runs_dropdown.on_click(saved_runs_dropdown_callback)
 
 
 # ---- pulse number slider
-def hdf5_pulse_slider_callback(attr, old, new):
+def hdf5_pulse_slider_callback(_attr, _old, new):
     global hdf5_update_fun
     hdf5_update_fun(pulse=new)
 

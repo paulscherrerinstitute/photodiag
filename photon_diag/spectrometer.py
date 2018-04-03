@@ -78,7 +78,7 @@ class Spectrometer:
         data_avg = calib_waveforms.mean(axis=0)
         data_avg = data_avg - data_avg[slice(*self.noise_range)].mean()
 
-        t0, ampl = self._detect_photon_peak(data_avg, noise_std)
+        t0, _ampl = self._detect_photon_peak(data_avg, noise_std)
 
         self.calib_data.loc[energy] = {'waveform': data_avg,
                                        't0': t0,
@@ -113,7 +113,7 @@ class Spectrometer:
         def fit_func(time, a, b):
             return (a / time) ** 2 + b
 
-        popt, pcov = curve_fit(fit_func, time_delays, pulse_energies)
+        popt, _pcov = curve_fit(fit_func, time_delays, pulse_energies)
 
         self.calib_a, self.calib_b = popt
         self.t0 = np.round(cd.t0.mean()).astype(int)
