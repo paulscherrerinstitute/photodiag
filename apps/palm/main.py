@@ -487,7 +487,7 @@ def internal_periodic_callback():
                 buffer_slider.end = len(receiver.data_buffer) - 1
                 buffer_slider.value = len(receiver.data_buffer) - 1
 
-            if len(receiver.data_buffer) > 0:
+            if receiver.data_buffer:
                 current_message = receiver.data_buffer[-1]
 
     doc.add_next_tick_callback(partial(update, message=current_message))

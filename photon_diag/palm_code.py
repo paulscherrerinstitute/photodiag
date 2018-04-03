@@ -97,7 +97,7 @@ class PalmSetup:
                         etof.add_calibration_point(energy, calib_waveforms)
 
         calib_results = {}
-        for etof_key in self.spectrometers.keys():
+        for etof_key in self.spectrometers:
             calib_results[etof_key] = self.spectrometers[etof_key].fit_calibration_curve(bkg_en=bkg_en)
 
         return calib_results
@@ -177,7 +177,7 @@ class PalmSetup:
         Returns:
             energy in eV as a float number
         """
-        energy = float(re.findall('\d+', filename)[0])
+        energy = float(re.findall(r'\d+', filename)[0])
 
         return 1510 - energy
 
@@ -193,7 +193,6 @@ class PalmSetup:
         Returns:
             pulse arrival delays via cross-correlation method
         """
-        # TODO: generalize for different streaking field phases (=etof_key)
         data_str = input_data['1']
         data_nonstr = input_data['0']
 
