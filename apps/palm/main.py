@@ -60,13 +60,13 @@ calib_wf_plot.add_layout(Grid(dimension=1, ticker=BasicTicker()))
 
 # ---- multiline calibration waveforms glyphs
 calib_waveform_source0 = ColumnDataSource(dict(xs=[], ys=[]))
-calib_wf_plot.add_glyph(calib_waveform_source0, MultiLine(xs='xs', ys='ys', line_color='blue'))
+unstrk_ml = calib_wf_plot.add_glyph(calib_waveform_source0, MultiLine(xs='xs', ys='ys', line_color='blue'))
 calib_waveform_source1 = ColumnDataSource(dict(xs=[], ys=[]))
-calib_wf_plot.add_glyph(calib_waveform_source1, MultiLine(xs='xs', ys='ys', line_color='red'))
+streak_ml = calib_wf_plot.add_glyph(calib_waveform_source1, MultiLine(xs='xs', ys='ys', line_color='red'))
 
 calib_wf_plot.add_layout(Legend(items=[
-    ("unstreaked", [calib_wf_plot.renderers[5]]),
-    ("streaked", [calib_wf_plot.renderers[6]])
+    ("unstreaked", [unstrk_ml]),
+    ("streaked", [streak_ml])
 ]))
 calib_wf_plot.legend.click_policy = "hide"
 
@@ -94,21 +94,21 @@ calib_fit_plot.add_layout(LinearAxis(axis_label='Drift tube electron energy, eV'
 calib_fit_plot.add_layout(Grid(dimension=0, ticker=BasicTicker()))
 calib_fit_plot.add_layout(Grid(dimension=1, ticker=BasicTicker()))
 
-# ---- calibration points circle glyphs
+# ---- calibration fit points circle glyphs
 calib_point_source0 = ColumnDataSource(dict(x=[], y=[]))
-calib_fit_plot.add_glyph(calib_point_source0, Circle(x='x', y='y', line_color='blue'))
+unstrk_c = calib_fit_plot.add_glyph(calib_point_source0, Circle(x='x', y='y', line_color='blue'))
 calib_point_source1 = ColumnDataSource(dict(x=[], y=[]))
-calib_fit_plot.add_glyph(calib_point_source1, Circle(x='x', y='y', line_color='red'))
+streak_c = calib_fit_plot.add_glyph(calib_point_source1, Circle(x='x', y='y', line_color='red'))
 
 # ---- calibration fit line glyphs
 calib_fit_source0 = ColumnDataSource(dict(x=[], y=[]))
-calib_fit_plot.add_glyph(calib_fit_source0, Line(x='x', y='y', line_color='blue'))
+unstrk_l = calib_fit_plot.add_glyph(calib_fit_source0, Line(x='x', y='y', line_color='blue'))
 calib_fit_source1 = ColumnDataSource(dict(x=[], y=[]))
-calib_fit_plot.add_glyph(calib_fit_source1, Line(x='x', y='y', line_color='red'))
+streak_l = calib_fit_plot.add_glyph(calib_fit_source1, Line(x='x', y='y', line_color='red'))
 
 calib_fit_plot.add_layout(Legend(items=[
-    ("unstreaked", [calib_fit_plot.renderers[5], calib_fit_plot.renderers[7]]),
-    ("streaked", [calib_fit_plot.renderers[6], calib_fit_plot.renderers[8]])
+    ("unstreaked", [unstrk_c, unstrk_l]),
+    ("streaked", [streak_c, streak_l])
 ]))
 calib_fit_plot.legend.click_policy = "hide"
 
@@ -135,14 +135,14 @@ waveform_plot.add_layout(LinearAxis(axis_label='Intensity', major_label_orientat
 waveform_plot.add_layout(Grid(dimension=0, ticker=BasicTicker()))
 waveform_plot.add_layout(Grid(dimension=1, ticker=BasicTicker()))
 
-# ---- rgba image glyph
+# ---- waveforms line glyphs
 waveform_source = ColumnDataSource(dict(x_str=[], y_str=[], x_unstr=[], y_unstr=[]))
-waveform_plot.add_glyph(waveform_source, Line(x='x_unstr', y='y_unstr', line_color='blue'))
-waveform_plot.add_glyph(waveform_source, Line(x='x_str', y='y_str', line_color='red'))
+unstrk_l = waveform_plot.add_glyph(waveform_source, Line(x='x_unstr', y='y_unstr', line_color='blue'))
+streak_l = waveform_plot.add_glyph(waveform_source, Line(x='x_str', y='y_str', line_color='red'))
 
 waveform_plot.add_layout(Legend(items=[
-    ("unstreaked", [waveform_plot.renderers[4]]),
-    ("streaked", [waveform_plot.renderers[5]])
+    ("unstreaked", [unstrk_l]),
+    ("streaked", [streak_l])
 ]))
 waveform_plot.legend.click_policy = "hide"
 
