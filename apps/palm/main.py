@@ -10,7 +10,7 @@ from bokeh.models import BasicTicker, BoxZoomTool, Button, Circle, ColumnDataSou
 from tornado import gen
 
 import receiver
-from photon_diag.palm_code import PalmSetup
+from photdiag.palm_code import PalmSetup
 
 doc = curdoc()
 doc.title = "PALM"

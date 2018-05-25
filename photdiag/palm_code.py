@@ -4,7 +4,7 @@ import re
 import h5py
 import numpy as np
 
-from photon_diag.spectrometer import Spectrometer
+from photdiag.spectrometer import Spectrometer
 
 
 class PalmSetup:
