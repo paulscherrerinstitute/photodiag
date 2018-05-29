@@ -89,7 +89,6 @@ class PalmSetup:
                         if not overwrite and energy in etof.calib_data.index:
                             continue
 
-                        etof.internal_time = self._get_internal_time(*self.hdf5_range)
                         _, calib_waveforms = self._get_tags_and_data(entry.path, etof.chan, *self.hdf5_range)
 
                         # Filter out bad shots
@@ -114,14 +113,12 @@ class PalmSetup:
             tuple of tags and the corresponding results in a dictionary
         """
         data_raw = {}
-        time_raw = {}
         filepath = self.home_dir + filename
 
         for etof_key, etof in self.spectrometers.items():
             self.tags, data = self._get_tags_and_data(filepath, etof.chan, *self.hdf5_range)
             data_raw[etof_key] = data
             # data_raw[etof_key] = np.expand_dims(data[1, :], axis=0)
-            time_raw[etof_key] = self._get_internal_time(*self.hdf5_range)
 
         # Filter out bad shots
         good_ind = (data_raw['0'] > -5000).all(axis=1) & (data_raw['1'] > -5000).all(axis=1)
@@ -132,21 +129,6 @@ class PalmSetup:
         results, prep_data = self(data_raw)
 
         return results, prep_data
-
-    @staticmethod
-    def _get_internal_time(first_ind=None, last_ind=None):
-        """Get PALM internal time in spectrometer readout units. Current setup produces 2000 points (for a
-        span of 400 ns).
-
-        Args:
-            first_ind: (optional) index of a first element to read
-            last_ind: (optional) index of a last element to read
-
-        Returns:
-            time: internal electron time-of-flight reference.
-        """
-
-        return np.arange(0, 2000)[first_ind:last_ind]
 
     @staticmethod
     def _get_tags_and_data(filepath, etof_path, first_ind=None, last_ind=None):

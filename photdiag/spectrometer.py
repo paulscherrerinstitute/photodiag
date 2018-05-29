@@ -25,7 +25,8 @@ class Spectrometer:
                                              'noise_mean': np.array([], dtype=float),
                                              'noise_std': np.array([], dtype=float)})
 
-        self.internal_time = np.empty(0)
+        # current setup outputs 2000 points for a span of 400 ns excluding the end point
+        self.internal_time = np.linspace(0, 400, 2000, endpoint=False)
         self.time = np.empty(0)
 
         self.noise_range = [1900, 2000]

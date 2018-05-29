@@ -50,7 +50,7 @@ calib_wf_plot = Plot(
 calib_wf_plot.add_tools(PanTool(), BoxZoomTool(), WheelZoomTool(), SaveTool(), ResetTool())
 
 # ---- axes
-calib_wf_plot.add_layout(LinearAxis(axis_label='Spectrometer internal time, pix'), place='below')
+calib_wf_plot.add_layout(LinearAxis(axis_label='Spectrometer internal time, ns'), place='below')
 calib_wf_plot.add_layout(LinearAxis(axis_label='Intensity', major_label_orientation='vertical'),
                          place='left')
 
@@ -85,7 +85,7 @@ calib_fit_plot = Plot(
 calib_fit_plot.add_tools(PanTool(), BoxZoomTool(), WheelZoomTool(), SaveTool(), ResetTool())
 
 # ---- axes
-calib_fit_plot.add_layout(LinearAxis(axis_label='Spectrometer peak shift, pix'), place='below')
+calib_fit_plot.add_layout(LinearAxis(axis_label='Photoelectron peak shift, ns'), place='below')
 calib_fit_plot.add_layout(LinearAxis(axis_label='Drift tube electron energy, eV',
                                      major_label_orientation='vertical'),
                           place='left')
