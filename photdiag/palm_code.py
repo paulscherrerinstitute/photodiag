@@ -43,8 +43,6 @@ class PalmSetup:
         prep_data = {}
         for etof_key, data in waveforms.items():
             etof = self.spectrometers[etof_key]
-            # TODO: it can be ok to detect photon peaks from bulk data for a calibration check
-            # self._detect_photon_peaks()
             prep_data[etof_key] = etof(data, self.interp_energy, jacobian=jacobian, noise_thr=noise_thr)
 
         if method == 'xcorr':
@@ -224,7 +222,6 @@ class PalmSetup:
         Returns:
             result(s) of deconvolution
         """
-        # TODO: generalize for different streaking field phases (=etof_key)
         data_str = input_data['1']
         data_nonstr = input_data['0']
 
@@ -373,8 +370,6 @@ def richardson_lucy_deconv(streaked_signal, base_signal, iterations=200, noise=0
     from numpy import conjugate, real, ones
     from numpy.fft import fft, ifft, fftshift
 
-    # TODO: check the implementation of 'weight' parameter, for now keep it == 1
-    # TODO: implement stability enforcement
     weight = ones(streaked_signal.shape)
 
     otf = fft(fftshift(base_signal))  # optical transfer function
