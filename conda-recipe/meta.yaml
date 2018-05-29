@@ -1,0 +1,28 @@
+{% set data = load_setup_py_data() %}
+
+package:
+  name: photdiag
+  version: {{ data['version'] }}
+
+source:
+  path: ..
+
+build:
+  entry_points:
+    - photdiag = photdiag.photdiag:main
+
+requirements:
+  build:
+    - python
+    - setuptools
+  run:
+    - python>=3.6
+    - bokeh>=0.12.15
+    - bsread
+    - h5py
+
+about:
+  home: https://git.psi.ch/usov_i/photdiag
+  summary: {{ data['description'] }}
+  license: GNU GPLv3
+  license_file: LICENSE
