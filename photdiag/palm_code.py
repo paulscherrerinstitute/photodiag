@@ -24,7 +24,6 @@ class PalmSetup:
         self.spectrometers = {'1': Spectrometer(chan='SAROP11-PALMK118:CH2_BUFFER'),
                               '0': Spectrometer(chan='SAROP11-PALMK118:CH1_BUFFER')}
 
-        self.hdf5_range = [0, 2000]
         self.tags = []
         self.interp_energy = np.linspace(1, 120, 500)
 
@@ -89,7 +88,7 @@ class PalmSetup:
                         if not overwrite and energy in etof.calib_data.index:
                             continue
 
-                        _, calib_waveforms = self._get_tags_and_data(entry.path, etof.chan, *self.hdf5_range)
+                        _, calib_waveforms = self._get_tags_and_data(entry.path, etof.chan)
 
                         # Filter out bad shots
                         calib_waveforms = calib_waveforms[(calib_waveforms > -5000).all(axis=1)]
@@ -116,7 +115,7 @@ class PalmSetup:
         filepath = self.home_dir + filename
 
         for etof_key, etof in self.spectrometers.items():
-            self.tags, data = self._get_tags_and_data(filepath, etof.chan, *self.hdf5_range)
+            self.tags, data = self._get_tags_and_data(filepath, etof.chan)
             data_raw[etof_key] = data
             # data_raw[etof_key] = np.expand_dims(data[1, :], axis=0)
 
