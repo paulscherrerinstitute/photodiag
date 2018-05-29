@@ -27,12 +27,9 @@ class Spectrometer:
 
         # current setup outputs 2000 points for a span of 400 ns excluding the end point
         self.internal_time = np.linspace(0, 400, 2000, endpoint=False)
-        self.time = np.empty(0)
-
         self.noise_range = [1900, 2000]
         self.data_range = [300, 1000]
         self.t0 = np.empty(0)
-        self.energy = np.empty(0)
 
     def __call__(self, input_data, interp_energy, jacobian=False, noise_thr=3):
         """Perform electron time of flight (eTOF) to pulse energy transformation (ns -> eV) of data through
@@ -46,20 +43,20 @@ class Spectrometer:
         Returns:
             interpolated output data
         """
-        self.time = self.internal_time[self.t0 + 1:] - self.internal_time[self.t0]
-        self.energy = (self.calib_a / self.time) ** 2 + self.calib_b
+        flight_time = self.internal_time[self.t0 + 1:] - self.internal_time[self.t0]
+        pulse_energy = (self.calib_a / flight_time) ** 2 + self.calib_b
 
         output_data = input_data[:, self.t0 + 1:]
 
         if jacobian:
-            jacobian_factor_inv = -self.energy ** (3 / 2)  # = 1 / jacobian_factor
+            jacobian_factor_inv = -pulse_energy ** (3 / 2)  # = 1 / jacobian_factor
             output_data = output_data / jacobian_factor_inv  # = spectr.data * jacobian_factor
 
         def interpolate_row(data, energy, interp_energy):
             return np.interp(interp_energy, energy, data)
 
-        output_data = np.apply_along_axis(interpolate_row, 1, output_data[:, ::-1],
-                                          self.energy[::-1], interp_energy)
+        output_data = np.apply_along_axis(interpolate_row, 1,
+                                          output_data[:, ::-1], pulse_energy[::-1], interp_energy)
 
         output_data = output_data - noise_thr * self.calib_data.noise_std.mean()
 
