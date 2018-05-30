@@ -6,7 +6,7 @@ from bokeh.io import curdoc
 from bokeh.layouts import column, row
 from bokeh.models import BasicTicker, BoxZoomTool, Button, Circle, ColumnDataSource, CustomJS, \
     DataRange1d, Div, Dropdown, Grid, Legend, Line, LinearAxis, MultiLine, Panel, PanTool, Plot, \
-    ResetTool, SaveTool, Slider, Spacer, Span, Tabs, TextInput, Title, Toggle, WheelZoomTool
+    ResetTool, Slider, Spacer, Span, Tabs, TextInput, Title, Toggle, WheelZoomTool
 from tornado import gen
 
 import receiver
@@ -47,7 +47,7 @@ calib_wf_plot = Plot(
 )
 
 # ---- tools
-calib_wf_plot.add_tools(PanTool(), BoxZoomTool(), WheelZoomTool(), SaveTool(), ResetTool())
+calib_wf_plot.add_tools(PanTool(), BoxZoomTool(), WheelZoomTool(), ResetTool())
 
 # ---- axes
 calib_wf_plot.add_layout(LinearAxis(axis_label='Spectrometer internal time, ns'), place='below')
@@ -82,7 +82,7 @@ calib_fit_plot = Plot(
 )
 
 # ---- tools
-calib_fit_plot.add_tools(PanTool(), BoxZoomTool(), WheelZoomTool(), SaveTool(), ResetTool())
+calib_fit_plot.add_tools(PanTool(), BoxZoomTool(), WheelZoomTool(), ResetTool())
 
 # ---- axes
 calib_fit_plot.add_layout(LinearAxis(axis_label='Photoelectron peak shift, ns'), place='below')
@@ -125,7 +125,7 @@ calib_thz_plot = Plot(
 )
 
 # ---- tools
-calib_thz_plot.add_tools(PanTool(), BoxZoomTool(), WheelZoomTool(), SaveTool(), ResetTool())
+calib_thz_plot.add_tools(PanTool(), BoxZoomTool(), WheelZoomTool(), ResetTool())
 
 # ---- axes
 calib_thz_plot.add_layout(LinearAxis(axis_label='Stage delay position'), place='below')
@@ -158,7 +158,7 @@ waveform_plot = Plot(
 )
 
 # ---- tools
-waveform_plot.add_tools(PanTool(), WheelZoomTool(), SaveTool(), ResetTool())
+waveform_plot.add_tools(PanTool(), WheelZoomTool(), ResetTool())
 
 # ---- axes
 waveform_plot.add_layout(LinearAxis(axis_label='Photon energy, eV'), place='below')
@@ -192,7 +192,7 @@ xcorr_plot = Plot(
 )
 
 # ---- tools
-xcorr_plot.add_tools(PanTool(), WheelZoomTool(), SaveTool(), ResetTool())
+xcorr_plot.add_tools(PanTool(), WheelZoomTool(), ResetTool())
 
 # ---- axes
 xcorr_plot.add_layout(LinearAxis(axis_label='Delay, eV'), place='below')
@@ -222,7 +222,7 @@ delay_plot = Plot(
 )
 
 # ---- tools
-delay_plot.add_tools(PanTool(), WheelZoomTool(), SaveTool(), ResetTool())
+delay_plot.add_tools(PanTool(), WheelZoomTool(), ResetTool())
 
 # ---- axes
 delay_plot.add_layout(LinearAxis(axis_label='Shot number'), place='below')
@@ -251,7 +251,7 @@ energy_plot = Plot(
 )
 
 # ---- tools
-energy_plot.add_tools(PanTool(), WheelZoomTool(), SaveTool(), ResetTool())
+energy_plot.add_tools(PanTool(), WheelZoomTool(), ResetTool())
 
 # ---- axes
 energy_plot.add_layout(LinearAxis(), place='below')
