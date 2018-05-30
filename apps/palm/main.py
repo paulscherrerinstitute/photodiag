@@ -5,8 +5,8 @@ import numpy as np
 from bokeh.io import curdoc
 from bokeh.layouts import column, row
 from bokeh.models import BasicTicker, BoxZoomTool, Button, Circle, ColumnDataSource, CustomJS, \
-    DataRange1d, Div, Dropdown, Grid, Legend, Line, LinearAxis, MultiLine, Panel, PanTool, Plot, \
-    ResetTool, Slider, Spacer, Span, Tabs, TextInput, Title, Toggle, WheelZoomTool
+    DataRange1d, Div, Dropdown, Grid, HoverTool, Legend, Line, LinearAxis, MultiLine, Panel, \
+    PanTool, Plot, ResetTool, Slider, Spacer, Span, Tabs, TextInput, Title, Toggle, WheelZoomTool
 from tornado import gen
 
 import receiver
@@ -47,7 +47,13 @@ calib_wf_plot = Plot(
 )
 
 # ---- tools
-calib_wf_plot.add_tools(PanTool(), BoxZoomTool(), WheelZoomTool(), ResetTool())
+calib_wf_plot_hover = HoverTool(tooltips=[
+    ("energy, eV", '@en'),
+    ("flight time, ns", '$x'),
+    ("intensity, a.u.", '$y'),
+])
+
+calib_wf_plot.add_tools(PanTool(), BoxZoomTool(), WheelZoomTool(), ResetTool(), calib_wf_plot_hover)
 
 # ---- axes
 calib_wf_plot.add_layout(LinearAxis(axis_label='Spectrometer internal time, ns'), place='below')
@@ -59,9 +65,10 @@ calib_wf_plot.add_layout(Grid(dimension=0, ticker=BasicTicker()))
 calib_wf_plot.add_layout(Grid(dimension=1, ticker=BasicTicker()))
 
 # ---- multiline calibration waveforms glyphs
-calib_waveform_source0 = ColumnDataSource(dict(xs=[], ys=[]))
+calib_waveform_source0 = ColumnDataSource(dict(xs=[], ys=[], en=[]))
 unstrk_ml = calib_wf_plot.add_glyph(calib_waveform_source0, MultiLine(xs='xs', ys='ys', line_color='blue'))
-calib_waveform_source1 = ColumnDataSource(dict(xs=[], ys=[]))
+
+calib_waveform_source1 = ColumnDataSource(dict(xs=[], ys=[], en=[]))
 streak_ml = calib_wf_plot.add_glyph(calib_waveform_source1, MultiLine(xs='xs', ys='ys', line_color='red'))
 
 calib_wf_plot.add_layout(Legend(items=[
@@ -312,9 +319,11 @@ def calibrate_button_callback():
     calib_data0 = palm.spectrometers['0'].calib_data
     calib_data1 = palm.spectrometers['1'].calib_data
     calib_waveform_source0.data.update(xs=len(calib_data0)*[palm.spectrometers['0'].internal_time],
-                                       ys=palm.spectrometers['0'].calib_data['waveform'].tolist())
+                                       ys=palm.spectrometers['0'].calib_data['waveform'].tolist(),
+                                       en=palm.spectrometers['0'].calib_data.index.values)
     calib_waveform_source1.data.update(xs=len(calib_data1)*[palm.spectrometers['1'].internal_time],
-                                       ys=palm.spectrometers['1'].calib_data['waveform'].tolist())
+                                       ys=palm.spectrometers['1'].calib_data['waveform'].tolist(),
+                                       en=palm.spectrometers['1'].calib_data.index.values)
 
     def plot_fit(time, calib_a, calib_b):
         time_fit = np.linspace(time.min(), time.max(), 100)
