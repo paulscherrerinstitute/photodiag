@@ -10,14 +10,13 @@ from photdiag.spectrometer import Spectrometer
 class PalmSetup:
     """Class describing the photon arrival and length monitor (PALM) setup.
     """
-    def __init__(self):
+    def __init__(self, unstr_chan, str_chan):
         """Initialize PALM setup object and optionally restore a particular state from the past.
 
         For the spectrometers the following notation is used: presense of a streaking field ('0': no
-        streaking, '1': positive streaking, '-1': negative streaking)
+        streaking, '1': positive streaking)
         """
-        self.spectrometers = {'1': Spectrometer(chan='SAROP11-PALMK118:CH2_BUFFER'),
-                              '0': Spectrometer(chan='SAROP11-PALMK118:CH1_BUFFER')}
+        self.spectrometers = {'0': Spectrometer(chan=unstr_chan), '1': Spectrometer(chan=str_chan)}
 
         self.tags = []
         self.interp_energy = np.linspace(1, 120, 500)
