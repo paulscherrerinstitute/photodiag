@@ -17,8 +17,6 @@ class PalmSetup:
         streaking, '1': positive streaking)
         """
         self.spectrometers = {'0': Spectrometer(chan=unstr_chan), '1': Spectrometer(chan=str_chan)}
-
-        self.tags = []
         self.interp_energy = np.linspace(1, 120, 500)
 
     def __call__(self, waveforms, method='xcorr', jacobian=False, noise_thr=3):
@@ -105,7 +103,7 @@ class PalmSetup:
         """
         data_raw = {}
         for etof_key, etof in self.spectrometers.items():
-            self.tags, data = self._get_tags_and_data(filepath, etof.chan)
+            tags, data = self._get_tags_and_data(filepath, etof.chan)
             data_raw[etof_key] = data
             # data_raw[etof_key] = np.expand_dims(data[1, :], axis=0)
 
@@ -113,11 +111,11 @@ class PalmSetup:
         good_ind = (data_raw['0'] > -5000).all(axis=1) & (data_raw['1'] > -5000).all(axis=1)
         data_raw['0'] = data_raw['0'][good_ind, :]
         data_raw['1'] = data_raw['1'][good_ind, :]
-        self.tags = self.tags[good_ind]
+        tags = tags[good_ind]
 
         results, prep_data = self(data_raw)
 
-        return results, prep_data
+        return tags, results, prep_data
 
     @staticmethod
     def _get_tags_and_data(filepath, etof_path, first_ind=None, last_ind=None):
