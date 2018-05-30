@@ -20,7 +20,7 @@ current_message = None
 connected = False
 
 # Currently in bokeh it's possible to control only a canvas size, but not a size of the plotting area.
-WAVEFORM_CANVAS_WIDTH = 730
+WAVEFORM_CANVAS_WIDTH = 700
 WAVEFORM_CANVAS_HEIGHT = 400
 
 APP_FPS = 1
@@ -37,7 +37,7 @@ palm = PalmSetup(unstr_chan=receiver.unstreaked, str_chan=receiver.streaked)
 
 # Calibration averaged waveforms per photon energy
 calib_wf_plot = Plot(
-    title=Title(text="Calibration waveforms"),
+    title=Title(text="eTOF calibration waveforms"),
     x_range=DataRange1d(),
     y_range=DataRange1d(),
     plot_height=WAVEFORM_CANVAS_HEIGHT,
@@ -72,7 +72,7 @@ calib_wf_plot.legend.click_policy = "hide"
 
 # Calibration fit plot
 calib_fit_plot = Plot(
-    title=Title(text="Calibration fit"),
+    title=Title(text="eTOF calibration fit"),
     x_range=DataRange1d(),
     y_range=DataRange1d(),
     plot_height=WAVEFORM_CANVAS_HEIGHT,
@@ -113,9 +113,42 @@ calib_fit_plot.add_layout(Legend(items=[
 calib_fit_plot.legend.click_policy = "hide"
 
 
+# THz calibration plot
+calib_thz_plot = Plot(
+    title=Title(text="THz calibration"),
+    x_range=DataRange1d(),
+    y_range=DataRange1d(),
+    plot_height=WAVEFORM_CANVAS_HEIGHT,
+    plot_width=WAVEFORM_CANVAS_WIDTH,
+    toolbar_location='right',
+    logo=None,
+)
+
+# ---- tools
+calib_thz_plot.add_tools(PanTool(), BoxZoomTool(), WheelZoomTool(), SaveTool(), ResetTool())
+
+# ---- axes
+calib_thz_plot.add_layout(LinearAxis(axis_label='Stage delay position'), place='below')
+calib_thz_plot.add_layout(LinearAxis(axis_label='Energy shift, eV',
+                                     major_label_orientation='vertical'),
+                          place='left')
+
+# ---- grid lines
+calib_thz_plot.add_layout(Grid(dimension=0, ticker=BasicTicker()))
+calib_thz_plot.add_layout(Grid(dimension=1, ticker=BasicTicker()))
+
+# ---- calibration fit points circle glyphs
+calib_thz_point_source = ColumnDataSource(dict(x=[], y=[]))
+thz_fit_c = calib_thz_plot.add_glyph(calib_thz_point_source, Circle(x='x', y='y', line_color='blue'))
+
+# ---- calibration fit line glyphs
+calib_thz_fit_source = ColumnDataSource(dict(x=[], y=[]))
+thz_fit_l = calib_thz_plot.add_glyph(calib_thz_fit_source, Line(x='x', y='y', line_color='blue'))
+
+
 # Streaked and unstreaked waveforms plot
 waveform_plot = Plot(
-    title=Title(text="eTOF waveforms"),
+    title=Title(text="Waveforms"),
     x_range=DataRange1d(),
     y_range=DataRange1d(),
     plot_height=WAVEFORM_CANVAS_HEIGHT,
@@ -434,12 +467,13 @@ tab_hdf5file = Panel(
 data_source_tabs = Tabs(tabs=[tab_calibration, tab_hdf5file, tab_stream])
 
 # Final layouts
-layout_calib = row(calib_wf_plot, Spacer(width=50), calib_fit_plot)
-layout_results = row(waveform_plot, Spacer(width=50), xcorr_plot)
+layout_calib = row(calib_wf_plot, Spacer(width=50), calib_fit_plot, Spacer(width=50), calib_thz_plot)
+layout_proc = row(waveform_plot, Spacer(width=50), xcorr_plot)
+layout_res = row(delay_plot, Spacer(width=50), energy_plot)
 layout_fit_res = column(fit_eq_div, calib_const_div)
-final_layout = column(row(layout_calib, Spacer(width=30), layout_fit_res),
-                      row(layout_results, Spacer(width=30), data_source_tabs),
-                      row(delay_plot, Spacer(width=50), energy_plot))
+final_layout = column(row(layout_calib),
+                      row(layout_proc, Spacer(width=30), data_source_tabs, Spacer(width=30), layout_fit_res),
+                      row(layout_res, Spacer(width=30)))
 
 doc.add_root(final_layout)
 
