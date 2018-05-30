@@ -10,17 +10,12 @@ from photdiag.spectrometer import Spectrometer
 class PalmSetup:
     """Class describing the photon arrival and length monitor (PALM) setup.
     """
-    def __init__(self, home_dir):
+    def __init__(self):
         """Initialize PALM setup object and optionally restore a particular state from the past.
 
         For the spectrometers the following notation is used: presense of a streaking field ('0': no
         streaking, '1': positive streaking, '-1': negative streaking)
-
-        Args:
-            home_dir: home directory for an experiment (location for all data files to be processed/derived)
         """
-        self.home_dir = home_dir
-
         self.spectrometers = {'1': Spectrometer(chan='SAROP11-PALMK118:CH2_BUFFER'),
                               '0': Spectrometer(chan='SAROP11-PALMK118:CH1_BUFFER')}
 
@@ -68,8 +63,6 @@ class PalmSetup:
         Returns:
             results of calibration as dictionary
         """
-        calib_folder = self.home_dir + folder_name
-
         if etofs is None:
             calibrated_etofs = self.spectrometers.values()
         else:
@@ -79,7 +72,7 @@ class PalmSetup:
             for etof in calibrated_etofs:
                 etof.calib_data.drop(etof.calib_data.index[:], inplace=True)
 
-        with os.scandir(calib_folder) as it:
+        with os.scandir(folder_name) as it:
             for entry in it:
                 if entry.is_file() and entry.name.endswith(('.hdf5', '.h5')):
                     energy = self._get_energy_from_filename(entry.name)
@@ -101,19 +94,17 @@ class PalmSetup:
 
         return calib_results
 
-    def process_hdf5_file(self, filename):
+    def process_hdf5_file(self, filepath):
         """Load data for all registered spectrometers from an hdf5 file. This method is to be changed
         in order to adapt to a format of PALM data files in the future.
 
         Args:
-            filename: file name to be loaded
+            filepath: file path to be loaded
 
         Returns:
             tuple of tags and the corresponding results in a dictionary
         """
         data_raw = {}
-        filepath = self.home_dir + filename
-
         for etof_key, etof in self.spectrometers.items():
             self.tags, data = self._get_tags_and_data(filepath, etof.chan)
             data_raw[etof_key] = data

@@ -9,14 +9,12 @@ class PsenSetup:
     """Class describing photon spectral encoder (PSEN) setup.
     """
 
-    def __init__(self, home_dir, ttcalib):
+    def __init__(self, ttcalib):
         """Initialize PsenSetup object.
 
         Args:
-            home_dir: path to the folder with csv data files
             ttcalib: calibration constant of the timing tool in [fs/pixel]
         """
-        self.home_dir = home_dir
         self.ttcalib = ttcalib
         self.tags = []
         self.data = []
@@ -26,15 +24,15 @@ class PsenSetup:
         """
         pass
 
-    def load_sacla_data(self, filename, method='average', remove_nans=True):
+    def load_sacla_data(self, filepath, method='average', remove_nans=True):
         """Load SACLA timing tool data into tags and data.
 
         Args:
-            filename: name of a csv file with data
+            filepath: path of a csv file with data
             method: {'derivative', 'fitting', 'average'(default)} available methods of timing edge detection
             remove_nans: clear data from NaNs also removing the corresponding tags
         """
-        data = np.genfromtxt(self.home_dir + filename, delimiter=',', skip_header=2)
+        data = np.genfromtxt(filepath, delimiter=',', skip_header=2)
         self.tags = data[:, 0]  # first column is a tags list
 
         if method == 'derivative':

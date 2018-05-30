@@ -32,7 +32,7 @@ HDF5_FILE_PATH_UPDATE_PERIOD = 10000  # ms
 HDF5_DATASET_PATH = '/entry/data/data'
 hdf5_file_data = []
 
-palm = PalmSetup('')
+palm = PalmSetup()
 
 
 # Calibration averaged waveforms per photon energy
@@ -404,7 +404,7 @@ def hdf5_update(pulse, results, prep_data):
 def saved_runs_dropdown_callback(selection):
     global hdf5_update_fun
     saved_runs_dropdown.label = selection
-    results, prep_data = palm.process_hdf5_file(filename=os.path.join(hdf5_file_path.value, selection))
+    results, prep_data = palm.process_hdf5_file(filepath=os.path.join(hdf5_file_path.value, selection))
     _lags, delays, _pulse_lengths, _corr_res_uncut, _corr_results = results
     delay_source.data.update(pulse=np.arange(len(delays)), delay=delays)
     hdf5_update_fun = partial(hdf5_update, results=results, prep_data=prep_data)
