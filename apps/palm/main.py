@@ -246,9 +246,10 @@ delay_plot.add_glyph(delay_source, Line(x='pulse', y='delay', line_color='steelb
 delay_plot_pos = Span(location=0, dimension='height')
 delay_plot.add_layout(delay_plot_pos)
 
-# Streaked and unstreaked waveforms plot
-energy_plot = Plot(
-    title=Title(text="FEL energies"),
+
+# Pulse lengths plot
+pulse_len_plot = Plot(
+    title=Title(text="Pulse lengths"),
     x_range=DataRange1d(),
     y_range=DataRange1d(),
     plot_height=WAVEFORM_CANVAS_HEIGHT,
@@ -258,20 +259,22 @@ energy_plot = Plot(
 )
 
 # ---- tools
-energy_plot.add_tools(PanTool(), WheelZoomTool(), ResetTool())
+pulse_len_plot.add_tools(PanTool(), WheelZoomTool(), ResetTool())
 
 # ---- axes
-energy_plot.add_layout(LinearAxis(), place='below')
-energy_plot.add_layout(LinearAxis(major_label_orientation='vertical'), place='left')
+pulse_len_plot.add_layout(LinearAxis(axis_label='Shot number'), place='below')
+pulse_len_plot.add_layout(LinearAxis(axis_label='Pulse length', major_label_orientation='vertical'),
+                          place='left')
 
 # ---- grid lines
-energy_plot.add_layout(Grid(dimension=0, ticker=BasicTicker()))
-energy_plot.add_layout(Grid(dimension=1, ticker=BasicTicker()))
+pulse_len_plot.add_layout(Grid(dimension=0, ticker=BasicTicker()))
+pulse_len_plot.add_layout(Grid(dimension=1, ticker=BasicTicker()))
 
 # ---- rgba image glyph
-energy_source = ColumnDataSource(dict(time=[], undulator=[], monochrom=[]))
-energy_plot.add_glyph(energy_source, Line(x='time', y='undulator', line_color='red'))
-energy_plot.add_glyph(energy_source, Line(x='time', y='monochrom', line_color='blue'))
+pulse_len_source = ColumnDataSource(dict(x=[], y=[]))
+pulse_len_plot.add_glyph(pulse_len_source, Line(x='x', y='y', line_color='steelblue'))
+pulse_len_plot_pos = Span(location=0, dimension='height')
+pulse_len_plot.add_layout(pulse_len_plot_pos)
 
 
 # Fitting equation
@@ -398,8 +401,6 @@ stream_button.on_click(stream_button_callback)
 def intensity_stream_reset_button_callback():
     global stream_t
     stream_t = 1  # keep the latest point in order to prevent full axis reset
-    energy_source.data.update(time=[1], undulator=[energy_source.data['undulator'][-1]],
-                              monochrom=[energy_source.data['monochrom'][-1]])
 
 intensity_stream_reset_button = Button(label="Reset", button_type='default', width=250)
 intensity_stream_reset_button.on_click(intensity_stream_reset_button_callback)
@@ -441,14 +442,16 @@ def hdf5_update(pulse, results, prep_data):
     xcorr_source.data.update(lags=lags, xcorr1=corr_res_uncut[pulse, :], xcorr2=corr_results[pulse, :])
     xcorr_plot_pos.location = delays[pulse]
     delay_plot_pos.location = pulse
+    pulse_len_plot_pos.location = pulse
 
 
 def saved_runs_dropdown_callback(selection):
     global hdf5_update_fun
     saved_runs_dropdown.label = selection
     _tags, results, prep_data = palm.process_hdf5_file(filepath=os.path.join(hdf5_file_path.value, selection))
-    _lags, delays, _pulse_lengths, _corr_res_uncut, _corr_results = results
+    _lags, delays, pulse_lengths, _corr_res_uncut, _corr_results = results
     delay_source.data.update(pulse=np.arange(len(delays)), delay=delays)
+    pulse_len_source.data.update(x=np.arange(len(pulse_lengths)), y=pulse_lengths)
     hdf5_update_fun = partial(hdf5_update, results=results, prep_data=prep_data)
 
     hdf5_pulse_slider.end = len(results[1]) - 1
@@ -478,7 +481,7 @@ data_source_tabs = Tabs(tabs=[tab_calibration, tab_hdf5file, tab_stream])
 # Final layouts
 layout_calib = row(calib_wf_plot, Spacer(width=50), calib_fit_plot, Spacer(width=50), calib_thz_plot)
 layout_proc = row(waveform_plot, Spacer(width=50), xcorr_plot)
-layout_res = row(delay_plot, Spacer(width=50), energy_plot)
+layout_res = row(delay_plot, Spacer(width=50), pulse_len_plot)
 layout_fit_res = column(fit_eq_div, calib_const_div)
 final_layout = column(row(layout_calib),
                       row(layout_proc, Spacer(width=30), data_source_tabs, Spacer(width=30), layout_fit_res),
@@ -499,15 +502,9 @@ def update(message):
         y_streaked = message[receiver.streaked].value
         x_streaked = np.arange(len(y_streaked))
 
-        undulator = message[receiver.undulator].value
-        monochrom = message[receiver.monochrom].value
-
         waveform_source.stream(new_data=dict(x_streaked=[x_streaked], y_streaked=[y_streaked],
                                              x_unstreaked=[x_unstreaked], y_unstreaked=[y_unstreaked]),
                                rollover=STREAM_ROLLOVER)
-
-        energy_source.stream(new_data=dict(time=[stream_t], undulator=[undulator], monochrom=[monochrom]),
-                             rollover=STREAM_ROLLOVER)
 
 
 def internal_periodic_callback():
