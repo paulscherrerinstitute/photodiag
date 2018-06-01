@@ -434,8 +434,8 @@ hdf5_file_path.on_change('value', hdf5_file_path_callback)
 
 # ---- saved runs dropdown menu
 hdf5_update_fun = []
-def hdf5_update(pulse, results, prep_data):
-    lags, delays, _pulse_lengths, corr_res_uncut, corr_results = results
+def hdf5_update(pulse, delays, debug_data):
+    prep_data, lags, corr_res_uncut, corr_results = debug_data
     waveform_source.data.update(
         x_str=palm.interp_energy, y_str=prep_data['1'][pulse, :],
         x_unstr=palm.interp_energy, y_unstr=prep_data['0'][pulse, :])
@@ -448,13 +448,14 @@ def hdf5_update(pulse, results, prep_data):
 def saved_runs_dropdown_callback(selection):
     global hdf5_update_fun
     saved_runs_dropdown.label = selection
-    _tags, results, prep_data = palm.process_hdf5_file(filepath=os.path.join(hdf5_file_path.value, selection))
-    _lags, delays, pulse_lengths, _corr_res_uncut, _corr_results = results
+    _tags, delays, pulse_lengths, debug_data = palm.process_hdf5_file(
+        filepath=os.path.join(hdf5_file_path.value, selection), debug=True)
+
     delay_source.data.update(pulse=np.arange(len(delays)), delay=delays)
     pulse_len_source.data.update(x=np.arange(len(pulse_lengths)), y=pulse_lengths)
-    hdf5_update_fun = partial(hdf5_update, results=results, prep_data=prep_data)
+    hdf5_update_fun = partial(hdf5_update, delays=delays, debug_data=debug_data)
 
-    hdf5_pulse_slider.end = len(results[1]) - 1
+    hdf5_pulse_slider.end = len(delays) - 1
     hdf5_pulse_slider.value = 0
     hdf5_update_fun(0)
 

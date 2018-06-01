@@ -19,7 +19,7 @@ class PalmSetup:
         self.spectrometers = {'0': Spectrometer(chan=unstr_chan), '1': Spectrometer(chan=str_chan)}
         self.interp_energy = np.linspace(1, 120, 500)
 
-    def __call__(self, waveforms, method='xcorr', jacobian=False, noise_thr=3):
+    def __call__(self, waveforms, method='xcorr', jacobian=False, noise_thr=3, debug=False):
         """Main function to analyse PALM data that pipelines separate stages of data processing.
 
         Args:
@@ -27,6 +27,7 @@ class PalmSetup:
             method: (optional) currently, only one method is available {'xcorr' (default), 'deconv'}
             jacobian: (optional) apply jacobian corrections of spectrometer's time to energy transformation
             noise_thr:
+            debug: (optional) return debug data
 
         Returns:
             pulse lengths and arrival times per pulse
@@ -37,15 +38,15 @@ class PalmSetup:
             prep_data[etof_key] = etof(data, self.interp_energy, jacobian=jacobian, noise_thr=noise_thr)
 
         if method == 'xcorr':
-            results = self._cross_corr_analysis(prep_data)
+            results = self._cross_corr_analysis(prep_data, debug=debug)
 
         elif method == 'deconv':
-            results = self._deconvolution_analysis(prep_data)
+            results = self._deconvolution_analysis(prep_data, debug=debug)
 
         else:
             raise RuntimeError(f"Method '{method}' is not recognised")
 
-        return results, prep_data
+        return results
 
     def calibrate(self, folder_name, bkg_en=None, etofs=None, overwrite=True):
         """General routine for a calibration process of the electron time of flight (eTOF) etofs.
@@ -91,7 +92,7 @@ class PalmSetup:
 
         return calib_results
 
-    def process_hdf5_file(self, filepath):
+    def process_hdf5_file(self, filepath, debug=False):
         """Load data for all registered spectrometers from an hdf5 file. This method is to be changed
         in order to adapt to a format of PALM data files in the future.
 
@@ -113,9 +114,8 @@ class PalmSetup:
         data_raw['1'] = data_raw['1'][good_ind, :]
         tags = tags[good_ind]
 
-        results, prep_data = self(data_raw)
-
-        return tags, results, prep_data
+        results = self(data_raw, debug=debug)
+        return (tags, *results)
 
     @staticmethod
     def _get_tags_and_data(filepath, etof_path, first_ind=None, last_ind=None):
@@ -151,7 +151,7 @@ class PalmSetup:
 
         return 1510 - energy
 
-    def _cross_corr_analysis(self, input_data):
+    def _cross_corr_analysis(self, input_data, debug=False):
         """Perform analysis to determine arrival times via cross correlation.
 
         Usually, this data can be used to initally identify pulses that are falling within linear slope of
@@ -159,6 +159,7 @@ class PalmSetup:
 
         Args:
             input_data: input data to be correlated
+            debug: (optional) return debug data
 
         Returns:
             pulse arrival delays via cross-correlation method
@@ -176,17 +177,19 @@ class PalmSetup:
         lags = self.interp_energy - self.interp_energy[int(self.interp_energy.size/2)]
 
         delays, _ = self._peak_params(lags, corr_results)
-
         pulse_lengths = self._peak_center_of_mass(input_data, lags)
 
-        return lags, delays, pulse_lengths, corr_res_uncut, corr_results
+        if debug:
+            return delays, pulse_lengths, (input_data, lags, corr_res_uncut, corr_results)
+        return delays, pulse_lengths
 
-    def _deconvolution_analysis(self, input_data, iterations=200):
+    def _deconvolution_analysis(self, input_data, iterations=200, debug=False):
         """Perform analysis to determine temporal profile of photon pulses.
 
         Args:
             input_data: data to be analysed
-            iterations: number of iterations for the deconvolution analysis
+            iterations: (optional) number of iterations for the deconvolution analysis
+            debug: (optional) return debug data
 
         Returns:
             result(s) of deconvolution
@@ -198,6 +201,8 @@ class PalmSetup:
         for i, (x, y) in enumerate(zip(data_nonstr, data_str)):
             deconv_result[i] = richardson_lucy_deconv(x, y, iterations=iterations)
 
+        if debug:
+            return deconv_result, input_data
         return deconv_result
 
     @staticmethod
