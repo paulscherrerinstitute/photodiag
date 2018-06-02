@@ -19,35 +19,6 @@ class PalmSetup:
         self.spectrometers = {'0': Spectrometer(chan=unstr_chan), '1': Spectrometer(chan=str_chan)}
         self.interp_energy = np.linspace(1, 120, 500)
 
-    def __call__(self, waveforms, method='xcorr', jacobian=False, noise_thr=3, debug=False):
-        """Main function to analyse PALM data that pipelines separate stages of data processing.
-
-        Args:
-            waveforms: dictionary with waveforms from streaked and non-streaked spectrometers
-            method: (optional) currently, only one method is available {'xcorr' (default), 'deconv'}
-            jacobian: (optional) apply jacobian corrections of spectrometer's time to energy transformation
-            noise_thr:
-            debug: (optional) return debug data
-
-        Returns:
-            pulse lengths and arrival times per pulse
-        """
-        prep_data = {}
-        for etof_key, data in waveforms.items():
-            etof = self.spectrometers[etof_key]
-            prep_data[etof_key] = etof(data, self.interp_energy, jacobian=jacobian, noise_thr=noise_thr)
-
-        if method == 'xcorr':
-            results = self._cross_corr_analysis(prep_data, debug=debug)
-
-        elif method == 'deconv':
-            results = self._deconvolution_analysis(prep_data, debug=debug)
-
-        else:
-            raise RuntimeError(f"Method '{method}' is not recognised")
-
-        return results
-
     def calibrate(self, folder_name, bkg_en=None, etofs=None, overwrite=True):
         """General routine for a calibration process of the electron time of flight (eTOF) etofs.
 
@@ -92,6 +63,36 @@ class PalmSetup:
 
         return calib_results
 
+    def process(self, waveforms, method='xcorr', jacobian=False, noise_thr=3, debug=False):
+        """Main function to analyse PALM data that pipelines separate stages of data processing.
+
+        Args:
+            waveforms: dictionary with waveforms from streaked and non-streaked spectrometers
+            method: (optional) currently, only one method is available {'xcorr' (default), 'deconv'}
+            jacobian: (optional) apply jacobian corrections of spectrometer's time to energy transformation
+            noise_thr:
+            debug: (optional) return debug data
+
+        Returns:
+            pulse lengths and arrival times per pulse
+        """
+        prep_data = {}
+        for etof_key, data in waveforms.items():
+            etof = self.spectrometers[etof_key]
+            prep_data[etof_key] = etof.convert(
+                data, self.interp_energy, jacobian=jacobian, noise_thr=noise_thr)
+
+        if method == 'xcorr':
+            results = self._cross_corr_analysis(prep_data, debug=debug)
+
+        elif method == 'deconv':
+            results = self._deconvolution_analysis(prep_data, debug=debug)
+
+        else:
+            raise RuntimeError(f"Method '{method}' is not recognised")
+
+        return results
+
     def process_hdf5_file(self, filepath, debug=False):
         """Load data for all registered spectrometers from an hdf5 file. This method is to be changed
         in order to adapt to a format of PALM data files in the future.
@@ -114,7 +115,7 @@ class PalmSetup:
         data_raw['1'] = data_raw['1'][good_ind, :]
         tags = tags[good_ind]
 
-        results = self(data_raw, debug=debug)
+        results = self.process(data_raw, debug=debug)
         return (tags, *results)
 
     @staticmethod

@@ -31,37 +31,6 @@ class Spectrometer:
         self.data_range = [300, 1000]
         self.t0 = np.empty(0)
 
-    def __call__(self, input_data, interp_energy, jacobian=False, noise_thr=3):
-        """Perform electron time of flight (eTOF) to pulse energy transformation (ns -> eV) of data through
-        the spectrometer's calibration constants and a photon peak position followed by 1D interpolation.
-
-        Args:
-            input_data: data to be processed
-            jacobian: apply jacobian corrections of spectrometer's time to energy transformation
-            noise_thr:
-
-        Returns:
-            interpolated output data
-        """
-        flight_time = self.internal_time[self.t0 + 1:] - self.internal_time[self.t0]
-        pulse_energy = (self.calib_a / flight_time) ** 2 + self.calib_b
-
-        output_data = input_data[:, self.t0 + 1:]
-
-        if jacobian:
-            jacobian_factor_inv = -pulse_energy ** (3 / 2)  # = 1 / jacobian_factor
-            output_data = output_data / jacobian_factor_inv  # = spectr.data * jacobian_factor
-
-        def interpolate_row(data, energy, interp_energy):
-            return np.interp(interp_energy, energy, data)
-
-        output_data = np.apply_along_axis(interpolate_row, 1,
-                                          output_data[:, ::-1], pulse_energy[::-1], interp_energy)
-
-        output_data = output_data - noise_thr * self.calib_data.noise_std.mean()
-
-        return output_data
-
     def add_calibration_point(self, energy, calib_waveforms):
         """Add calibration point for a specified X-ray energy.
 
@@ -117,6 +86,37 @@ class Spectrometer:
         self.t0 = np.round(cd.t0.mean()).astype(int)
 
         return popt, time_delays, pulse_energies
+
+    def convert(self, input_data, interp_energy, jacobian=False, noise_thr=3):
+        """Perform electron time of flight (eTOF) to pulse energy transformation (ns -> eV) of data through
+        the spectrometer's calibration constants and a photon peak position followed by 1D interpolation.
+
+        Args:
+            input_data: data to be processed
+            jacobian: apply jacobian corrections of spectrometer's time to energy transformation
+            noise_thr:
+
+        Returns:
+            interpolated output data
+        """
+        flight_time = self.internal_time[self.t0 + 1:] - self.internal_time[self.t0]
+        pulse_energy = (self.calib_a / flight_time) ** 2 + self.calib_b
+
+        output_data = input_data[:, self.t0 + 1:]
+
+        if jacobian:
+            jacobian_factor_inv = -pulse_energy ** (3 / 2)  # = 1 / jacobian_factor
+            output_data = output_data / jacobian_factor_inv  # = spectr.data * jacobian_factor
+
+        def interpolate_row(data, energy, interp_energy):
+            return np.interp(interp_energy, energy, data)
+
+        output_data = np.apply_along_axis(interpolate_row, 1,
+                                          output_data[:, ::-1], pulse_energy[::-1], interp_energy)
+
+        output_data = output_data - noise_thr * self.calib_data.noise_std.mean()
+
+        return output_data
 
     @staticmethod
     def _detect_photon_peak(waveform, noise_std, noise_thr=3):
