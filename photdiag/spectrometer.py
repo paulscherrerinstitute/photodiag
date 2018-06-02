@@ -15,7 +15,6 @@ class Spectrometer:
             b: calibration constant 'b'
         """
         self.chan = chan
-
         self.calib_a = a
         self.calib_b = b
 
@@ -122,8 +121,8 @@ class Spectrometer:
     def _detect_photon_peak(waveform, noise_std, noise_thr=3):
         """Estimate position and amplitude of a photon peak.
 
-        Under assumption that the photon peak is the first peak encontered above the specified noise_std
-        threshold level (= noise_thr * noise_std).
+        Under assumption that the photon peak is the first peak encontered above the specified noise
+        level (= noise_thr * noise_std).
 
         Args:
             waveform: waveform of interest

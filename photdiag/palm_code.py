@@ -120,7 +120,7 @@ class PalmSetup:
 
     @staticmethod
     def _get_tags_and_data(filepath, etof_path, first_ind=None, last_ind=None):
-        """Read PALM waveforms from an hdf5 file for unique tags (ignoring data for all repeated tags).
+        """Read PALM waveforms from an hdf5 file.
 
         Args:
             filepath: path to an hdf5 file
@@ -264,8 +264,8 @@ class PalmSetup:
         return y
 
     @staticmethod
-    def _truncate_largest_peak(y, thr):
-        """Truncate the largest peak above a specified threshold.
+    def _truncate_widest_peak(y, thr):
+        """Truncate the widest peak above a specified threshold.
 
         Args:
             y: waveform/graph to be truncated
