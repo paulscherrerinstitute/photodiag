@@ -2,10 +2,11 @@ import os
 from functools import partial
 
 import numpy as np
+import pandas as pd
 from bokeh.io import curdoc
 from bokeh.layouts import column, row
-from bokeh.models import BasicTicker, BoxZoomTool, Button, Circle, ColumnDataSource, CustomJS, \
-    DataRange1d, Div, Dropdown, Grid, HoverTool, Legend, Line, LinearAxis, MultiLine, Panel, \
+from bokeh.models import BasicTicker, BoxZoomTool, Button, CheckboxButtonGroup, Circle, ColumnDataSource, \
+    CustomJS, DataRange1d, Div, Dropdown, Grid, HoverTool, Legend, Line, LinearAxis, MultiLine, Panel, \
     PanTool, Plot, ResetTool, Slider, Spacer, Span, Tabs, TextInput, Title, Toggle, WheelZoomTool
 from tornado import gen
 
@@ -16,6 +17,7 @@ doc = curdoc()
 doc.title = "PALM"
 
 current_message = None
+current_results = ()
 
 connected = False
 
@@ -425,7 +427,8 @@ doc.add_periodic_callback(hdf5_file_path_update, HDF5_FILE_PATH_UPDATE_PERIOD)
 
 
 # ---- folder path text input
-def hdf5_file_path_callback(_attr, _old, _new):
+def hdf5_file_path_callback(_attr, _old, new):
+    save_ti.value = new
     hdf5_file_path_update()
 
 hdf5_file_path = TextInput(title="Folder Path:", value=HDF5_FILE_PATH, width=250)
@@ -446,10 +449,14 @@ def hdf5_update(pulse, delays, debug_data):
 
 
 def saved_runs_dropdown_callback(selection):
-    global hdf5_update_fun
+    global hdf5_update_fun, current_results
     saved_runs_dropdown.label = selection
-    _tags, delays, pulse_lengths, debug_data = palm.process_hdf5_file(
-        filepath=os.path.join(hdf5_file_path.value, selection), debug=True)
+    filepath = os.path.join(hdf5_file_path.value, selection)
+    tags, delays, pulse_lengths, debug_data = palm.process_hdf5_file(filepath=filepath, debug=True)
+    current_results = (selection, tags, delays, pulse_lengths)
+
+    if autosave_cb.active:
+        save_b_callback()
 
     delay_source.data.update(pulse=np.arange(len(delays)), delay=delays)
     pulse_len_source.data.update(x=np.arange(len(pulse_lengths)), y=pulse_lengths)
@@ -462,6 +469,22 @@ def saved_runs_dropdown_callback(selection):
 saved_runs_dropdown = Dropdown(label="Saved Runs", button_type='primary', menu=[], width=250)
 saved_runs_dropdown.on_click(saved_runs_dropdown_callback)
 
+# ---- save location
+save_ti = TextInput(title="Save Folder Path:", value=HDF5_FILE_PATH, width=250)
+
+# ---- autosave checkbox
+autosave_cb = CheckboxButtonGroup(labels=["Auto Save"], active=[], width=100)
+
+# ---- save button
+def save_b_callback():
+    if current_results:
+        filename, tags, delays, pulse_lengths = current_results
+        save_filename = os.path.splitext(filename)[0]+'.csv'
+        df = pd.DataFrame({'pulse_id': tags, 'pulse_delay': delays, 'pulse_length': pulse_lengths})
+        df.to_csv(os.path.join(save_ti.value, save_filename), index=False)
+
+save_b = Button(label="Save Results", button_type='default', width=250)
+save_b.on_click(save_b_callback)
 
 # ---- pulse number slider
 def hdf5_pulse_slider_callback(_attr, _old, new):
@@ -474,7 +497,7 @@ hdf5_pulse_slider.on_change('value', hdf5_pulse_slider_callback)
 
 # assemble
 tab_hdf5file = Panel(
-    child=column(hdf5_file_path, saved_runs_dropdown, hdf5_pulse_slider),
+    child=column(hdf5_file_path, saved_runs_dropdown, hdf5_pulse_slider, save_ti, autosave_cb, save_b),
     title="HDF5 File")
 
 data_source_tabs = Tabs(tabs=[tab_calibration, tab_hdf5file, tab_stream])
