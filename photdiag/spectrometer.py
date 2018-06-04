@@ -118,7 +118,7 @@ class Spectrometer:
         return output_data
 
     @staticmethod
-    def _detect_photon_peak(waveform, noise_std, noise_thr=3):
+    def _detect_photon_peak(waveform, noise_std, noise_thr=1):
         """Estimate position and amplitude of a photon peak.
 
         Under assumption that the photon peak is the first peak encontered above the specified noise
