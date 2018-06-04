@@ -6,8 +6,8 @@ data_buffer = deque(maxlen=BUFFER_SIZE)
 
 state = 'polling'
 
-unstreaked = 'SAROP11-PALMK118:CH1_BUFFER'
-streaked = 'SAROP11-PALMK118:CH2_BUFFER'
+unstreaked = 'SAROP21-PALMK134:CH1_BUFFER'
+streaked = 'SAROP21-PALMK134:CH2_BUFFER'
 
 
 def stream_receive():
