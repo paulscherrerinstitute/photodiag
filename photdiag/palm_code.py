@@ -119,21 +119,27 @@ class PalmSetup:
         return (tags, *results)
 
     @staticmethod
-    def _get_tags_and_data(filepath, etof_path, first_ind=None, last_ind=None):
+    def _get_tags_and_data(filepath, etof_path):
         """Read PALM waveforms from an hdf5 file.
 
         Args:
             filepath: path to an hdf5 file
             etof_path: location of data in hdf5 file
-            first_ind: (optional) index of a first element to read
-            last_ind: (optional) index of a last element to read
 
         Returns:
             tags and data
         """
         with h5py.File(filepath, 'r') as h5f:
-            tags = h5f['/pulse_id'][:]
-            data = -h5f[f'/{etof_path}/data'][:, first_ind:last_ind]
+            if 'monofiles' in filepath:  # calibration data
+                tags = h5f['/pulseId'][:]
+                data = -h5f[f'/{etof_path}'][:]
+            else:
+                try:
+                    tags = h5f['/scan 1/SLAAR21-LMOT-M552:MOT.VAL'][:]
+                    data = -h5f[f'/scan 1/{etof_path} averager'][:]
+                except KeyError:
+                    tags = h5f[f'/data/{etof_path}/pulse_id'][:]
+                    data = -h5f[f'/data/{etof_path}/data'][:]
 
         return tags, data
 
