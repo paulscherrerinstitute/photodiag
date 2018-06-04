@@ -95,7 +95,7 @@ calib_fit_plot.add_tools(PanTool(), BoxZoomTool(), WheelZoomTool(), ResetTool())
 
 # ---- axes
 calib_fit_plot.add_layout(LinearAxis(axis_label='Photoelectron peak shift, ns'), place='below')
-calib_fit_plot.add_layout(LinearAxis(axis_label='Drift tube electron energy, eV',
+calib_fit_plot.add_layout(LinearAxis(axis_label='X-fel energy, eV',
                                      major_label_orientation='vertical'),
                           place='left')
 

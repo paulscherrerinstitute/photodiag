@@ -17,7 +17,7 @@ class PalmSetup:
         streaking, '1': positive streaking)
         """
         self.spectrometers = {'0': Spectrometer(chan=unstr_chan), '1': Spectrometer(chan=str_chan)}
-        self.interp_energy = np.linspace(1, 120, 500)
+        self.interp_energy = np.linspace(2850, 3100, 300)
 
     def calibrate(self, folder_name, bkg_en=None, etofs=None, overwrite=True):
         """General routine for a calibration process of the electron time of flight (eTOF) etofs.
@@ -150,7 +150,7 @@ class PalmSetup:
         """
         energy = float(re.findall(r'\d+', filename)[0])
 
-        return 1510 - energy
+        return energy
 
     def _cross_corr_analysis(self, input_data, debug=False):
         """Perform analysis to determine arrival times via cross correlation.
