@@ -26,8 +26,8 @@ class Spectrometer:
 
         # current setup outputs 2000 points for a span of 400 ns excluding the end point
         self.internal_time = np.linspace(0, 400, 2000, endpoint=False)
-        self.noise_range = [1900, 2000]
-        self.data_range = [300, 1000]
+        self.noise_range = [0, 400]
+        self.data_range = [800, 1999]
         self.t0 = np.empty(0)
 
     def add_calibration_point(self, energy, calib_waveforms):
