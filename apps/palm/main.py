@@ -491,7 +491,7 @@ def hdf5_pulse_slider_callback(_attr, _old, new):
     global hdf5_update_fun
     hdf5_update_fun(pulse=new)
 
-hdf5_pulse_slider = Slider(start=0, end=99, value=0, step=1, title="Pulse ID")
+hdf5_pulse_slider = Slider(start=0, end=99999, value=0, step=1, title="Pulse ID")
 hdf5_pulse_slider.on_change('value', hdf5_pulse_slider_callback)
 
 
