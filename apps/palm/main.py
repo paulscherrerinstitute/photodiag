@@ -11,7 +11,7 @@ from bokeh.models import BasicTicker, BoxZoomTool, Button, CheckboxButtonGroup, 
 from tornado import gen
 
 import receiver
-from photdiag.palm_code import PalmSetup
+from photodiag.palm_code import PalmSetup
 
 doc = curdoc()
 doc.title = "PALM"

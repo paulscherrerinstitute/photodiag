@@ -19,7 +19,7 @@ script:
 
 deploy:
   provider: script
-  script: anaconda -t $ANACONDA_TOKEN upload $HOME/miniconda/conda-bld/**/photdiag-*.tar.bz2
+  script: anaconda -t $ANACONDA_TOKEN upload $HOME/miniconda/conda-bld/**/photodiag-*.tar.bz2
   on:
     branch: master
     tags: true

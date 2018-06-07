@@ -1,9 +1,9 @@
 def main():
     """
-    Execute the "photdiag" command line program.
+    Execute the "photodiag" command line program.
 
     This is a wrapper around 'bokeh serve' command which provides a user interface to launch applications
-    bundled with photdiag package.
+    bundled with photodiag package.
 
     For more information, see:
     https://bokeh.pydata.org/en/latest/docs/reference/command/subcommands/serve.html
@@ -12,9 +12,9 @@ def main():
     import os
     import sys
 
-    apps_path = os.path.join(os.environ['CONDA_PREFIX'], 'photdiag-apps')
+    apps_path = os.path.join(os.environ['CONDA_PREFIX'], 'photodiag-apps')
 
-    # TODO: generalize photdiag parsing after python/3.7 release
+    # TODO: generalize photodiag parsing after python/3.7 release
     # due to an issue with 'argparse' (https://bugs.python.org/issue14191),
     # which is supposed to be fixed in python/3.7, keep parsing unflexible, but very simple
     _, app_name, *app_args = sys.argv

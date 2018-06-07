@@ -1,7 +1,7 @@
 {% set data = load_setup_py_data() %}
 
 package:
-  name: photdiag
+  name: photodiag
   version: {{ data['version'] }}
 
 source:
@@ -9,7 +9,7 @@ source:
 
 build:
   entry_points:
-    - photdiag = photdiag.photdiag:main
+    - photodiag = photodiag.photodiag:main
 
 requirements:
   build:
@@ -23,7 +23,7 @@ requirements:
     - h5py
 
 about:
-  home: https://git.psi.ch/usov_i/photdiag
+  home: https://git.psi.ch/usov_i/photodiag
   summary: {{ data['description'] }}
   license: GNU GPLv3
   license_file: LICENSE
