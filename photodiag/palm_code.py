@@ -16,7 +16,7 @@ class PalmSetup:
         """Initialize PALM setup object.
 
         For the electron time of flight (eTOF) spectrometers the following notation is used: presense of a
-        streaking field ('0': no streaking, '1': positive streaking)
+        streaking field ('0': no streaking (reference), '1': positive streaking, '-1': negative streaking)
         """
         self.channels = channels
         self.etofs = {'0': Spectrometer(), '1': Spectrometer()}
@@ -206,10 +206,10 @@ class PalmSetup:
             pulse arrival delays via cross-correlation method
         """
         data_str = input_data['1']
-        data_nonstr = input_data['0']
+        data_ref = input_data['0']
 
-        corr_results = np.empty_like(data_nonstr)
-        for i, (x, y) in enumerate(zip(data_nonstr, data_str)):
+        corr_results = np.empty_like(data_ref)
+        for i, (x, y) in enumerate(zip(data_ref, data_str)):
             corr_results[i, :] = np.correlate(x, y, mode='same')
 
         corr_res_uncut = corr_results.copy()
@@ -236,10 +236,10 @@ class PalmSetup:
             result(s) of deconvolution
         """
         data_str = input_data['1']
-        data_nonstr = input_data['0']
+        data_ref = input_data['0']
 
         deconv_result = np.empty_like(data_str)
-        for i, (x, y) in enumerate(zip(data_nonstr, data_str)):
+        for i, (x, y) in enumerate(zip(data_ref, data_str)):
             deconv_result[i] = richardson_lucy_deconv(x, y, iterations=iterations)
 
         if debug:
@@ -349,16 +349,16 @@ class PalmSetup:
             pulse lenghts
         """
         data_str = input_data['1'].copy()
-        data_nonstr = input_data['0'].copy()
+        data_ref = input_data['0'].copy()
 
         # thr1 = np.mean(self.spectrometers['1'].noise_std)
         # thr3 = np.mean(self.spectrometers['0'].noise_std)
 
         data_str = self._truncate_highest_peak(data_str, 0)
-        data_nonstr = self._truncate_highest_peak(data_nonstr, 0)
+        data_ref = self._truncate_highest_peak(data_ref, 0)
 
         _, var1 = self._peak_params(lags, data_str)
-        _, var3 = self._peak_params(lags, data_nonstr)
+        _, var3 = self._peak_params(lags, data_ref)
 
         ind = np.logical_and(~np.isnan(var1), ~np.isnan(var3))
 
@@ -367,7 +367,7 @@ class PalmSetup:
         return pulse_length
 
 
-def richardson_lucy_deconv(streaked_signal, base_signal, iterations=200, noise=0.3):
+def richardson_lucy_deconv(streaked_signal, reference_signal, iterations=200, noise=0.3):
     """Deconvolve eTOF waveforms using Richardson-Lucy algorithm, extracting pulse profile in a time domain.
 
     The assumption is that the streaked waveform was created by convolving an with a point-spread function
@@ -375,7 +375,7 @@ def richardson_lucy_deconv(streaked_signal, base_signal, iterations=200, noise=0
 
     Args:
         streaked_signal: waveform after streaking
-        base_signal: waveform without effect of streaking
+        reference_signal: waveform without effect of streaking
         iterations: number of Richardson-Lucy algorithm iterations
         noise: noise level in the units of waveform intensity
 
@@ -387,7 +387,7 @@ def richardson_lucy_deconv(streaked_signal, base_signal, iterations=200, noise=0
 
     weight = ones(streaked_signal.shape)
 
-    otf = fft(fftshift(base_signal))  # optical transfer function
+    otf = fft(fftshift(reference_signal))  # optical transfer function
     time_profile = streaked_signal.copy()
     time_profile.clip(min=0)
 

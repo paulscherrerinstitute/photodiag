@@ -34,7 +34,7 @@ HDF5_FILE_PATH_UPDATE_PERIOD = 10000  # ms
 HDF5_DATASET_PATH = '/entry/data/data'
 hdf5_file_data = []
 
-palm = photodiag.PalmSetup({'0': receiver.unstreaked, '1': receiver.streaked})
+palm = photodiag.PalmSetup({'0': receiver.reference, '1': receiver.streaked})
 
 
 # Calibration averaged waveforms per photon energy
@@ -68,14 +68,14 @@ calib_wf_plot.add_layout(Grid(dimension=1, ticker=BasicTicker()))
 
 # ---- multiline calibration waveforms glyphs
 calib_waveform_source0 = ColumnDataSource(dict(xs=[], ys=[], en=[]))
-unstrk_ml = calib_wf_plot.add_glyph(calib_waveform_source0, MultiLine(xs='xs', ys='ys', line_color='blue'))
+reference_ml = calib_wf_plot.add_glyph(calib_waveform_source0, MultiLine(xs='xs', ys='ys', line_color='blue'))
 
 calib_waveform_source1 = ColumnDataSource(dict(xs=[], ys=[], en=[]))
-streak_ml = calib_wf_plot.add_glyph(calib_waveform_source1, MultiLine(xs='xs', ys='ys', line_color='red'))
+streaked_ml = calib_wf_plot.add_glyph(calib_waveform_source1, MultiLine(xs='xs', ys='ys', line_color='red'))
 
 calib_wf_plot.add_layout(Legend(items=[
-    ("unstreaked", [unstrk_ml]),
-    ("streaked", [streak_ml])
+    ("reference", [reference_ml]),
+    ("streaked", [streaked_ml])
 ]))
 calib_wf_plot.legend.click_policy = "hide"
 
@@ -105,19 +105,19 @@ calib_fit_plot.add_layout(Grid(dimension=1, ticker=BasicTicker()))
 
 # ---- calibration fit points circle glyphs
 calib_point_source0 = ColumnDataSource(dict(x=[], y=[]))
-unstrk_c = calib_fit_plot.add_glyph(calib_point_source0, Circle(x='x', y='y', line_color='blue'))
+reference_c = calib_fit_plot.add_glyph(calib_point_source0, Circle(x='x', y='y', line_color='blue'))
 calib_point_source1 = ColumnDataSource(dict(x=[], y=[]))
-streak_c = calib_fit_plot.add_glyph(calib_point_source1, Circle(x='x', y='y', line_color='red'))
+streaked_c = calib_fit_plot.add_glyph(calib_point_source1, Circle(x='x', y='y', line_color='red'))
 
 # ---- calibration fit line glyphs
 calib_fit_source0 = ColumnDataSource(dict(x=[], y=[]))
-unstrk_l = calib_fit_plot.add_glyph(calib_fit_source0, Line(x='x', y='y', line_color='blue'))
+reference_l = calib_fit_plot.add_glyph(calib_fit_source0, Line(x='x', y='y', line_color='blue'))
 calib_fit_source1 = ColumnDataSource(dict(x=[], y=[]))
-streak_l = calib_fit_plot.add_glyph(calib_fit_source1, Line(x='x', y='y', line_color='red'))
+streaked_l = calib_fit_plot.add_glyph(calib_fit_source1, Line(x='x', y='y', line_color='red'))
 
 calib_fit_plot.add_layout(Legend(items=[
-    ("unstreaked", [unstrk_c, unstrk_l]),
-    ("streaked", [streak_c, streak_l])
+    ("reference", [reference_c, reference_l]),
+    ("streaked", [streaked_c, streaked_l])
 ]))
 calib_fit_plot.legend.click_policy = "hide"
 
@@ -155,7 +155,7 @@ calib_thz_fit_source = ColumnDataSource(dict(x=[], y=[]))
 thz_fit_l = calib_thz_plot.add_glyph(calib_thz_fit_source, Line(x='x', y='y', line_color='blue'))
 
 
-# Streaked and unstreaked waveforms plot
+# Streaked and reference waveforms plot
 waveform_plot = Plot(
     title=Title(text="Waveforms"),
     x_range=DataRange1d(),
@@ -178,13 +178,13 @@ waveform_plot.add_layout(Grid(dimension=0, ticker=BasicTicker()))
 waveform_plot.add_layout(Grid(dimension=1, ticker=BasicTicker()))
 
 # ---- waveforms line glyphs
-waveform_source = ColumnDataSource(dict(x_str=[], y_str=[], x_unstr=[], y_unstr=[]))
-unstrk_l = waveform_plot.add_glyph(waveform_source, Line(x='x_unstr', y='y_unstr', line_color='blue'))
-streak_l = waveform_plot.add_glyph(waveform_source, Line(x='x_str', y='y_str', line_color='red'))
+waveform_source = ColumnDataSource(dict(x_str=[], y_str=[], x_ref=[], y_ref=[]))
+reference_l = waveform_plot.add_glyph(waveform_source, Line(x='x_ref', y='y_ref', line_color='blue'))
+streaked_l = waveform_plot.add_glyph(waveform_source, Line(x='x_str', y='y_str', line_color='red'))
 
 waveform_plot.add_layout(Legend(items=[
-    ("unstreaked", [unstrk_l]),
-    ("streaked", [streak_l])
+    ("reference", [reference_l]),
+    ("streaked", [streaked_l])
 ]))
 waveform_plot.legend.click_policy = "hide"
 
@@ -439,7 +439,7 @@ def hdf5_update(pulse, delays, debug_data):
     prep_data, lags, corr_res_uncut, corr_results = debug_data
     waveform_source.data.update(
         x_str=palm.interp_energy, y_str=prep_data['1'][pulse, :],
-        x_unstr=palm.interp_energy, y_unstr=prep_data['0'][pulse, :])
+        x_ref=palm.interp_energy, y_ref=prep_data['0'][pulse, :])
     xcorr_source.data.update(lags=lags, xcorr1=corr_res_uncut[pulse, :], xcorr2=corr_results[pulse, :])
     xcorr_plot_pos.location = delays[pulse]
     delay_plot_pos.location = pulse
@@ -518,14 +518,14 @@ def update(message):
     if connected and receiver.state == 'receiving':
         stream_t += 1
 
-        y_unstreaked = message[receiver.unstreaked].value
-        x_unstreaked = np.arange(len(y_unstreaked))
+        y_reference = message[receiver.reference].value
+        x_reference = np.arange(len(y_reference))
 
         y_streaked = message[receiver.streaked].value
         x_streaked = np.arange(len(y_streaked))
 
         waveform_source.stream(new_data=dict(x_streaked=[x_streaked], y_streaked=[y_streaked],
-                                             x_unstreaked=[x_unstreaked], y_unstreaked=[y_unstreaked]),
+                                             x_reference=[x_reference], y_reference=[y_reference]),
                                rollover=STREAM_ROLLOVER)
 
 
