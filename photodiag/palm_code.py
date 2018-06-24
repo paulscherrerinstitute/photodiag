@@ -20,7 +20,7 @@ class PalmSetup:
         """
         self.channels = channels
         self.etofs = {'0': Spectrometer(), '1': Spectrometer()}
-        self.interp_energy = np.linspace(2850, 3100, 300)
+        self.energy_range = np.linspace(2850, 3100, 300)
 
     def calibrate_etof(self, folder_name, bkg_en=None, etofs=None, overwrite=True):
         """General routine for a calibration process of the eTOF spectrometers.
@@ -48,14 +48,14 @@ class PalmSetup:
         with os.scandir(folder_name) as it:
             for entry in it:
                 if entry.is_file() and entry.name.endswith(('.hdf5', '.h5')):
-                    energy = self._get_energy_from_filename(entry.name)
+                    energy = get_energy_from_filename(entry.name)
 
                     for etof_key in calibrated_etofs:
                         etof = self.etofs[etof_key]
                         if not overwrite and energy in etof.calib_data.index:
                             continue
 
-                        _, calib_waveforms = self._get_tags_and_data(entry.path, self.channels[etof_key])
+                        _, calib_waveforms = get_tags_and_data(entry.path, self.channels[etof_key])
 
                         etof.add_calibration_point(energy, calib_waveforms)
 
@@ -105,7 +105,7 @@ class PalmSetup:
         for etof_key, data in waveforms.items():
             etof = self.etofs[etof_key]
             prep_data[etof_key] = etof.convert(
-                data, self.interp_energy, jacobian=jacobian, noise_thr=noise_thr)
+                data, self.energy_range, jacobian=jacobian, noise_thr=noise_thr)
 
         if method == 'xcorr':
             results = self._cross_corr_analysis(prep_data, debug=debug)
@@ -145,52 +145,12 @@ class PalmSetup:
         """
         data_raw = {}
         for etof_key in self.etofs:
-            tags, data = self._get_tags_and_data(filepath, self.channels[etof_key])
+            tags, data = get_tags_and_data(filepath, self.channels[etof_key])
             data_raw[etof_key] = data
             # data_raw[etof_key] = np.expand_dims(data[1, :], axis=0)
 
         results = self.process(data_raw, debug=debug)
         return (tags, *results)
-
-    @staticmethod
-    def _get_tags_and_data(filepath, etof_path):
-        """Read PALM waveforms from an hdf5 file.
-
-        Args:
-            filepath: path to an hdf5 file
-            etof_path: location of data in hdf5 file
-
-        Returns:
-            tags and data
-        """
-        with h5py.File(filepath, 'r') as h5f:
-            if 'monofiles' in filepath:  # calibration data
-                tags = h5f['/pulseId'][:]
-                data = -h5f[f'/{etof_path}'][:]
-            else:
-                try:
-                    tags = h5f['/scan 1/SLAAR21-LMOT-M552:MOT.VAL'][:]
-                    data = -h5f[f'/scan 1/{etof_path} averager'][:]
-                except KeyError:
-                    tags = h5f[f'/data/{etof_path}/pulse_id'][:]
-                    data = -h5f[f'/data/{etof_path}/data'][:]
-
-        return tags, data
-
-    @staticmethod
-    def _get_energy_from_filename(filename):
-        """Parse filename and return energy value (first float number encountered). This method is likely to
-        be changed in order to adapt to a format of PALM callibration files in the future.
-
-        Args:
-            filename: file name to be parsed
-
-        Returns:
-            energy in eV as a float number
-        """
-        energy = float(re.findall(r'\d+', filename)[0])
-
-        return energy
 
     def _cross_corr_analysis(self, input_data, debug=False):
         """Perform analysis to determine arrival times via cross correlation.
@@ -215,7 +175,7 @@ class PalmSetup:
         corr_res_uncut = corr_results.copy()
         corr_results = self._truncate_highest_peak(corr_results, 0)
 
-        lags = self.interp_energy - self.interp_energy[int(self.interp_energy.size/2)]
+        lags = self.energy_range - self.energy_range[int(self.energy_range.size/2)]
 
         delays, _ = self._peak_params(lags, corr_results)
         pulse_lengths = self._peak_center_of_mass(input_data, lags)
@@ -366,6 +326,43 @@ class PalmSetup:
 
         return pulse_length
 
+def get_energy_from_filename(filename):
+    """Parse filename and return energy value (first float number encountered). This method is likely to
+    be changed in order to adapt to a format of PALM callibration files in the future.
+
+    Args:
+        filename: file name to be parsed
+
+    Returns:
+        energy in eV as a float number
+    """
+    energy = float(re.findall(r'\d+', filename)[0])
+
+    return energy
+
+def get_tags_and_data(filepath, etof_path):
+    """Read PALM waveforms from an hdf5 file.
+
+    Args:
+        filepath: path to an hdf5 file
+        etof_path: location of data in hdf5 file
+
+    Returns:
+        tags and data
+    """
+    with h5py.File(filepath, 'r') as h5f:
+        if 'monofiles' in filepath:  # calibration data
+            tags = h5f['/pulseId'][:]
+            data = -h5f[f'/{etof_path}'][:]
+        else:
+            try:
+                tags = h5f['/scan 1/SLAAR21-LMOT-M552:MOT.VAL'][:]
+                data = -h5f[f'/scan 1/{etof_path} averager'][:]
+            except KeyError:
+                tags = h5f[f'/data/{etof_path}/pulse_id'][:]
+                data = -h5f[f'/data/{etof_path}/data'][:]
+
+    return tags, data
 
 def richardson_lucy_deconv(streaked_signal, reference_signal, iterations=200, noise=0.3):
     """Deconvolve eTOF waveforms using Richardson-Lucy algorithm, extracting pulse profile in a time domain.

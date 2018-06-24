@@ -438,8 +438,8 @@ hdf5_update_fun = []
 def hdf5_update(pulse, delays, debug_data):
     prep_data, lags, corr_res_uncut, corr_results = debug_data
     waveform_source.data.update(
-        x_str=palm.interp_energy, y_str=prep_data['1'][pulse, :],
-        x_ref=palm.interp_energy, y_ref=prep_data['0'][pulse, :])
+        x_str=palm.energy_range, y_str=prep_data['1'][pulse, :],
+        x_ref=palm.energy_range, y_ref=prep_data['0'][pulse, :])
     xcorr_source.data.update(lags=lags, xcorr1=corr_res_uncut[pulse, :], xcorr2=corr_results[pulse, :])
     xcorr_plot_pos.location = delays[pulse]
     delay_plot_pos.location = pulse
