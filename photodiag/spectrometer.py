@@ -6,19 +6,14 @@ from scipy.optimize import curve_fit
 class Spectrometer:
     """Class describing a single eTOF spectrometer.
     """
-    def __init__(self, chan):
+    def __init__(self):
         """ Initialize Spectrometer object.
-
-        Args:
-            chan: channel name of the spectrometer data
         """
-        self.chan = chan
-
         # index of self.calib_data DataFrame is 'energy'
-        self.calib_data = pd.DataFrame(data={'waveform': np.array([], dtype=float),
-                                             't0': np.array([], dtype=int),
-                                             'noise_mean': np.array([], dtype=float),
-                                             'noise_std': np.array([], dtype=float)})
+        self.calib_data = pd.DataFrame({'waveform': np.array([], dtype=float),
+                                        't0': np.array([], dtype=int),
+                                        'noise_mean': np.array([], dtype=float),
+                                        'noise_std': np.array([], dtype=float)})
 
         self.calib_a = None
         self.calib_b = None

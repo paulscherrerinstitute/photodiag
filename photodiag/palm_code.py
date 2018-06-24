@@ -12,13 +12,14 @@ from photodiag.spectrometer import Spectrometer
 class PalmSetup:
     """Class describing the photon arrival and length monitor (PALM) setup.
     """
-    def __init__(self, unstr_chan, str_chan):
+    def __init__(self, channels):
         """Initialize PALM setup object.
 
         For the electron time of flight (eTOF) spectrometers the following notation is used: presense of a
         streaking field ('0': no streaking, '1': positive streaking)
         """
-        self.etofs = {'0': Spectrometer(chan=unstr_chan), '1': Spectrometer(chan=str_chan)}
+        self.channels = channels
+        self.etofs = {'0': Spectrometer(), '1': Spectrometer()}
         self.interp_energy = np.linspace(2850, 3100, 300)
 
     def calibrate_etof(self, folder_name, bkg_en=None, etofs=None, overwrite=True):
@@ -28,19 +29,20 @@ class PalmSetup:
             folder_name: location of hdf5 files with calibration data
             bkg_en: (optional) background energy profile to be subtracted from other waveforms (e.g. to
                     remove influence of Auger peaks)
-            etofs: (optional) list of eTOF spectrometers to be calibrated
+            etofs: (optional) list of eTOF spectrometer keys to be calibrated
             overwrite: (optional) start over a calibration process
 
         Returns:
             results of calibration as dictionary
         """
         if etofs is None:
-            calibrated_etofs = self.etofs.values()
+            calibrated_etofs = self.etofs.keys()
         else:
             calibrated_etofs = etofs
 
         if overwrite:
-            for etof in calibrated_etofs:
+            for etof_key in calibrated_etofs:
+                etof = self.etofs[etof_key]
                 etof.calib_data.drop(etof.calib_data.index[:], inplace=True)
 
         with os.scandir(folder_name) as it:
@@ -48,11 +50,12 @@ class PalmSetup:
                 if entry.is_file() and entry.name.endswith(('.hdf5', '.h5')):
                     energy = self._get_energy_from_filename(entry.name)
 
-                    for etof in calibrated_etofs:
+                    for etof_key in calibrated_etofs:
+                        etof = self.etofs[etof_key]
                         if not overwrite and energy in etof.calib_data.index:
                             continue
 
-                        _, calib_waveforms = self._get_tags_and_data(entry.path, etof.chan)
+                        _, calib_waveforms = self._get_tags_and_data(entry.path, self.channels[etof_key])
 
                         etof.add_calibration_point(energy, calib_waveforms)
 
@@ -141,8 +144,8 @@ class PalmSetup:
             tuple of tags and the corresponding results in a dictionary
         """
         data_raw = {}
-        for etof_key, etof in self.etofs.items():
-            tags, data = self._get_tags_and_data(filepath, etof.chan)
+        for etof_key in self.etofs:
+            tags, data = self._get_tags_and_data(filepath, self.channels[etof_key])
             data_raw[etof_key] = data
             # data_raw[etof_key] = np.expand_dims(data[1, :], axis=0)
 
