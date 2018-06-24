@@ -52,9 +52,6 @@ class PalmSetup:
 
                         _, calib_waveforms = self._get_tags_and_data(entry.path, etof.chan)
 
-                        # Filter out bad shots
-                        calib_waveforms = calib_waveforms[(calib_waveforms > -5000).all(axis=1)]
-
                         etof.add_calibration_point(energy, calib_waveforms)
 
         calib_results = {}
@@ -133,12 +130,6 @@ class PalmSetup:
             tags, data = self._get_tags_and_data(filepath, etof.chan)
             data_raw[etof_key] = data
             # data_raw[etof_key] = np.expand_dims(data[1, :], axis=0)
-
-        # Filter out bad shots
-        good_ind = (data_raw['0'] > -5000).all(axis=1) & (data_raw['1'] > -5000).all(axis=1)
-        data_raw['0'] = data_raw['0'][good_ind, :]
-        data_raw['1'] = data_raw['1'][good_ind, :]
-        tags = tags[good_ind]
 
         results = self.process(data_raw, debug=debug)
         return (tags, *results)
