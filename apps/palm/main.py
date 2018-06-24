@@ -79,6 +79,13 @@ calib_wf_plot.add_layout(Legend(items=[
 ]))
 calib_wf_plot.legend.click_policy = "hide"
 
+# ---- photon peak position
+phot_peak_pos_ref = Span(location=0, dimension='height', line_dash='dashed', line_color='blue')
+phot_peak_pos_str = Span(location=0, dimension='height', line_dash='dashed', line_color='red')
+calib_wf_plot.add_layout(phot_peak_pos_ref)
+calib_wf_plot.add_layout(phot_peak_pos_str)
+
+
 # Calibration fit plot
 calib_fit_plot = Plot(
     title=Title(text="eTOF calibration fit"),
@@ -329,6 +336,9 @@ def calibrate_button_callback():
     calib_waveform_source1.data.update(xs=len(etof_str.calib_data)*[etof_str.internal_time],
                                        ys=etof_str.calib_data['waveform'].tolist(),
                                        en=etof_str.calib_data.index.values)
+
+    phot_peak_pos_ref.location = etof_ref.internal_time[etof_ref.t0]
+    phot_peak_pos_str.location = etof_str.internal_time[etof_str.t0]
 
     def plot_fit(time, calib_a, calib_b):
         time_fit = np.linspace(time.min(), time.max(), 100)
