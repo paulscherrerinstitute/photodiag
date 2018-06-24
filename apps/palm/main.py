@@ -319,16 +319,16 @@ background_dropdown.on_click(background_dropdown_callback)
 
 # ---- load button
 def calibrate_button_callback():
-    calib_res = palm.calibrate(folder_name=calibration_path.value)
+    calib_res = palm.calibrate_etof(folder_name=calibration_path.value)
 
-    calib_data0 = palm.spectrometers['0'].calib_data
-    calib_data1 = palm.spectrometers['1'].calib_data
-    calib_waveform_source0.data.update(xs=len(calib_data0)*[palm.spectrometers['0'].internal_time],
-                                       ys=palm.spectrometers['0'].calib_data['waveform'].tolist(),
-                                       en=palm.spectrometers['0'].calib_data.index.values)
-    calib_waveform_source1.data.update(xs=len(calib_data1)*[palm.spectrometers['1'].internal_time],
-                                       ys=palm.spectrometers['1'].calib_data['waveform'].tolist(),
-                                       en=palm.spectrometers['1'].calib_data.index.values)
+    etof_ref = palm.etofs['0']
+    etof_str = palm.etofs['1']
+    calib_waveform_source0.data.update(xs=len(etof_ref.calib_data)*[etof_ref.internal_time],
+                                       ys=etof_ref.calib_data['waveform'].tolist(),
+                                       en=etof_ref.calib_data.index.values)
+    calib_waveform_source1.data.update(xs=len(etof_str.calib_data)*[etof_str.internal_time],
+                                       ys=etof_str.calib_data['waveform'].tolist(),
+                                       en=etof_str.calib_data.index.values)
 
     def plot_fit(time, calib_a, calib_b):
         time_fit = np.linspace(time.min(), time.max(), 100)
@@ -340,17 +340,15 @@ def calibrate_button_callback():
         x_fit, y_fit = plot_fit(x, a, c)
         circle.data.update(x=x, y=y)
         line.data.update(x=x_fit, y=y_fit)
-        # a_w.value = round(a, 2)
-        # c_w.value = round(c)
 
     update_calib_plot(calib_res['0'], calib_point_source0, calib_fit_source0)
     update_calib_plot(calib_res['1'], calib_point_source1, calib_fit_source1)
     calib_const_div.text = f"""
-    a_str = {palm.spectrometers['1'].calib_a:.2f}<br>
-    b_str = {palm.spectrometers['1'].calib_b:.2f}<br>
+    a_str = {etof_str.calib_a:.2f}<br>
+    b_str = {etof_str.calib_b:.2f}<br>
     <br>
-    a_unstr = {palm.spectrometers['0'].calib_a:.2f}<br>
-    b_unstr = {palm.spectrometers['0'].calib_b:.2f}
+    a_ref = {etof_ref.calib_a:.2f}<br>
+    b_ref = {etof_ref.calib_b:.2f}
     """
 
 

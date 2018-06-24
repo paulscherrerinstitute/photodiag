@@ -11,29 +11,29 @@ class PalmSetup:
     """Class describing the photon arrival and length monitor (PALM) setup.
     """
     def __init__(self, unstr_chan, str_chan):
-        """Initialize PALM setup object and optionally restore a particular state from the past.
+        """Initialize PALM setup object.
 
-        For the spectrometers the following notation is used: presense of a streaking field ('0': no
-        streaking, '1': positive streaking)
+        For the electron time of flight (eTOF) spectrometers the following notation is used: presense of a
+        streaking field ('0': no streaking, '1': positive streaking)
         """
-        self.spectrometers = {'0': Spectrometer(chan=unstr_chan), '1': Spectrometer(chan=str_chan)}
+        self.etofs = {'0': Spectrometer(chan=unstr_chan), '1': Spectrometer(chan=str_chan)}
         self.interp_energy = np.linspace(2850, 3100, 300)
 
-    def calibrate(self, folder_name, bkg_en=None, etofs=None, overwrite=True):
-        """General routine for a calibration process of the electron time of flight (eTOF) etofs.
+    def calibrate_etof(self, folder_name, bkg_en=None, etofs=None, overwrite=True):
+        """General routine for a calibration process of the eTOF spectrometers.
 
         Args:
             folder_name: location of hdf5 files with calibration data
             bkg_en: (optional) background energy profile to be subtracted from other waveforms (e.g. to
                     remove influence of Auger peaks)
-            etofs: (optional) list of etof spectrometers to be calibrated
+            etofs: (optional) list of eTOF spectrometers to be calibrated
             overwrite: (optional) start over a calibration process
 
         Returns:
             results of calibration as dictionary
         """
         if etofs is None:
-            calibrated_etofs = self.spectrometers.values()
+            calibrated_etofs = self.etofs.values()
         else:
             calibrated_etofs = etofs
 
@@ -58,10 +58,20 @@ class PalmSetup:
                         etof.add_calibration_point(energy, calib_waveforms)
 
         calib_results = {}
-        for etof_key in self.spectrometers:
-            calib_results[etof_key] = self.spectrometers[etof_key].fit_calibration_curve(bkg_en=bkg_en)
+        for etof_key in self.etofs:
+            calib_results[etof_key] = self.etofs[etof_key].fit_calibration_curve(bkg_en=bkg_en)
 
         return calib_results
+
+    def save_etof_calib(self, file):
+        """ Save eTOF calibration to a file.
+        """
+        pass
+
+    def load_etof_calib(self, file):
+        """Load eTOF calibration from a file.
+        """
+        pass
 
     def process(self, waveforms, method='xcorr', jacobian=False, noise_thr=3, debug=False):
         """Main function to analyse PALM data that pipelines separate stages of data processing.
@@ -78,7 +88,7 @@ class PalmSetup:
         """
         prep_data = {}
         for etof_key, data in waveforms.items():
-            etof = self.spectrometers[etof_key]
+            etof = self.etofs[etof_key]
             prep_data[etof_key] = etof.convert(
                 data, self.interp_energy, jacobian=jacobian, noise_thr=noise_thr)
 
@@ -93,6 +103,21 @@ class PalmSetup:
 
         return results
 
+    def calibrate_thz(self):
+        """Calibrate THz pulse.
+        """
+        pass
+
+    def save_thz_calib(self, file):
+        """ Save THz pulse calibration to a file.
+        """
+        pass
+
+    def load_thz_calib(self, file):
+        """Load THz pulse calibration from a file.
+        """
+        pass
+
     def process_hdf5_file(self, filepath, debug=False):
         """Load data for all registered spectrometers from an hdf5 file. This method is to be changed
         in order to adapt to a format of PALM data files in the future.
@@ -104,7 +129,7 @@ class PalmSetup:
             tuple of tags and the corresponding results in a dictionary
         """
         data_raw = {}
-        for etof_key, etof in self.spectrometers.items():
+        for etof_key, etof in self.etofs.items():
             tags, data = self._get_tags_and_data(filepath, etof.chan)
             data_raw[etof_key] = data
             # data_raw[etof_key] = np.expand_dims(data[1, :], axis=0)
