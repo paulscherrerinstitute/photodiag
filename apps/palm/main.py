@@ -58,7 +58,7 @@ calib_wf_plot_hover = HoverTool(tooltips=[
 calib_wf_plot.add_tools(PanTool(), BoxZoomTool(), WheelZoomTool(), ResetTool(), calib_wf_plot_hover)
 
 # ---- axes
-calib_wf_plot.add_layout(LinearAxis(axis_label='Spectrometer internal time, ns'), place='below')
+calib_wf_plot.add_layout(LinearAxis(axis_label='Spectrometer internal time'), place='below')
 calib_wf_plot.add_layout(LinearAxis(axis_label='Intensity', major_label_orientation='vertical'),
                          place='left')
 
@@ -101,7 +101,7 @@ calib_fit_plot = Plot(
 calib_fit_plot.add_tools(PanTool(), BoxZoomTool(), WheelZoomTool(), ResetTool())
 
 # ---- axes
-calib_fit_plot.add_layout(LinearAxis(axis_label='Photoelectron peak shift, ns'), place='below')
+calib_fit_plot.add_layout(LinearAxis(axis_label='Photoelectron peak shift'), place='below')
 calib_fit_plot.add_layout(LinearAxis(axis_label='X-fel energy, eV',
                                      major_label_orientation='vertical'),
                           place='left')
@@ -330,15 +330,15 @@ def calibrate_button_callback():
 
     etof_ref = palm.etofs['0']
     etof_str = palm.etofs['1']
-    calib_waveform_source0.data.update(xs=len(etof_ref.calib_data)*[etof_ref.internal_time],
+    calib_waveform_source0.data.update(xs=len(etof_ref.calib_data)*[list(range(etof_ref.internal_time_bins))],
                                        ys=etof_ref.calib_data['waveform'].tolist(),
                                        en=etof_ref.calib_data.index.values)
-    calib_waveform_source1.data.update(xs=len(etof_str.calib_data)*[etof_str.internal_time],
+    calib_waveform_source1.data.update(xs=len(etof_str.calib_data)*[list(range(etof_str.internal_time_bins))],
                                        ys=etof_str.calib_data['waveform'].tolist(),
                                        en=etof_str.calib_data.index.values)
 
-    phot_peak_pos_ref.location = etof_ref.internal_time[etof_ref.t0]
-    phot_peak_pos_str.location = etof_str.internal_time[etof_str.t0]
+    phot_peak_pos_ref.location = etof_ref.t0
+    phot_peak_pos_str.location = etof_str.t0
 
     def plot_fit(time, calib_a, calib_b):
         time_fit = np.linspace(time.min(), time.max(), 100)

@@ -17,9 +17,7 @@ class Spectrometer:
 
         self.calib_a = None
         self.calib_b = None
-
-        # current setup outputs 2000 points for a span of 400 ns excluding the end point
-        self.internal_time = np.linspace(0, 400, 2000, endpoint=False)
+        self.internal_time_bins = 2000
         self.noise_range = [0, 250]
         self.t0 = np.empty(0)
 
@@ -66,7 +64,7 @@ class Spectrometer:
 
         calib_peak_pos = calib_wf.apply(self._detect_rightmost_peak)
 
-        time_delays = self.internal_time[calib_peak_pos] - self.internal_time[calib_t0]
+        time_delays = calib_peak_pos - calib_t0
         pulse_energies = calib_wf.index
 
         def fit_func(time, a, b):
@@ -91,7 +89,7 @@ class Spectrometer:
         Returns:
             interpolated output data
         """
-        flight_time = self.internal_time[self.t0 + 1:] - self.internal_time[self.t0]
+        flight_time = np.arange(1, self.internal_time_bins - self.t0)
         pulse_energy = (self.calib_a / flight_time) ** 2 + self.calib_b
 
         output_data = input_data[:, self.t0 + 1:]
