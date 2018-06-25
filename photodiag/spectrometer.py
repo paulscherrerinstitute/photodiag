@@ -20,8 +20,7 @@ class Spectrometer:
 
         # current setup outputs 2000 points for a span of 400 ns excluding the end point
         self.internal_time = np.linspace(0, 400, 2000, endpoint=False)
-        self.noise_range = [0, 400]
-        self.data_range = [800, 1999]
+        self.noise_range = [0, 250]
         self.t0 = np.empty(0)
 
     def add_calibration_point(self, energy, calib_waveforms):
@@ -65,7 +64,7 @@ class Spectrometer:
             calib_t0 = calib_t0.loc[cd.index != bkg_en]
             calib_wf = calib_wf.loc[cd.index != bkg_en] - calib_wf.loc[bkg_en]
 
-        calib_peak_pos = self.data_range[0] + calib_wf.apply(lambda x: x[slice(*self.data_range)].argmax())
+        calib_peak_pos = calib_wf.apply(self._detect_rightmost_peak)
 
         time_delays = self.internal_time[calib_peak_pos] - self.internal_time[calib_t0]
         pulse_energies = calib_wf.index
@@ -147,3 +146,28 @@ class Spectrometer:
         amplitude = waveform[position]
 
         return position, amplitude
+
+    # @staticmethod
+    def _detect_rightmost_peak(self, waveform, noise_thr=10):
+        noise_std = self.calib_data.noise_std.mean()
+        above_thr = np.greater(waveform[::-1], noise_thr * noise_std)
+
+        # TODO: the code could be improved once the following issue is resolved,
+        # https://github.com/numpy/numpy/issues/2269
+        if not above_thr.any():
+            # no values above the noise threshold in the waveform
+            raise Exception('Can not detect a peak')
+
+        ind_l = np.argmax(above_thr)
+
+        if not above_thr[ind_l:].any():
+            # no values below the noise threshold along the peak
+            raise Exception('Can not detect a peak')
+
+        ind_r = ind_l + np.argmin(above_thr[ind_l:])
+        ind_l = len(above_thr) - ind_l - 1
+        ind_r = len(above_thr) - ind_r - 1
+
+        position = ind_r + np.argmax(waveform[ind_r:ind_l])
+
+        return position
