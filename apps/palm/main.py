@@ -337,8 +337,8 @@ def calibrate_button_callback():
                                        ys=etof_str.calib_data['waveform'].tolist(),
                                        en=etof_str.calib_data.index.values)
 
-    phot_peak_pos_ref.location = etof_ref.t0
-    phot_peak_pos_str.location = etof_str.t0
+    phot_peak_pos_ref.location = etof_ref.calib_t0
+    phot_peak_pos_str.location = etof_str.calib_t0
 
     def plot_fit(time, calib_a, calib_b):
         time_fit = np.linspace(time.min(), time.max(), 100)

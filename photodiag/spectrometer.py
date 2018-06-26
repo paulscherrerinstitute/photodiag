@@ -11,7 +11,8 @@ class Spectrometer:
         """
         # index of self.calib_data DataFrame is 'energy'
         self.calib_data = pd.DataFrame({'waveform': np.array([], dtype=float),
-                                        't0': np.array([], dtype=int),
+                                        'calib_t0': np.array([], dtype=int),
+                                        'calib_tpeak': np.array([], dtype=int),
                                         'noise_mean': np.array([], dtype=float),
                                         'noise_std': np.array([], dtype=float)})
 
@@ -19,7 +20,7 @@ class Spectrometer:
         self.calib_b = None
         self.internal_time_bins = 2000
         self.noise_range = [0, 250]
-        self.t0 = np.empty(0)
+        self.calib_t0 = np.empty(0)
 
     def add_calibration_point(self, energy, calib_waveforms):
         """Add calibration point for a specified X-ray energy.
@@ -35,10 +36,12 @@ class Spectrometer:
         data_avg = calib_waveforms.mean(axis=0)
         data_avg = data_avg - data_avg[slice(*self.noise_range)].mean()
 
-        t0, _ampl = self._detect_photon_peak(data_avg, noise_std)
+        calib_t0, _ampl = self._detect_photon_peak(data_avg, noise_std)
+        calib_tpeak = self._detect_electron_peak(data_avg, noise_std)
 
         self.calib_data.loc[energy] = {'waveform': data_avg,
-                                       't0': t0,
+                                       'calib_t0': calib_t0,
+                                       'calib_tpeak': calib_tpeak,
                                        'noise_mean': noise_mean,
                                        'noise_std': noise_std}
 
@@ -52,19 +55,19 @@ class Spectrometer:
             calibration constants and a goodness of fit
         """
         cd = self.calib_data
-        calib_t0 = cd.t0
+        calib_t0 = cd.calib_t0
         calib_wf = cd.waveform
+        calib_tpeak = cd.calib_tpeak
 
         if bkg_en is not None:
             if bkg_en not in cd.index:
                 raise Exception('Can not find data for background energy')
 
             calib_t0 = calib_t0.loc[cd.index != bkg_en]
+            calib_tpeak = calib_tpeak.loc[cd.index != bkg_en]
             calib_wf = calib_wf.loc[cd.index != bkg_en] - calib_wf.loc[bkg_en]
 
-        calib_peak_pos = calib_wf.apply(self._detect_rightmost_peak)
-
-        time_delays = calib_peak_pos - calib_t0
+        time_delays = calib_tpeak - calib_t0
         pulse_energies = calib_wf.index
 
         def fit_func(time, a, b):
@@ -73,7 +76,7 @@ class Spectrometer:
         popt, _pcov = curve_fit(fit_func, time_delays, pulse_energies)
 
         self.calib_a, self.calib_b = popt
-        self.t0 = np.round(cd.t0.mean()).astype(int)
+        self.calib_t0 = np.round(cd.calib_t0.mean()).astype(int)
 
         return popt, time_delays, pulse_energies
 
@@ -89,10 +92,10 @@ class Spectrometer:
         Returns:
             interpolated output data
         """
-        flight_time = np.arange(1, self.internal_time_bins - self.t0)
+        flight_time = np.arange(1, self.internal_time_bins - self.calib_t0)
         pulse_energy = (self.calib_a / flight_time) ** 2 + self.calib_b
 
-        output_data = input_data[:, self.t0 + 1:]
+        output_data = input_data[:, self.calib_t0 + 1:]
 
         if jacobian:
             jacobian_factor_inv = -pulse_energy ** (3 / 2)  # = 1 / jacobian_factor
@@ -145,9 +148,8 @@ class Spectrometer:
 
         return position, amplitude
 
-    # @staticmethod
-    def _detect_rightmost_peak(self, waveform, noise_thr=10):
-        noise_std = self.calib_data.noise_std.mean()
+    @staticmethod
+    def _detect_electron_peak(waveform, noise_std, noise_thr=10):
         above_thr = np.greater(waveform[::-1], noise_thr * noise_std)
 
         # TODO: the code could be improved once the following issue is resolved,
