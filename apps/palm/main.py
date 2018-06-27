@@ -10,8 +10,8 @@ from bokeh.models import BasicTicker, BoxZoomTool, Button, CheckboxButtonGroup, 
     PanTool, Plot, ResetTool, Slider, Spacer, Span, Tabs, TextInput, Title, Toggle, WheelZoomTool
 from tornado import gen
 
-import receiver
 import photodiag
+import receiver
 
 doc = curdoc()
 doc.title = "PALM"
@@ -289,10 +289,8 @@ pulse_len_plot.add_layout(pulse_len_plot_pos)
 # Fitting equation
 fit_eq_div = Div(text="""Fitting equation:<br><br><img src="/palm/static/5euwuy.gif">""")
 
-
 # Calibration constants
 calib_const_div = Div(text="")
-
 
 # Calibration panel
 def calibration_path_update():
@@ -303,10 +301,9 @@ def calibration_path_update():
                 if entry.is_file() and entry.name.endswith(('.hdf5', '.h5')):
                     new_menu.append((entry.name, entry.name))
 
-    background_dropdown.menu = sorted(new_menu)
+    background_dropdown.menu = sorted(new_menu, reverse=True)
 
 doc.add_periodic_callback(calibration_path_update, HDF5_FILE_PATH_UPDATE_PERIOD)
-
 
 # ---- calibration folder path text input
 def calibration_path_callback(_attr, _old, _new):
@@ -315,7 +312,6 @@ def calibration_path_callback(_attr, _old, _new):
 calibration_path = TextInput(title="Calibration Folder Path:", value=HDF5_FILE_PATH, width=250)
 calibration_path.on_change('value', calibration_path_callback)
 
-
 # ---- background dropdown menu
 def background_dropdown_callback(selection):
     background_dropdown.label = f"Background energy: {selection}"
@@ -323,11 +319,12 @@ def background_dropdown_callback(selection):
 background_dropdown = Dropdown(label="Background energy: None", menu=[], width=250)
 background_dropdown.on_click(background_dropdown_callback)
 
-
-# ---- load button
+# ---- calibrate button
 def calibrate_button_callback():
     calib_res = palm.calibrate_etof(folder_name=calibration_path.value)
+    update_calibration_plot(calib_res)
 
+def update_calibration_plot(calib_res):
     etof_ref = palm.etofs['0']
     etof_str = palm.etofs['1']
     calib_waveform_source0.data.update(xs=len(etof_ref.calib_data)*[list(range(etof_ref.internal_time_bins))],
@@ -345,14 +342,14 @@ def calibrate_button_callback():
         en_fit = (calib_a / time_fit) ** 2 + calib_b
         return time_fit, en_fit
 
-    def update_calib_plot(calib_results, circle, line):
+    def update_plot(calib_results, circle, line):
         (a, c), x, y = calib_results
         x_fit, y_fit = plot_fit(x, a, c)
         circle.data.update(x=x, y=y)
         line.data.update(x=x_fit, y=y_fit)
 
-    update_calib_plot(calib_res['0'], calib_point_source0, calib_fit_source0)
-    update_calib_plot(calib_res['1'], calib_point_source1, calib_fit_source1)
+    update_plot(calib_res['0'], calib_point_source0, calib_fit_source0)
+    update_plot(calib_res['1'], calib_point_source1, calib_fit_source1)
     calib_const_div.text = f"""
     a_str = {etof_str.calib_a:.2f}<br>
     b_str = {etof_str.calib_b:.2f}<br>
@@ -361,14 +358,45 @@ def calibrate_button_callback():
     b_ref = {etof_ref.calib_b:.2f}
     """
 
-
 calibrate_button = Button(label="Calibrate", button_type='default', width=250)
 calibrate_button.on_click(calibrate_button_callback)
 
+# ---- save calibration button
+def save_button_callback():
+    palm.save_etof_calib()
+    update_calib_load_menu()
+
+save_button = Button(label="Save", button_type='default', width=120)
+save_button.on_click(save_button_callback)
+
+# ---- load calibration button
+def load_button_callback(selection):
+    calib_file = os.path.join(os.path.expanduser('~'), 'eTOF_calibs', selection)
+    palm.load_etof_calib(calib_file)
+    calib_results = {}
+    for etof_key in palm.etofs:
+        calib_results[etof_key] = palm.etofs[etof_key].fit_calibration_curve()
+    update_calibration_plot(calib_results)
+
+def update_calib_load_menu():
+    new_menu = []
+    with os.scandir(os.path.join(os.path.expanduser('~'), 'eTOF_calibs')) as it:
+        for entry in it:
+            if entry.is_file():
+                new_menu.append((entry.name, entry.name))
+
+    load_button.menu = sorted(new_menu, reverse=True)
+
+doc.add_next_tick_callback(update_calib_load_menu)
+doc.add_periodic_callback(update_calib_load_menu, 10000)
+
+load_button = Dropdown(label="Load", menu=[], width=120)
+load_button.on_click(load_button_callback)
 
 # assemble
 tab_calibration = Panel(
-    child=column(calibration_path, background_dropdown, calibrate_button),
+    child=column(calibration_path, background_dropdown, calibrate_button,
+                 row(save_button, Spacer(width=10), load_button)),
     title="Calibration")
 
 
@@ -429,7 +457,7 @@ def hdf5_file_path_update():
                 if entry.is_file() and entry.name.endswith(('.hdf5', '.h5')):
                     new_menu.append((entry.name, entry.name))
 
-    saved_runs_dropdown.menu = sorted(new_menu)
+    saved_runs_dropdown.menu = sorted(new_menu, reverse=True)
 
 doc.add_periodic_callback(hdf5_file_path_update, HDF5_FILE_PATH_UPDATE_PERIOD)
 
