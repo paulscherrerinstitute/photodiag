@@ -20,7 +20,7 @@ class PalmSetup:
         """
         self.channels = channels
         self.etofs = {'0': Spectrometer(), '1': Spectrometer()}
-        self.energy_range = np.linspace(2850, 3100, 300)
+        self.energy_range = np.linspace(4850, 5150, 301)
 
     def calibrate_etof(self, folder_name, bkg_en=None, etofs=None, overwrite=True):
         """General routine for a calibration process of the eTOF spectrometers.
@@ -69,7 +69,7 @@ class PalmSetup:
         """ Save eTOF calibration to a file.
         """
         if not file:
-            file = f"eTOF_calib_{datetime.datetime.now().isoformat(sep='_', timespec='seconds')}"
+            file = f"{datetime.datetime.now().isoformat(sep='_', timespec='seconds')}"
 
         path, file = os.path.split(file)
 

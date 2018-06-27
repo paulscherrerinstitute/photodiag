@@ -149,7 +149,7 @@ class Spectrometer:
         return position, amplitude
 
     @staticmethod
-    def _detect_electron_peak(waveform, noise_std, noise_thr=10):
+    def _detect_electron_peak(waveform, noise_std, noise_thr=20):
         above_thr = np.greater(waveform[::-1], noise_thr * noise_std)
 
         # TODO: the code could be improved once the following issue is resolved,
