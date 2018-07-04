@@ -6,9 +6,13 @@ data_buffer = deque(maxlen=BUFFER_SIZE)
 
 state = 'polling'
 
-reference = 'SAROP21-PALMK134:CH1_BUFFER'
-streaked = 'SAROP21-PALMK134:CH2_BUFFER'
+# bernina
+# reference = 'SAROP21-PALMK134:CH1_BUFFER'
+# streaked = 'SAROP21-PALMK134:CH2_BUFFER'
 
+# alvra
+reference = 'SAROP11-PALMK118:CH1_BUFFER'
+streaked = 'SAROP11-PALMK118:CH2_BUFFER'
 
 def stream_receive():
     global state

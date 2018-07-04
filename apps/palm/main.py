@@ -552,19 +552,15 @@ doc.add_root(final_layout)
 
 @gen.coroutine
 def update(message):
-    global stream_t
     if connected and receiver.state == 'receiving':
-        stream_t += 1
+        y_ref = message[receiver.reference].value[np.newaxis, :]
+        y_str = message[receiver.streaked].value[np.newaxis, :]
 
-        y_reference = message[receiver.reference].value
-        x_reference = np.arange(len(y_reference))
+        y_ref = palm.etofs['0'].convert(y_ref, palm.energy_range)
+        y_str = palm.etofs['1'].convert(y_str, palm.energy_range)
 
-        y_streaked = message[receiver.streaked].value
-        x_streaked = np.arange(len(y_streaked))
-
-        waveform_source.stream(new_data=dict(x_streaked=[x_streaked], y_streaked=[y_streaked],
-                                             x_reference=[x_reference], y_reference=[y_reference]),
-                               rollover=STREAM_ROLLOVER)
+        waveform_source.data.update(x_str=palm.energy_range, y_str=y_str[0, :],
+                                    x_ref=palm.energy_range, y_ref=y_ref[0, :])
 
 
 def internal_periodic_callback():
