@@ -29,6 +29,7 @@ APP_FPS = 1
 stream_t = 0
 STREAM_ROLLOVER = 3600
 
+DEFAULT_CALIB_PATH = os.path.join(os.path.expanduser('~'), 'eTOF_calibs')
 HDF5_FILE_PATH = '/filepath'
 HDF5_FILE_PATH_UPDATE_PERIOD = 10000  # ms
 HDF5_DATASET_PATH = '/entry/data/data'
@@ -371,7 +372,7 @@ save_button.on_click(save_button_callback)
 
 # ---- load calibration button
 def load_button_callback(selection):
-    calib_file = os.path.join(os.path.expanduser('~'), 'eTOF_calibs', selection)
+    calib_file = os.path.join(DEFAULT_CALIB_PATH, selection)
     palm.load_etof_calib(calib_file)
     calib_results = {}
     for etof_key in palm.etofs:
@@ -379,13 +380,14 @@ def load_button_callback(selection):
     update_calibration_plot(calib_results)
 
 def update_calib_load_menu():
-    new_menu = []
-    with os.scandir(os.path.join(os.path.expanduser('~'), 'eTOF_calibs')) as it:
-        for entry in it:
-            if entry.is_file():
-                new_menu.append((entry.name, entry.name))
+    if os.path.isdir(DEFAULT_CALIB_PATH):
+        new_menu = []
+        with os.scandir(DEFAULT_CALIB_PATH) as it:
+            for entry in it:
+                if entry.is_file():
+                    new_menu.append((entry.name, entry.name))
 
-    load_button.menu = sorted(new_menu, reverse=True)
+        load_button.menu = sorted(new_menu, reverse=True)
 
 doc.add_next_tick_callback(update_calib_load_menu)
 doc.add_periodic_callback(update_calib_load_menu, 10000)
