@@ -29,7 +29,8 @@ class PsenSetup:
 
         Args:
             filepath: path of a csv file with data
-            method: {'derivative', 'fitting', 'average'(default)} available methods of timing edge detection
+            method: {'derivative', 'fitting', 'average'(default)} available methods of timing edge
+                detection
             remove_nans: clear data from NaNs also removing the corresponding tags
         """
         data = np.genfromtxt(filepath, delimiter=',', skip_header=2)

@@ -10,11 +10,12 @@ class Spectrometer:
         """ Initialize Spectrometer object.
         """
         # index of self.calib_data DataFrame is 'energy'
-        self.calib_data = pd.DataFrame({'waveform': np.array([], dtype=float),
-                                        'calib_t0': np.array([], dtype=int),
-                                        'calib_tpeak': np.array([], dtype=int),
-                                        'noise_mean': np.array([], dtype=float),
-                                        'noise_std': np.array([], dtype=float)})
+        self.calib_data = pd.DataFrame({
+            'waveform': np.array([], dtype=float),
+            'calib_t0': np.array([], dtype=int),
+            'calib_tpeak': np.array([], dtype=int),
+            'noise_mean': np.array([], dtype=float),
+            'noise_std': np.array([], dtype=float)})
 
         self.calib_a = None
         self.calib_b = None
@@ -39,11 +40,12 @@ class Spectrometer:
         calib_t0, _ampl = self._detect_photon_peak(data_avg, noise_std)
         calib_tpeak = self._detect_electron_peak(data_avg, noise_std)
 
-        self.calib_data.loc[energy] = {'waveform': data_avg,
-                                       'calib_t0': calib_t0,
-                                       'calib_tpeak': calib_tpeak,
-                                       'noise_mean': noise_mean,
-                                       'noise_std': noise_std}
+        self.calib_data.loc[energy] = {
+            'waveform': data_avg,
+            'calib_t0': calib_t0,
+            'calib_tpeak': calib_tpeak,
+            'noise_mean': noise_mean,
+            'noise_std': noise_std}
 
     def fit_calibration_curve(self, bkg_en=None):
         """Perform fitting of calibration data.
@@ -81,8 +83,9 @@ class Spectrometer:
         return popt, time_delays, pulse_energies
 
     def convert(self, input_data, interp_energy, jacobian=False, noise_thr=3):
-        """Perform electron time of flight (eTOF) to pulse energy transformation (ns -> eV) of data through
-        the spectrometer's calibration constants and a photon peak position followed by 1D interpolation.
+        """Perform electron time of flight (eTOF) to pulse energy transformation (ns -> eV) of data
+        through the spectrometer's calibration constants and a photon peak position followed by
+        1D interpolation.
 
         Args:
             input_data: data to be processed
@@ -104,8 +107,8 @@ class Spectrometer:
         def interpolate_row(data, energy, interp_energy):
             return np.interp(interp_energy, energy, data)
 
-        output_data = np.apply_along_axis(interpolate_row, 1,
-                                          output_data[:, ::-1], pulse_energy[::-1], interp_energy)
+        output_data = np.apply_along_axis(
+            interpolate_row, 1, output_data[:, ::-1], pulse_energy[::-1], interp_energy)
 
         output_data = output_data - noise_thr * self.calib_data.noise_std.mean()
 
@@ -115,14 +118,14 @@ class Spectrometer:
     def _detect_photon_peak(waveform, noise_std, noise_thr=1):
         """Estimate position and amplitude of a photon peak.
 
-        Under assumption that the photon peak is the first peak encontered above the specified noise
-        level (= noise_thr * noise_std).
+        Under assumption that the photon peak is the first peak encontered above the specified
+        noise level (= noise_thr * noise_std).
 
         Args:
             waveform: waveform of interest
             noise_std: noise level in waveform units
-            noise_thr: number of noise_std standard deviations above which the signal is considered to be
-                detectable (default is 3-sigma)
+            noise_thr: number of noise_std standard deviations above which the signal is considered
+                to be detectable (default is 3-sigma)
 
         Returns:
             index of the photon peak position

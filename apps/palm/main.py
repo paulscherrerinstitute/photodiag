@@ -5,9 +5,10 @@ import numpy as np
 import pandas as pd
 from bokeh.io import curdoc
 from bokeh.layouts import column, row
-from bokeh.models import BasicTicker, BoxZoomTool, Button, CheckboxButtonGroup, Circle, ColumnDataSource, \
-    CustomJS, DataRange1d, Div, Dropdown, Grid, HoverTool, Legend, Line, LinearAxis, MultiLine, Panel, \
-    PanTool, Plot, ResetTool, Slider, Spacer, Span, Tabs, TextInput, Title, Toggle, WheelZoomTool
+from bokeh.models import BasicTicker, BoxZoomTool, Button, CheckboxButtonGroup, \
+    Circle, ColumnDataSource, CustomJS, DataRange1d, Div, Dropdown, Grid, \
+    HoverTool, Legend, Line, LinearAxis, MultiLine, Panel, PanTool, Plot, \
+    ResetTool, Slider, Spacer, Span, Tabs, TextInput, Title, Toggle, WheelZoomTool
 from tornado import gen
 
 import photodiag
@@ -21,7 +22,7 @@ current_results = ()
 
 connected = False
 
-# Currently in bokeh it's possible to control only a canvas size, but not a size of the plotting area.
+# Currently, it's possible to control only a canvas size, but not a size of the plotting area.
 WAVEFORM_CANVAS_WIDTH = 700
 WAVEFORM_CANVAS_HEIGHT = 400
 
@@ -60,8 +61,8 @@ calib_wf_plot.add_tools(PanTool(), BoxZoomTool(), WheelZoomTool(), ResetTool(), 
 
 # ---- axes
 calib_wf_plot.add_layout(LinearAxis(axis_label='Spectrometer internal time'), place='below')
-calib_wf_plot.add_layout(LinearAxis(axis_label='Intensity', major_label_orientation='vertical'),
-                         place='left')
+calib_wf_plot.add_layout(
+    LinearAxis(axis_label='Intensity', major_label_orientation='vertical'), place='left')
 
 # ---- grid lines
 calib_wf_plot.add_layout(Grid(dimension=0, ticker=BasicTicker()))
@@ -69,10 +70,12 @@ calib_wf_plot.add_layout(Grid(dimension=1, ticker=BasicTicker()))
 
 # ---- multiline calibration waveforms glyphs
 calib_waveform_source0 = ColumnDataSource(dict(xs=[], ys=[], en=[]))
-reference_ml = calib_wf_plot.add_glyph(calib_waveform_source0, MultiLine(xs='xs', ys='ys', line_color='blue'))
+reference_ml = calib_wf_plot.add_glyph(
+    calib_waveform_source0, MultiLine(xs='xs', ys='ys', line_color='blue'))
 
 calib_waveform_source1 = ColumnDataSource(dict(xs=[], ys=[], en=[]))
-streaked_ml = calib_wf_plot.add_glyph(calib_waveform_source1, MultiLine(xs='xs', ys='ys', line_color='red'))
+streaked_ml = calib_wf_plot.add_glyph(
+    calib_waveform_source1, MultiLine(xs='xs', ys='ys', line_color='red'))
 
 calib_wf_plot.add_layout(Legend(items=[
     ("reference", [reference_ml]),
@@ -103,9 +106,8 @@ calib_fit_plot.add_tools(PanTool(), BoxZoomTool(), WheelZoomTool(), ResetTool())
 
 # ---- axes
 calib_fit_plot.add_layout(LinearAxis(axis_label='Photoelectron peak shift'), place='below')
-calib_fit_plot.add_layout(LinearAxis(axis_label='X-fel energy, eV',
-                                     major_label_orientation='vertical'),
-                          place='left')
+calib_fit_plot.add_layout(
+    LinearAxis(axis_label='X-fel energy, eV', major_label_orientation='vertical'), place='left')
 
 # ---- grid lines
 calib_fit_plot.add_layout(Grid(dimension=0, ticker=BasicTicker()))
@@ -146,9 +148,8 @@ calib_thz_plot.add_tools(PanTool(), BoxZoomTool(), WheelZoomTool(), ResetTool())
 
 # ---- axes
 calib_thz_plot.add_layout(LinearAxis(axis_label='Stage delay position'), place='below')
-calib_thz_plot.add_layout(LinearAxis(axis_label='Energy shift, eV',
-                                     major_label_orientation='vertical'),
-                          place='left')
+calib_thz_plot.add_layout(
+    LinearAxis(axis_label='Energy shift, eV', major_label_orientation='vertical'), place='left')
 
 # ---- grid lines
 calib_thz_plot.add_layout(Grid(dimension=0, ticker=BasicTicker()))
@@ -156,7 +157,8 @@ calib_thz_plot.add_layout(Grid(dimension=1, ticker=BasicTicker()))
 
 # ---- calibration fit points circle glyphs
 calib_thz_point_source = ColumnDataSource(dict(x=[], y=[]))
-thz_fit_c = calib_thz_plot.add_glyph(calib_thz_point_source, Circle(x='x', y='y', line_color='blue'))
+thz_fit_c = calib_thz_plot.add_glyph(
+    calib_thz_point_source, Circle(x='x', y='y', line_color='blue'))
 
 # ---- calibration fit line glyphs
 calib_thz_fit_source = ColumnDataSource(dict(x=[], y=[]))
@@ -179,7 +181,8 @@ waveform_plot.add_tools(PanTool(), WheelZoomTool(), ResetTool())
 
 # ---- axes
 waveform_plot.add_layout(LinearAxis(axis_label='Photon energy, eV'), place='below')
-waveform_plot.add_layout(LinearAxis(axis_label='Intensity', major_label_orientation='vertical'), place='left')
+waveform_plot.add_layout(
+    LinearAxis(axis_label='Intensity', major_label_orientation='vertical'), place='left')
 
 # ---- grid lines
 waveform_plot.add_layout(Grid(dimension=0, ticker=BasicTicker()))
@@ -187,8 +190,10 @@ waveform_plot.add_layout(Grid(dimension=1, ticker=BasicTicker()))
 
 # ---- waveforms line glyphs
 waveform_source = ColumnDataSource(dict(x_str=[], y_str=[], x_ref=[], y_ref=[]))
-reference_l = waveform_plot.add_glyph(waveform_source, Line(x='x_ref', y='y_ref', line_color='blue'))
-streaked_l = waveform_plot.add_glyph(waveform_source, Line(x='x_str', y='y_str', line_color='red'))
+reference_l = waveform_plot.add_glyph(
+    waveform_source, Line(x='x_ref', y='y_ref', line_color='blue'))
+streaked_l = waveform_plot.add_glyph(
+    waveform_source, Line(x='x_str', y='y_str', line_color='red'))
 
 waveform_plot.add_layout(Legend(items=[
     ("reference", [reference_l]),
@@ -213,7 +218,8 @@ xcorr_plot.add_tools(PanTool(), WheelZoomTool(), ResetTool())
 
 # ---- axes
 xcorr_plot.add_layout(LinearAxis(axis_label='Delay, eV'), place='below')
-xcorr_plot.add_layout(LinearAxis(axis_label='Xcorr, a.u.', major_label_orientation='vertical'), place='left')
+xcorr_plot.add_layout(
+    LinearAxis(axis_label='Xcorr, a.u.', major_label_orientation='vertical'), place='left')
 
 # ---- grid lines
 xcorr_plot.add_layout(Grid(dimension=0, ticker=BasicTicker()))
@@ -222,7 +228,8 @@ xcorr_plot.add_layout(Grid(dimension=1, ticker=BasicTicker()))
 # ---- rgba image glyph
 xcorr_source = ColumnDataSource(dict(lags=[], xcorr1=[], xcorr2=[]))
 xcorr_pos_source = ColumnDataSource(dict(pos=[]))
-xcorr_plot.add_glyph(xcorr_source, Line(x='lags', y='xcorr1', line_color='purple', line_dash='dashed'))
+xcorr_plot.add_glyph(
+    xcorr_source, Line(x='lags', y='xcorr1', line_color='purple', line_dash='dashed'))
 xcorr_plot.add_glyph(xcorr_source, Line(x='lags', y='xcorr2', line_color='purple'))
 xcorr_plot_pos = Span(location=0, dimension='height')
 xcorr_plot.add_layout(xcorr_plot_pos)
@@ -243,7 +250,8 @@ delay_plot.add_tools(PanTool(), WheelZoomTool(), ResetTool())
 
 # ---- axes
 delay_plot.add_layout(LinearAxis(axis_label='Shot number'), place='below')
-delay_plot.add_layout(LinearAxis(axis_label='Delay, eV', major_label_orientation='vertical'), place='left')
+delay_plot.add_layout(
+    LinearAxis(axis_label='Delay, eV', major_label_orientation='vertical'), place='left')
 
 # ---- grid lines
 delay_plot.add_layout(Grid(dimension=0, ticker=BasicTicker()))
@@ -273,8 +281,8 @@ pulse_len_plot.add_tools(PanTool(), WheelZoomTool(), ResetTool())
 
 # ---- axes
 pulse_len_plot.add_layout(LinearAxis(axis_label='Shot number'), place='below')
-pulse_len_plot.add_layout(LinearAxis(axis_label='Pulse length', major_label_orientation='vertical'),
-                          place='left')
+pulse_len_plot.add_layout(
+    LinearAxis(axis_label='Pulse length', major_label_orientation='vertical'), place='left')
 
 # ---- grid lines
 pulse_len_plot.add_layout(Grid(dimension=0, ticker=BasicTicker()))
@@ -328,12 +336,16 @@ def calibrate_button_callback():
 def update_calibration_plot(calib_res):
     etof_ref = palm.etofs['0']
     etof_str = palm.etofs['1']
-    calib_waveform_source0.data.update(xs=len(etof_ref.calib_data)*[list(range(etof_ref.internal_time_bins))],
-                                       ys=etof_ref.calib_data['waveform'].tolist(),
-                                       en=etof_ref.calib_data.index.values)
-    calib_waveform_source1.data.update(xs=len(etof_str.calib_data)*[list(range(etof_str.internal_time_bins))],
-                                       ys=etof_str.calib_data['waveform'].tolist(),
-                                       en=etof_str.calib_data.index.values)
+
+    calib_waveform_source0.data.update(
+        xs=len(etof_ref.calib_data)*[list(range(etof_ref.internal_time_bins))],
+        ys=etof_ref.calib_data['waveform'].tolist(),
+        en=etof_ref.calib_data.index.values)
+
+    calib_waveform_source1.data.update(
+        xs=len(etof_str.calib_data)*[list(range(etof_str.internal_time_bins))],
+        ys=etof_str.calib_data['waveform'].tolist(),
+        en=etof_str.calib_data.index.values)
 
     phot_peak_pos_ref.location = etof_ref.calib_t0
     phot_peak_pos_str.location = etof_str.calib_t0
@@ -351,6 +363,7 @@ def update_calibration_plot(calib_res):
 
     update_plot(calib_res['0'], calib_point_source0, calib_fit_source0)
     update_plot(calib_res['1'], calib_point_source1, calib_fit_source1)
+
     calib_const_div.text = f"""
     a_str = {etof_str.calib_a:.2f}<br>
     b_str = {etof_str.calib_b:.2f}<br>
@@ -386,7 +399,6 @@ def update_calib_load_menu():
             for entry in it:
                 if entry.is_file():
                     new_menu.append((entry.name, entry.name))
-
         load_button.menu = sorted(new_menu, reverse=True)
 
 doc.add_next_tick_callback(update_calib_load_menu)
@@ -397,8 +409,9 @@ load_button.on_click(load_button_callback)
 
 # assemble
 tab_calibration = Panel(
-    child=column(calibration_path, background_dropdown, calibrate_button,
-                 row(save_button, Spacer(width=10), load_button)),
+    child=column(
+        calibration_path, background_dropdown, calibrate_button,
+        row(save_button, Spacer(width=10), load_button)),
     title="Calibration")
 
 
@@ -411,8 +424,8 @@ def buffer_slider_callback(_attr, _old, new):
 buffer_slider_source = ColumnDataSource(dict(value=[]))
 buffer_slider_source.on_change('data', buffer_slider_callback)
 
-buffer_slider = Slider(start=0, end=1, value=0, step=1, title="Buffered Image",
-                       callback_policy='mouseup')
+buffer_slider = Slider(
+    start=0, end=1, value=0, step=1, title="Buffered Image", callback_policy='mouseup')
 
 buffer_slider.callback = CustomJS(
     args=dict(source=buffer_slider_source),
@@ -446,8 +459,8 @@ intensity_stream_reset_button = Button(label="Reset", button_type='default', wid
 intensity_stream_reset_button.on_click(intensity_stream_reset_button_callback)
 
 # assemble
-tab_stream = Panel(child=column(buffer_slider, stream_button, intensity_stream_reset_button),
-                   title="Stream")
+tab_stream = Panel(
+    child=column(buffer_slider, stream_button, intensity_stream_reset_button), title="Stream")
 
 
 # HDF5 File panel
@@ -458,7 +471,6 @@ def hdf5_file_path_update():
             for entry in it:
                 if entry.is_file() and entry.name.endswith(('.hdf5', '.h5')):
                     new_menu.append((entry.name, entry.name))
-
     saved_runs_dropdown.menu = sorted(new_menu, reverse=True)
 
 doc.add_periodic_callback(hdf5_file_path_update, HDF5_FILE_PATH_UPDATE_PERIOD)
@@ -477,10 +489,14 @@ hdf5_file_path.on_change('value', hdf5_file_path_callback)
 hdf5_update_fun = []
 def hdf5_update(pulse, delays, debug_data):
     prep_data, lags, corr_res_uncut, corr_results = debug_data
+
     waveform_source.data.update(
         x_str=palm.energy_range, y_str=prep_data['1'][pulse, :],
         x_ref=palm.energy_range, y_ref=prep_data['0'][pulse, :])
-    xcorr_source.data.update(lags=lags, xcorr1=corr_res_uncut[pulse, :], xcorr2=corr_results[pulse, :])
+
+    xcorr_source.data.update(
+        lags=lags, xcorr1=corr_res_uncut[pulse, :], xcorr2=corr_results[pulse, :])
+
     xcorr_plot_pos.location = delays[pulse]
     delay_plot_pos.location = pulse
     pulse_len_plot_pos.location = pulse
@@ -535,19 +551,22 @@ hdf5_pulse_slider.on_change('value', hdf5_pulse_slider_callback)
 
 # assemble
 tab_hdf5file = Panel(
-    child=column(hdf5_file_path, saved_runs_dropdown, hdf5_pulse_slider, save_ti, autosave_cb, save_b),
+    child=column(
+        hdf5_file_path, saved_runs_dropdown, hdf5_pulse_slider, save_ti, autosave_cb, save_b),
     title="HDF5 File")
 
 data_source_tabs = Tabs(tabs=[tab_calibration, tab_hdf5file, tab_stream])
 
 # Final layouts
-layout_calib = row(calib_wf_plot, Spacer(width=50), calib_fit_plot, Spacer(width=50), calib_thz_plot)
+layout_calib = row(
+    calib_wf_plot, Spacer(width=50), calib_fit_plot, Spacer(width=50), calib_thz_plot)
 layout_proc = row(waveform_plot, Spacer(width=50), xcorr_plot)
 layout_res = row(delay_plot, Spacer(width=50), pulse_len_plot)
 layout_fit_res = column(fit_eq_div, calib_const_div)
-final_layout = column(row(layout_calib),
-                      row(layout_proc, Spacer(width=30), data_source_tabs, Spacer(width=30), layout_fit_res),
-                      row(layout_res, Spacer(width=30)))
+final_layout = column(
+    row(layout_calib),
+    row(layout_proc, Spacer(width=30), data_source_tabs, Spacer(width=30), layout_fit_res),
+    row(layout_res, Spacer(width=30)))
 
 doc.add_root(final_layout)
 
@@ -561,8 +580,9 @@ def update(message):
         y_ref = palm.etofs['0'].convert(y_ref, palm.energy_range)
         y_str = palm.etofs['1'].convert(y_str, palm.energy_range)
 
-        waveform_source.data.update(x_str=palm.energy_range, y_str=y_str[0, :],
-                                    x_ref=palm.energy_range, y_ref=y_ref[0, :])
+        waveform_source.data.update(
+            x_str=palm.energy_range, y_str=y_str[0, :],
+            x_ref=palm.energy_range, y_ref=y_ref[0, :])
 
 
 def internal_periodic_callback():

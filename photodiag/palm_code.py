@@ -15,8 +15,9 @@ class PalmSetup:
     def __init__(self, channels):
         """Initialize PALM setup object.
 
-        For the electron time of flight (eTOF) spectrometers the following notation is used: presense of a
-        streaking field ('0': no streaking (reference), '1': positive streaking, '-1': negative streaking)
+        For the electron time of flight (eTOF) spectrometers the following notation is used:
+        presense of a streaking field ('0': no streaking (reference), '1': positive streaking,
+        '-1': negative streaking)
         """
         self.channels = channels
         self.etofs = {'0': Spectrometer(), '1': Spectrometer()}
@@ -27,8 +28,8 @@ class PalmSetup:
 
         Args:
             folder_name: location of hdf5 files with calibration data
-            bkg_en: (optional) background energy profile to be subtracted from other waveforms (e.g. to
-                    remove influence of Auger peaks)
+            bkg_en: (optional) background energy profile to be subtracted from other waveforms
+                (e.g. to remove influence of Auger peaks)
             etofs: (optional) list of eTOF spectrometer keys to be calibrated
             overwrite: (optional) start over a calibration process
 
@@ -94,7 +95,8 @@ class PalmSetup:
         Args:
             waveforms: dictionary with waveforms from streaked and non-streaked spectrometers
             method: (optional) currently, only one method is available {'xcorr' (default), 'deconv'}
-            jacobian: (optional) apply jacobian corrections of spectrometer's time to energy transformation
+            jacobian: (optional) apply jacobian corrections of spectrometer's time to energy
+                transformation
             noise_thr:
             debug: (optional) return debug data
 
@@ -134,8 +136,8 @@ class PalmSetup:
         pass
 
     def process_hdf5_file(self, filepath, debug=False):
-        """Load data for all registered spectrometers from an hdf5 file. This method is to be changed
-        in order to adapt to a format of PALM data files in the future.
+        """Load data for all registered spectrometers from an hdf5 file. This method is to be
+        changed in order to adapt to a format of PALM data files in the future.
 
         Args:
             filepath: file path to be loaded
@@ -155,8 +157,8 @@ class PalmSetup:
     def _cross_corr_analysis(self, input_data, debug=False):
         """Perform analysis to determine arrival times via cross correlation.
 
-        Usually, this data can be used to initally identify pulses that are falling within linear slope of
-        a THz streak pulse.
+        Usually, this data can be used to initally identify pulses that are falling within linear
+        slope of a THz streak pulse.
 
         Args:
             input_data: input data to be correlated
@@ -327,8 +329,8 @@ class PalmSetup:
         return pulse_length
 
 def get_energy_from_filename(filename):
-    """Parse filename and return energy value (first float number encountered). This method is likely to
-    be changed in order to adapt to a format of PALM callibration files in the future.
+    """Parse filename and return energy value (first float number encountered). This method is
+    likely to be changed in order to adapt to a format of PALM callibration files in the future.
 
     Args:
         filename: file name to be parsed
@@ -365,10 +367,11 @@ def get_tags_and_data(filepath, etof_path):
     return tags, data
 
 def richardson_lucy_deconv(streaked_signal, reference_signal, iterations=200, noise=0.3):
-    """Deconvolve eTOF waveforms using Richardson-Lucy algorithm, extracting pulse profile in a time domain.
+    """Deconvolve eTOF waveforms using Richardson-Lucy algorithm, extracting pulse profile in
+    a time domain.
 
-    The assumption is that the streaked waveform was created by convolving an with a point-spread function
-    PSF and possibly by adding noise.
+    The assumption is that the streaked waveform was created by convolving an with a point-spread
+    function PSF and possibly by adding noise.
 
     Args:
         streaked_signal: waveform after streaking
