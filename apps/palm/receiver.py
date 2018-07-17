@@ -16,8 +16,12 @@ streaked = 'SAROP11-PALMK118:CH2_BUFFER'
 
 def stream_receive():
     global state
-    with source(channels=[reference, streaked]) as stream:
-        while True:
-            message = stream.receive()
-            data_buffer.append(message.data.data)
-            state = 'receiving'
+    try:
+        with source(channels=[reference, streaked]) as stream:
+            while True:
+                message = stream.receive()
+                data_buffer.append(message.data.data)
+                state = 'receiving'
+
+    except Exception as e:
+        print(e)
