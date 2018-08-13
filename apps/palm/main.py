@@ -585,6 +585,7 @@ def update(message):
             x_ref=palm.energy_range, y_ref=y_ref[0, :])
 
 
+@gen.coroutine
 def internal_periodic_callback():
     global current_message
     if waveform_plot.inner_width is None:

@@ -333,19 +333,21 @@ class PalmSetup:
 
         return pulse_length
 
+
 def get_energy_from_filename(filename):
     """Parse filename and return energy value (first float number encountered). This method is
     likely to be changed in order to adapt to a format of PALM callibration files in the future.
 
     Args:
-        filename: file name to be parsed
+        filename: filename to be parsed
 
     Returns:
-        energy in eV as a float number
+        energy in eV as a floating point number
     """
     energy = float(re.findall(r'\d+', filename)[0])
 
     return energy
+
 
 def get_tags_and_data(filepath, etof_path):
     """Read PALM waveforms from an hdf5 file.
@@ -370,6 +372,7 @@ def get_tags_and_data(filepath, etof_path):
                 data = -h5f[f'/data/{etof_path}/data'][:]
 
     return tags, data
+
 
 def richardson_lucy_deconv(streaked_signal, reference_signal, iterations=200, noise=0.3):
     """Deconvolve eTOF waveforms using Richardson-Lucy algorithm, extracting pulse profile in
