@@ -89,7 +89,8 @@ class PalmSetup:
         with open(file, 'rb') as f:
             self.etofs = pickle.load(f)
 
-    def process(self, waveforms, method='xcorr', jacobian=False, noise_thr=3, debug=False):
+    def process(self, waveforms, method='xcorr', jacobian=False, noise_thr=3, debug=False,
+                peak='com'):
         """Main function to analyse PALM data that pipelines separate stages of data processing.
 
         Args:
@@ -110,7 +111,7 @@ class PalmSetup:
                 data, self.energy_range, jacobian=jacobian, noise_thr=noise_thr)
 
         if method == 'xcorr':
-            results = self._cross_corr_analysis(prep_data, debug=debug)
+            results = self._cross_corr_analysis(prep_data, debug=debug, peak=peak)
 
         elif method == 'deconv':
             results = self._deconvolution_analysis(prep_data, debug=debug)
@@ -154,7 +155,7 @@ class PalmSetup:
         results = self.process(data_raw, debug=debug)
         return (tags, *results)
 
-    def _cross_corr_analysis(self, input_data, debug=False):
+    def _cross_corr_analysis(self, input_data, debug=False, peak='com'):
         """Perform analysis to determine arrival times via cross correlation.
 
         Usually, this data can be used to initally identify pulses that are falling within linear
@@ -179,7 +180,11 @@ class PalmSetup:
 
         lags = self.energy_range - self.energy_range[int(self.energy_range.size/2)]
 
-        delays, _ = self._peak_params(lags, corr_results)
+        if peak == 'com':
+            delays, _ = self._peak_params(lags, corr_results)
+        elif peak == 'max':
+            delays = lags[np.argmax(corr_results, axis=1)]
+
         pulse_lengths = self._peak_center_of_mass(input_data, lags)
 
         if debug:
