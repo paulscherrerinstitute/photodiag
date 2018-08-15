@@ -303,7 +303,7 @@ calib_const_div = Div(text="")
 
 # Calibration panel
 # ---- calibration folder path text input
-calibration_path = TextInput(title="Calibration Folder Path:", value=HDF5_FILE_PATH, width=250)
+calibration_path = TextInput(title="Calibration Folder Path:", value=HDF5_FILE_PATH)
 
 # ---- calibrate button
 def calibrate_button_callback():
@@ -349,7 +349,7 @@ def update_calibration_plot(calib_res):
     b_ref = {etof_ref.calib_b:.2f}
     """
 
-calibrate_button = Button(label="Calibrate", button_type='default', width=250)
+calibrate_button = Button(label="Calibrate", button_type='default')
 calibrate_button.on_click(calibrate_button_callback)
 
 # ---- save calibration button
@@ -357,7 +357,7 @@ def save_button_callback():
     palm.save_etof_calib()
     update_calib_load_menu()
 
-save_button = Button(label="Save", button_type='default', width=120)
+save_button = Button(label="Save", button_type='default', width=135)
 save_button.on_click(save_button_callback)
 
 # ---- load calibration button
@@ -381,7 +381,7 @@ def update_calib_load_menu():
 doc.add_next_tick_callback(update_calib_load_menu)
 doc.add_periodic_callback(update_calib_load_menu, 10000)
 
-load_button = Dropdown(label="Load", menu=[], width=120)
+load_button = Dropdown(label="Load", menu=[], width=135)
 load_button.on_click(load_button_callback)
 
 # assemble
@@ -424,7 +424,7 @@ def stream_button_callback(state):
         stream_button.button_type = 'default'
 
 
-stream_button = Toggle(label="Connect", button_type='default', width=250)
+stream_button = Toggle(label="Connect", button_type='default')
 stream_button.on_click(stream_button_callback)
 
 
@@ -433,7 +433,7 @@ def intensity_stream_reset_button_callback():
     global stream_t
     stream_t = 1  # keep the latest point in order to prevent full axis reset
 
-intensity_stream_reset_button = Button(label="Reset", button_type='default', width=250)
+intensity_stream_reset_button = Button(label="Reset", button_type='default')
 intensity_stream_reset_button.on_click(intensity_stream_reset_button_callback)
 
 # assemble
@@ -459,7 +459,7 @@ def hdf5_file_path_callback(_attr, _old, new):
     save_ti.value = new
     hdf5_file_path_update()
 
-hdf5_file_path = TextInput(title="Folder Path:", value=HDF5_FILE_PATH, width=250)
+hdf5_file_path = TextInput(title="Folder Path:", value=HDF5_FILE_PATH)
 hdf5_file_path.on_change('value', hdf5_file_path_callback)
 
 
@@ -498,11 +498,11 @@ def saved_runs_dropdown_callback(selection):
     hdf5_pulse_slider.value = 0
     hdf5_update_fun(0)
 
-saved_runs_dropdown = Dropdown(label="Saved Runs", button_type='primary', menu=[], width=250)
+saved_runs_dropdown = Dropdown(label="Saved Runs", button_type='primary', menu=[])
 saved_runs_dropdown.on_click(saved_runs_dropdown_callback)
 
 # ---- save location
-save_ti = TextInput(title="Save Folder Path:", value=HDF5_FILE_PATH, width=250)
+save_ti = TextInput(title="Save Folder Path:", value=HDF5_FILE_PATH)
 
 # ---- autosave checkbox
 autosave_cb = CheckboxButtonGroup(labels=["Auto Save"], active=[], width=100)
@@ -515,7 +515,7 @@ def save_b_callback():
         df = pd.DataFrame({'pulse_id': tags, 'pulse_delay': delays, 'pulse_length': pulse_lengths})
         df.to_csv(os.path.join(save_ti.value, save_filename), index=False)
 
-save_b = Button(label="Save Results", button_type='default', width=250)
+save_b = Button(label="Save Results", button_type='default')
 save_b.on_click(save_b_callback)
 
 # ---- pulse number slider
