@@ -302,31 +302,8 @@ fit_eq_div = Div(text="""Fitting equation:<br><br><img src="/palm/static/5euwuy.
 calib_const_div = Div(text="")
 
 # Calibration panel
-def calibration_path_update():
-    new_menu = [('None', 'None')]
-    if os.path.isdir(calibration_path.value):
-        with os.scandir(calibration_path.value) as it:
-            for entry in it:
-                if entry.is_file() and entry.name.endswith(('.hdf5', '.h5')):
-                    new_menu.append((entry.name, entry.name))
-
-    background_dropdown.menu = sorted(new_menu, reverse=True)
-
-doc.add_periodic_callback(calibration_path_update, HDF5_FILE_PATH_UPDATE_PERIOD)
-
 # ---- calibration folder path text input
-def calibration_path_callback(_attr, _old, _new):
-    calibration_path_update()
-
 calibration_path = TextInput(title="Calibration Folder Path:", value=HDF5_FILE_PATH, width=250)
-calibration_path.on_change('value', calibration_path_callback)
-
-# ---- background dropdown menu
-def background_dropdown_callback(selection):
-    background_dropdown.label = f"Background energy: {selection}"
-
-background_dropdown = Dropdown(label="Background energy: None", menu=[], width=250)
-background_dropdown.on_click(background_dropdown_callback)
 
 # ---- calibrate button
 def calibrate_button_callback():
@@ -410,7 +387,8 @@ load_button.on_click(load_button_callback)
 # assemble
 tab_calibration = Panel(
     child=column(
-        calibration_path, background_dropdown, calibrate_button,
+        calibration_path,
+        calibrate_button,
         row(save_button, Spacer(width=10), load_button)),
     title="Calibration")
 

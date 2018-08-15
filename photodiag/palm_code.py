@@ -23,13 +23,11 @@ class PalmSetup:
         self.etofs = {'0': Spectrometer(), '1': Spectrometer()}
         self.energy_range = np.linspace(4850, 5150, 301)
 
-    def calibrate_etof(self, folder_name, bkg_en=None, etofs=None, overwrite=True):
+    def calibrate_etof(self, folder_name, etofs=None, overwrite=True):
         """General routine for a calibration process of the eTOF spectrometers.
 
         Args:
             folder_name: location of hdf5 files with calibration data
-            bkg_en: (optional) background energy profile to be subtracted from other waveforms
-                (e.g. to remove influence of Auger peaks)
             etofs: (optional) list of eTOF spectrometer keys to be calibrated
             overwrite: (optional) start over a calibration process
 
@@ -62,7 +60,7 @@ class PalmSetup:
 
         calib_results = {}
         for etof_key in self.etofs:
-            calib_results[etof_key] = self.etofs[etof_key].fit_calibration_curve(bkg_en=bkg_en)
+            calib_results[etof_key] = self.etofs[etof_key].fit_calibration_curve()
 
         return calib_results
 

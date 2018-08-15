@@ -47,11 +47,8 @@ class Spectrometer:
             'noise_mean': noise_mean,
             'noise_std': noise_std}
 
-    def fit_calibration_curve(self, bkg_en=None):
+    def fit_calibration_curve(self):
         """Perform fitting of calibration data.
-
-        Args:
-            bkg_en: (optional) subtract background energy profile of that value (eV)
 
         Returns:
             calibration constants and a goodness of fit
@@ -60,14 +57,6 @@ class Spectrometer:
         calib_t0 = cd.calib_t0
         calib_wf = cd.waveform
         calib_tpeak = cd.calib_tpeak
-
-        if bkg_en is not None:
-            if bkg_en not in cd.index:
-                raise Exception('Can not find data for background energy')
-
-            calib_t0 = calib_t0.loc[cd.index != bkg_en]
-            calib_tpeak = calib_tpeak.loc[cd.index != bkg_en]
-            calib_wf = calib_wf.loc[cd.index != bkg_en] - calib_wf.loc[bkg_en]
 
         time_delays = calib_tpeak - calib_t0
         pulse_energies = calib_wf.index
