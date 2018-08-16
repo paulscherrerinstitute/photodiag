@@ -395,8 +395,8 @@ def update_calib_load_menu():
         new_menu = []
         with os.scandir(calib_path_textinput.value) as it:
             for entry in it:
-                if entry.is_file():
-                    new_menu.append((entry.name, entry.name))
+                if entry.is_file() and entry.name.endswith(('.palm')):
+                    new_menu.append((entry.name[:-5], entry.name))
         load_button.menu = sorted(new_menu, reverse=True)
 
 doc.add_next_tick_callback(update_calib_load_menu)
@@ -532,7 +532,7 @@ autosave_cb = CheckboxButtonGroup(labels=["Auto Save"], active=[], width=100)
 def save_b_callback():
     if current_results:
         filename, tags, delays, pulse_lengths = current_results
-        save_filename = os.path.splitext(filename)[0]+'.csv'
+        save_filename = os.path.splitext(filename)[0] + '.csv'
         df = pd.DataFrame({'pulse_id': tags, 'pulse_delay': delays, 'pulse_length': pulse_lengths})
         df.to_csv(os.path.join(save_ti.value, save_filename), index=False)
 

@@ -70,6 +70,9 @@ class PalmSetup:
         if not file:
             file = f"{datetime.datetime.now().isoformat(sep='_', timespec='seconds')}"
 
+        if not file.endswith('.palm'):
+            file += '.palm'
+
         if not os.path.exists(path):
             os.makedirs(path)
 
