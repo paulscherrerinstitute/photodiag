@@ -64,16 +64,11 @@ class PalmSetup:
 
         return calib_results
 
-    def save_etof_calib(self, file=None):
+    def save_etof_calib(self, path, file=None):
         """ Save eTOF calibration to a file.
         """
         if not file:
             file = f"{datetime.datetime.now().isoformat(sep='_', timespec='seconds')}"
-
-        path, file = os.path.split(file)
-
-        if not path:
-            path = os.path.join(os.path.expanduser('~'), 'eTOF_calibs')
 
         if not os.path.exists(path):
             os.makedirs(path)
@@ -81,10 +76,10 @@ class PalmSetup:
         with open(os.path.join(path, file), 'wb') as f:
             pickle.dump(self.etofs, f)
 
-    def load_etof_calib(self, file):
+    def load_etof_calib(self, path, file):
         """Load eTOF calibration from a file.
         """
-        with open(file, 'rb') as f:
+        with open(os.path.join(path, file), 'rb') as f:
             self.etofs = pickle.load(f)
 
     def process(self, waveforms, method='xcorr', jacobian=False, noise_thr=3, debug=False,

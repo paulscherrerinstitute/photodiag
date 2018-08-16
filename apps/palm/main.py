@@ -30,7 +30,6 @@ APP_FPS = 1
 stream_t = 0
 STREAM_ROLLOVER = 3600
 
-DEFAULT_CALIB_PATH = os.path.join(os.path.expanduser('~'), 'eTOF_calibs')
 HDF5_FILE_PATH = '/filepath'
 HDF5_FILE_PATH_UPDATE_PERIOD = 10000  # ms
 HDF5_DATASET_PATH = '/entry/data/data'
@@ -322,11 +321,12 @@ calib_const_div = Div(text="")
 
 # Calibration panel
 # ---- calibration folder path text input
-calibration_path = TextInput(title="Calibration Folder Path:", value=HDF5_FILE_PATH)
+calib_path_textinput = TextInput(
+    title="Calibration Folder Path:", value=os.path.join(os.path.expanduser('~')))
 
 # ---- calibrate button
 def calibrate_button_callback():
-    calib_res = palm.calibrate_etof(folder_name=calibration_path.value)
+    calib_res = palm.calibrate_etof(folder_name=calib_path_textinput.value)
     calibres_table_source.data.update(
         energy=calib_res['0'][1].index.values, peak_shift0=calib_res['0'][1].values,
         peak_shift1=calib_res['1'][1].values)
@@ -376,7 +376,7 @@ calibrate_button.on_click(calibrate_button_callback)
 
 # ---- save calibration button
 def save_button_callback():
-    palm.save_etof_calib()
+    palm.save_etof_calib(path=calib_path_textinput.value)
     update_calib_load_menu()
 
 save_button = Button(label="Save", button_type='default', width=135)
@@ -384,17 +384,16 @@ save_button.on_click(save_button_callback)
 
 # ---- load calibration button
 def load_button_callback(selection):
-    calib_file = os.path.join(DEFAULT_CALIB_PATH, selection)
-    palm.load_etof_calib(calib_file)
+    palm.load_etof_calib(calib_path_textinput.value, selection)
     calib_results = {}
     for etof_key in palm.etofs:
         calib_results[etof_key] = palm.etofs[etof_key].fit_calibration_curve()
     update_calibration_plot(calib_results)
 
 def update_calib_load_menu():
-    if os.path.isdir(DEFAULT_CALIB_PATH):
+    if os.path.isdir(calib_path_textinput.value):
         new_menu = []
-        with os.scandir(DEFAULT_CALIB_PATH) as it:
+        with os.scandir(calib_path_textinput.value) as it:
             for entry in it:
                 if entry.is_file():
                     new_menu.append((entry.name, entry.name))
@@ -409,7 +408,7 @@ load_button.on_click(load_button_callback)
 # assemble
 tab_calibration = Panel(
     child=column(
-        calibration_path,
+        calib_path_textinput,
         calibrate_button,
         row(save_button, Spacer(width=10), load_button)),
     title="Calibration")
