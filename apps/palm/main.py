@@ -52,7 +52,7 @@ calib_wf_plot = Plot(
 # ---- tools
 calib_wf_plot_hover = HoverTool(tooltips=[
     ("energy, eV", '@en'),
-    ("flight time, ns", '$x'),
+    ("etof time, a.u.", '$x'),
     ("intensity, a.u.", '$y'),
 ])
 
