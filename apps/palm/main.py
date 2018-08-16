@@ -5,10 +5,10 @@ import numpy as np
 import pandas as pd
 from bokeh.io import curdoc
 from bokeh.layouts import column, row
-from bokeh.models import BasicTicker, BoxZoomTool, Button, CheckboxButtonGroup, \
-    Circle, ColumnDataSource, CustomJS, DataRange1d, Div, Dropdown, Grid, \
-    HoverTool, Legend, Line, LinearAxis, MultiLine, Panel, PanTool, Plot, \
-    ResetTool, Slider, Spacer, Span, Tabs, TextInput, Title, Toggle, WheelZoomTool
+from bokeh.models import BasicTicker, BoxZoomTool, Button, CheckboxButtonGroup, Circle, \
+    ColumnDataSource, CustomJS, DataRange1d, DataTable, Div, Dropdown, Grid, HoverTool, \
+    IntEditor, Legend, Line, LinearAxis, MultiLine, Panel, PanTool, Plot, ResetTool, \
+    Slider, Spacer, Span, TableColumn, Tabs, TextInput, Title, Toggle, WheelZoomTool
 from tornado import gen
 
 import photodiag
@@ -130,6 +130,25 @@ calib_fit_plot.add_layout(Legend(items=[
     ("streaked", [streaked_c, streaked_l])
 ]))
 calib_fit_plot.legend.click_policy = "hide"
+
+
+# Calibration results datatable
+def calibres_table_source_callback(_attr, old, new):
+    pass
+
+calibres_table_source = ColumnDataSource(
+    dict(energy=['', '', ''], peak_shift0=['', '', ''], peak_shift1=['', '', '']))
+calibres_table_source.on_change('data', calibres_table_source_callback)
+
+calibres_table = DataTable(
+    source=calibres_table_source,
+    columns=[
+        TableColumn(field='energy', title="Photon Energy", editor=IntEditor()),
+        TableColumn(field='peak_shift0', title="Reference Peak Shift", editor=IntEditor()),
+        TableColumn(field='peak_shift1', title="Streaked Peak Shift", editor=IntEditor())],
+    index_position=None,
+    editable=True,
+)
 
 
 # THz calibration plot
@@ -308,6 +327,9 @@ calibration_path = TextInput(title="Calibration Folder Path:", value=HDF5_FILE_P
 # ---- calibrate button
 def calibrate_button_callback():
     calib_res = palm.calibrate_etof(folder_name=calibration_path.value)
+    calibres_table_source.data.update(
+        energy=calib_res['0'][1].index.values, peak_shift0=calib_res['0'][1].values,
+        peak_shift1=calib_res['1'][1].values)
     update_calibration_plot(calib_res)
 
 def update_calibration_plot(calib_res):
@@ -537,14 +559,16 @@ data_source_tabs = Tabs(tabs=[tab_calibration, tab_hdf5file, tab_stream])
 
 # Final layouts
 layout_calib = row(
-    calib_wf_plot, Spacer(width=50), calib_fit_plot, Spacer(width=50), calib_thz_plot)
+    calib_wf_plot, Spacer(width=50),
+    calib_fit_plot, Spacer(width=50),
+    calibres_table)
 layout_proc = row(waveform_plot, Spacer(width=50), xcorr_plot)
 layout_res = row(delay_plot, Spacer(width=50), pulse_len_plot)
 layout_fit_res = column(fit_eq_div, calib_const_div)
 final_layout = column(
     row(layout_calib),
-    row(layout_proc, Spacer(width=30), data_source_tabs, Spacer(width=30), layout_fit_res),
-    row(layout_res, Spacer(width=30)))
+    row(layout_proc, Spacer(width=50), calib_thz_plot),
+    row(layout_res, Spacer(width=30), data_source_tabs, Spacer(width=30), layout_fit_res))
 
 doc.add_root(final_layout)
 
