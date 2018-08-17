@@ -321,8 +321,12 @@ calib_const_div = Div(text="")
 
 # Calibration panel
 # ---- calibration folder path text input
+def calib_path_textinput_callback(_attr, _old, _new):
+    update_calib_load_menu()
+
 calib_path_textinput = TextInput(
     title="Calibration Folder Path:", value=os.path.join(os.path.expanduser('~')))
+calib_path_textinput.on_change('value', calib_path_textinput_callback)
 
 # ---- calibrate button
 def calibrate_button_callback():
@@ -392,12 +396,16 @@ def load_button_callback(selection):
 
 def update_calib_load_menu():
     if os.path.isdir(calib_path_textinput.value):
-        new_menu = []
         with os.scandir(calib_path_textinput.value) as it:
+            new_menu = []
             for entry in it:
                 if entry.is_file() and entry.name.endswith(('.palm')):
                     new_menu.append((entry.name[:-5], entry.name))
+        load_button.button_type = 'default'
         load_button.menu = sorted(new_menu, reverse=True)
+    else:
+        load_button.button_type = 'danger'
+        load_button.menu = new_menu
 
 doc.add_next_tick_callback(update_calib_load_menu)
 doc.add_periodic_callback(update_calib_load_menu, 10000)
