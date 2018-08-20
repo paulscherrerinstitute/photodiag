@@ -19,7 +19,7 @@ class Spectrometer:
 
         self.calib_a = None
         self.calib_b = None
-        self.internal_time_bins = 2000
+        self.internal_time_bins = None
         self.noise_range = [0, 250]
         self.calib_t0 = np.empty(0)
 
@@ -30,6 +30,12 @@ class Spectrometer:
             energy: X-ray energy used in data acquisition
             calib_waveforms: calibration data as a 2D array
         """
+        if self.internal_time_bins:
+            if self.internal_time_bins != calib_waveforms.shape[1]:
+                raise Exception('eTOF number of bins is inconsistent.')
+        else:
+            self.internal_time_bins = calib_waveforms.shape[1]
+
         noise = calib_waveforms[:, slice(*self.noise_range)]
         noise_mean = noise.mean(axis=1).mean()
         noise_std = noise.std(axis=1).mean()
