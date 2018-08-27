@@ -12,7 +12,7 @@ from photodiag.spectrometer import Spectrometer
 class PalmSetup:
     """Class describing the photon arrival and length monitor (PALM) setup.
     """
-    def __init__(self, channels, noise_range):
+    def __init__(self, channels, noise_range, energy_range):
         """Initialize PALM setup object.
 
         For the electron time of flight (eTOF) spectrometers the following notation is used:
@@ -22,10 +22,12 @@ class PalmSetup:
         Args:
             noise_range: a range of spectrometer bins that does not contain any signals (currently,
                 the same range will be applied for all spectrometers)
+            energy_range: energy interpolation points (eV) to be used for convering
+                spectrometer waveforms from 'time of flight' into 'energy' domain
         """
         self.channels = channels
         self.etofs = {'0': Spectrometer(noise_range), '1': Spectrometer(noise_range)}
-        self.energy_range = np.linspace(4850, 5150, 301)
+        self.energy_range = energy_range
 
     def calibrate_etof(self, folder_name, etofs=None, overwrite=True):
         """General routine for a calibration process of the eTOF spectrometers.
