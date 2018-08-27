@@ -12,15 +12,19 @@ from photodiag.spectrometer import Spectrometer
 class PalmSetup:
     """Class describing the photon arrival and length monitor (PALM) setup.
     """
-    def __init__(self, channels):
+    def __init__(self, channels, noise_range):
         """Initialize PALM setup object.
 
         For the electron time of flight (eTOF) spectrometers the following notation is used:
         presense of a streaking field ('0': no streaking (reference), '1': positive streaking,
         '-1': negative streaking)
+
+        Args:
+            noise_range: a range of spectrometer bins that does not contain any signals (currently,
+                the same range will be applied for all spectrometers)
         """
         self.channels = channels
-        self.etofs = {'0': Spectrometer(), '1': Spectrometer()}
+        self.etofs = {'0': Spectrometer(noise_range), '1': Spectrometer(noise_range)}
         self.energy_range = np.linspace(4850, 5150, 301)
 
     def calibrate_etof(self, folder_name, etofs=None, overwrite=True):

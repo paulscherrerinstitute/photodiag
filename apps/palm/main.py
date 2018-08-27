@@ -35,7 +35,7 @@ HDF5_FILE_PATH_UPDATE_PERIOD = 10000  # ms
 HDF5_DATASET_PATH = '/entry/data/data'
 hdf5_file_data = []
 
-palm = photodiag.PalmSetup({'0': receiver.reference, '1': receiver.streaked})
+palm = photodiag.PalmSetup({'0': receiver.reference, '1': receiver.streaked}, noise_range=[0, 250])
 
 
 # Calibration averaged waveforms per photon energy

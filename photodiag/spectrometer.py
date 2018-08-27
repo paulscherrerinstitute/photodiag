@@ -6,8 +6,11 @@ from scipy.optimize import curve_fit
 class Spectrometer:
     """Class describing a single eTOF spectrometer.
     """
-    def __init__(self):
+    def __init__(self, noise_range):
         """ Initialize Spectrometer object.
+
+        Args:
+            noise_range: a range of spectrometer bins that does not contain any signals
         """
         # index of self.calib_data DataFrame is 'energy'
         self.calib_data = pd.DataFrame({
@@ -20,7 +23,7 @@ class Spectrometer:
         self.calib_a = None
         self.calib_b = None
         self.internal_time_bins = None
-        self.noise_range = [0, 250]
+        self.noise_range = noise_range
         self.calib_t0 = np.empty(0)
 
     def add_calibration_point(self, energy, calib_waveforms):
