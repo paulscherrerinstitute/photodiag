@@ -5,27 +5,25 @@
             "name": "palm-alvra",
             "type": "python",
             "request": "launch",
-            "stopOnEntry": false,
             "pythonPath": "${config:python.pythonPath}",
             "module": "bokeh",
             "cwd": "${workspaceFolder}",
             "args": ["serve", "${workspaceFolder}/apps/palm", "--args", "alvra"],
+            "stopOnEntry": false,
             "console": "none",
             "env": {},
-            "debugOptions": ["RedirectOutput"]
         },
         {
             "name": "palm-bernina",
             "type": "python",
             "request": "launch",
-            "stopOnEntry": false,
             "pythonPath": "${config:python.pythonPath}",
             "module": "bokeh",
             "cwd": "${workspaceFolder}",
             "args": ["serve", "${workspaceFolder}/apps/palm", "--args", "bernina"],
+            "stopOnEntry": false,
             "console": "none",
             "env": {},
-            "debugOptions": ["RedirectOutput"]
         },
     ]
 }
