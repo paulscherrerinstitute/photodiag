@@ -398,15 +398,20 @@ save_button.on_click(save_button_callback)
 
 # ---- load calibration button
 def load_button_callback(selection):
-    palm.load_etof_calib(calib_path_textinput.value, selection)
+    if selection:
+        palm.load_etof_calib(calib_path_textinput.value, selection)
 
-    calib_res = {}
-    for etof_key in palm.etofs:
-        calib_res[etof_key] = palm.etofs[etof_key].fit_calibration_curve()
+        calib_res = {}
+        for etof_key in palm.etofs:
+            calib_res[etof_key] = palm.etofs[etof_key].fit_calibration_curve()
 
-    calibres_table_source.data.update(
-        energy=calib_res['0'][1].index.values, peak_shift0=calib_res['0'][1].values,
-        peak_shift1=calib_res['1'][1].values)
+        calibres_table_source.data.update(
+            energy=calib_res['0'][1].index.values, peak_shift0=calib_res['0'][1].values,
+            peak_shift1=calib_res['1'][1].values)
+
+        # Drop selection, so that this callback can be triggered again on the same dropdown menu
+        # item from the user perspective
+        load_button.value = ''
 
 def update_calib_load_menu():
     if os.path.isdir(calib_path_textinput.value):
