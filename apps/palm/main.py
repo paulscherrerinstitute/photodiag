@@ -135,7 +135,16 @@ calib_fit_plot.legend.click_policy = "hide"
 
 # Calibration results datatable
 def calibres_table_source_callback(_attr, old, new):
-    pass
+    tpeak0 = palm.etofs['0'].calib_data.calib_tpeak
+    tpeak1 = palm.etofs['1'].calib_data.calib_tpeak
+    for en, ps0, ps1 in zip(new['energy'], new['peak_shift0'], new['peak_shift1']):
+        tpeak0.loc[en] = ps0 + palm.etofs['0'].calib_t0
+        tpeak1.loc[en] = ps1 + palm.etofs['1'].calib_t0
+
+    calib_res = {}
+    for etof_key in palm.etofs:
+        calib_res[etof_key] = palm.etofs[etof_key].fit_calibration_curve()
+    update_calibration_plot(calib_res)
 
 calibres_table_source = ColumnDataSource(
     dict(energy=['', '', ''], peak_shift0=['', '', ''], peak_shift1=['', '', '']))
@@ -336,7 +345,6 @@ def calibrate_button_callback():
     calibres_table_source.data.update(
         energy=calib_res['0'][1].index.values, peak_shift0=calib_res['0'][1].values,
         peak_shift1=calib_res['1'][1].values)
-    update_calibration_plot(calib_res)
 
 def update_calibration_plot(calib_res):
     etof_ref = palm.etofs['0']
@@ -391,10 +399,14 @@ save_button.on_click(save_button_callback)
 # ---- load calibration button
 def load_button_callback(selection):
     palm.load_etof_calib(calib_path_textinput.value, selection)
-    calib_results = {}
+
+    calib_res = {}
     for etof_key in palm.etofs:
-        calib_results[etof_key] = palm.etofs[etof_key].fit_calibration_curve()
-    update_calibration_plot(calib_results)
+        calib_res[etof_key] = palm.etofs[etof_key].fit_calibration_curve()
+
+    calibres_table_source.data.update(
+        energy=calib_res['0'][1].index.values, peak_shift0=calib_res['0'][1].values,
+        peak_shift1=calib_res['1'][1].values)
 
 def update_calib_load_menu():
     if os.path.isdir(calib_path_textinput.value):
