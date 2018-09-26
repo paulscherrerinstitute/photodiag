@@ -414,9 +414,9 @@ def load_button_callback(selection):
         load_button.value = ''
 
 def update_calib_load_menu():
+    new_menu = []
     if os.path.isdir(calib_path_textinput.value):
         with os.scandir(calib_path_textinput.value) as it:
-            new_menu = []
             for entry in it:
                 if entry.is_file() and entry.name.endswith(('.palm')):
                     new_menu.append((entry.name[:-5], entry.name))
