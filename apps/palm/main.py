@@ -23,8 +23,8 @@ current_results = ()
 connected = False
 
 # Currently, it's possible to control only a canvas size, but not a size of the plotting area.
-WAVEFORM_CANVAS_WIDTH = 700
-WAVEFORM_CANVAS_HEIGHT = 400
+WAVEFORM_CANVAS_WIDTH = 660
+WAVEFORM_CANVAS_HEIGHT = 380
 
 APP_FPS = 1
 stream_t = 0
@@ -156,6 +156,7 @@ calibres_table = DataTable(
         TableColumn(field='peak_pos1', title="Streaked Peak Position", editor=IntEditor())],
     index_position=None,
     editable=True,
+    height=300,
 )
 
 
@@ -585,16 +586,16 @@ data_source_tabs = Tabs(tabs=[tab_calibration, tab_hdf5file, tab_stream])
 
 # Final layouts
 layout_calib = row(
-    calib_wf_plot, Spacer(width=50),
-    calib_fit_plot, Spacer(width=50),
+    calib_wf_plot,
+    calib_fit_plot, Spacer(width=10),
     calibres_table)
-layout_proc = row(waveform_plot, Spacer(width=50), xcorr_plot)
-layout_res = row(delay_plot, Spacer(width=50), pulse_len_plot)
+layout_proc = row(waveform_plot, xcorr_plot)
+layout_res = row(delay_plot, pulse_len_plot)
 layout_fit_res = column(fit_eq_div, calib_const_div)
 final_layout = column(
     row(layout_calib),
-    row(layout_proc, Spacer(width=50), calib_thz_plot),
-    row(layout_res, Spacer(width=30), data_source_tabs, Spacer(width=30), layout_fit_res))
+    row(layout_proc, calib_thz_plot),
+    row(layout_res, Spacer(width=10), data_source_tabs, Spacer(width=30), layout_fit_res))
 
 doc.add_root(final_layout)
 
