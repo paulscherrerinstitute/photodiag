@@ -136,8 +136,8 @@ calib_fit_plot.legend.click_policy = "hide"
 # Calibration results datatable
 def calibres_table_source_callback(_attr, _old, new):
     for en, ps0, ps1 in zip(new['energy'], new['peak_pos0'], new['peak_pos1']):
-        palm.etofs['0'].calib_data.calib_tpeak.loc[en] = ps0
-        palm.etofs['1'].calib_data.calib_tpeak.loc[en] = ps1
+        palm.etofs['0'].calib_data.loc[en, 'calib_tpeak'] = ps0
+        palm.etofs['1'].calib_data.loc[en, 'calib_tpeak'] = ps1
 
     calib_res = {}
     for etof_key in palm.etofs:
