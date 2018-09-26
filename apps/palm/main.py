@@ -134,12 +134,10 @@ calib_fit_plot.legend.click_policy = "hide"
 
 
 # Calibration results datatable
-def calibres_table_source_callback(_attr, old, new):
-    tpeak0 = palm.etofs['0'].calib_data.calib_tpeak
-    tpeak1 = palm.etofs['1'].calib_data.calib_tpeak
-    for en, ps0, ps1 in zip(new['energy'], new['peak_shift0'], new['peak_shift1']):
-        tpeak0.loc[en] = ps0 + palm.etofs['0'].calib_t0
-        tpeak1.loc[en] = ps1 + palm.etofs['1'].calib_t0
+def calibres_table_source_callback(_attr, _old, new):
+    for en, ps0, ps1 in zip(new['energy'], new['peak_pos0'], new['peak_pos1']):
+        palm.etofs['0'].calib_data.calib_tpeak.loc[en] = ps0
+        palm.etofs['1'].calib_data.calib_tpeak.loc[en] = ps1
 
     calib_res = {}
     for etof_key in palm.etofs:
@@ -147,15 +145,15 @@ def calibres_table_source_callback(_attr, old, new):
     update_calibration_plot(calib_res)
 
 calibres_table_source = ColumnDataSource(
-    dict(energy=['', '', ''], peak_shift0=['', '', ''], peak_shift1=['', '', '']))
+    dict(energy=['', '', ''], peak_pos0=['', '', ''], peak_pos1=['', '', '']))
 calibres_table_source.on_change('data', calibres_table_source_callback)
 
 calibres_table = DataTable(
     source=calibres_table_source,
     columns=[
         TableColumn(field='energy', title="Photon Energy", editor=IntEditor()),
-        TableColumn(field='peak_shift0', title="Reference Peak Shift", editor=IntEditor()),
-        TableColumn(field='peak_shift1', title="Streaked Peak Shift", editor=IntEditor())],
+        TableColumn(field='peak_pos0', title="Reference Peak Position", editor=IntEditor()),
+        TableColumn(field='peak_pos1', title="Streaked Peak Position", editor=IntEditor())],
     index_position=None,
     editable=True,
 )
@@ -343,8 +341,9 @@ calib_path_textinput.on_change('value', calib_path_textinput_callback)
 def calibrate_button_callback():
     calib_res = palm.calibrate_etof(folder_name=calib_path_textinput.value)
     calibres_table_source.data.update(
-        energy=calib_res['0'][1].index.values, peak_shift0=calib_res['0'][1].values,
-        peak_shift1=calib_res['1'][1].values)
+        energy=calib_res['0'][1].index.values,
+        peak_pos0=palm.etofs['0'].calib_data.calib_tpeak.values,
+        peak_pos1=palm.etofs['1'].calib_data.calib_tpeak.values)
 
 def update_calibration_plot(calib_res):
     etof_ref = palm.etofs['0']
@@ -406,8 +405,9 @@ def load_button_callback(selection):
             calib_res[etof_key] = palm.etofs[etof_key].fit_calibration_curve()
 
         calibres_table_source.data.update(
-            energy=calib_res['0'][1].index.values, peak_shift0=calib_res['0'][1].values,
-            peak_shift1=calib_res['1'][1].values)
+            energy=calib_res['0'][1].index.values,
+            peak_pos0=palm.etofs['0'].calib_data.calib_tpeak.values,
+            peak_pos1=palm.etofs['1'].calib_data.calib_tpeak.values)
 
         # Drop selection, so that this callback can be triggered again on the same dropdown menu
         # item from the user perspective
