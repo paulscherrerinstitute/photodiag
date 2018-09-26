@@ -43,14 +43,14 @@ class Spectrometer:
         noise_mean = noise.mean(axis=1).mean()
         noise_std = noise.std(axis=1).mean()
 
-        data_avg = calib_waveforms.mean(axis=0)
-        data_avg = data_avg - data_avg[slice(*self.noise_range)].mean()
+        # keep axis=0 for a situation with a single waveform
+        waveform = calib_waveforms.mean(axis=0) - noise_mean
 
-        calib_t0, _ampl = self._detect_photon_peak(data_avg, noise_std)
-        calib_tpeak = self._detect_electron_peak(data_avg, noise_std)
+        calib_t0, _ampl = self._detect_photon_peak(waveform, noise_std)
+        calib_tpeak = self._detect_electron_peak(waveform, noise_std)
 
         self.calib_data.loc[energy] = {
-            'waveform': data_avg,
+            'waveform': waveform,
             'calib_t0': calib_t0,
             'calib_tpeak': calib_tpeak,
             'noise_mean': noise_mean,
