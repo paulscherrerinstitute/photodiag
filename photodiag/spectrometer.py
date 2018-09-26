@@ -123,10 +123,11 @@ class Spectrometer:
             waveform: waveform of interest
             noise_std: noise level in waveform units
             noise_thr: number of noise_std standard deviations above which the signal is considered
-                to be detectable (default is 3-sigma)
+                to be detectable (default is 1-sigma)
 
         Returns:
-            index of the photon peak position
+            index of a photon peak maximum
+            photon peak amplitude
         """
         above_thr = np.greater(waveform, noise_thr * noise_std)
 
@@ -151,6 +152,20 @@ class Spectrometer:
 
     @staticmethod
     def _detect_electron_peak(waveform, noise_std, noise_thr=3):
+        """Estimate position of an electron peak.
+
+        Under assumption that the electron peak is the last peak encontered above the specified
+        noise level (= noise_thr * noise_std).
+
+        Args:
+            waveform: waveform of interest
+            noise_std: noise level in waveform units
+            noise_thr: number of noise_std standard deviations above which the signal is considered
+                to be detectable (default is 3-sigma)
+
+        Returns:
+            index of an electron peak maximum
+        """
         above_thr = np.greater(waveform[::-1], noise_thr * noise_std)
 
         # TODO: the code could be improved once the following issue is resolved,
