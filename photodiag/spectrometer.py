@@ -46,7 +46,7 @@ class Spectrometer:
         # keep axis=0 for a situation with a single waveform
         waveform = calib_waveforms.mean(axis=0) - noise_mean
 
-        calib_t0, _ampl = self._detect_photon_peak(waveform, noise_std)
+        calib_t0, _ = self._detect_photon_peak(waveform, noise_std)
         calib_tpeak = self._detect_electron_peak(waveform, noise_std)
 
         self.calib_data.loc[energy] = {
@@ -62,13 +62,11 @@ class Spectrometer:
         Returns:
             calibration constants and a goodness of fit
         """
-        cd = self.calib_data
-        calib_t0 = cd.calib_t0
-        calib_wf = cd.waveform
-        calib_tpeak = cd.calib_tpeak
+        time_delays_df = self.calib_data['calib_tpeak'] - self.calib_data['calib_t0']
 
-        time_delays = calib_tpeak - calib_t0
-        pulse_energies = calib_wf.index
+        # convert to numpy arrays
+        time_delays = time_delays_df.values
+        pulse_energies = time_delays_df.index.values
 
         def fit_func(time, a, b):
             return (a / time) ** 2 + b
@@ -76,7 +74,7 @@ class Spectrometer:
         popt, _pcov = curve_fit(fit_func, time_delays, pulse_energies)
 
         self.calib_a, self.calib_b = popt
-        self.calib_t0 = np.round(cd.calib_t0.mean()).astype(int)
+        self.calib_t0 = np.round(self.calib_data['calib_t0'].mean()).astype(int)
 
         return popt, time_delays, pulse_energies
 
@@ -99,8 +97,8 @@ class Spectrometer:
         output_data = input_data[:, self.calib_t0 + 1:]
 
         if jacobian:
-            jacobian_factor_inv = -pulse_energy ** (3 / 2)  # = 1 / jacobian_factor
-            output_data = output_data / jacobian_factor_inv  # = spectr.data * jacobian_factor
+            jacobian_factor_inv = - pulse_energy ** (3 / 2)  # = 1 / jacobian_factor
+            output_data /= jacobian_factor_inv  # = spectr.data * jacobian_factor
 
         def interpolate_row(data, energy, interp_energy):
             return np.interp(interp_energy, energy, data)
@@ -108,7 +106,7 @@ class Spectrometer:
         output_data = np.apply_along_axis(
             interpolate_row, 1, output_data[:, ::-1], pulse_energy[::-1], interp_energy)
 
-        output_data = output_data - noise_thr * self.calib_data.noise_std.mean()
+        output_data -= noise_thr * self.calib_data['noise_std'].mean()
 
         return output_data
 

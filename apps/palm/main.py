@@ -340,11 +340,12 @@ calib_path_textinput.on_change('value', calib_path_textinput_callback)
 
 # ---- calibrate button
 def calibrate_button_callback():
-    calib_res = palm.calibrate_etof(folder_name=calib_path_textinput.value)
+    palm.calibrate_etof(folder_name=calib_path_textinput.value)
+
     calibres_table_source.data.update(
-        energy=calib_res['0'][1].index.values,
-        peak_pos0=palm.etofs['0'].calib_data.calib_tpeak.values,
-        peak_pos1=palm.etofs['1'].calib_data.calib_tpeak.values)
+        energy=palm.etofs['0'].calib_data.index.values,
+        peak_pos0=palm.etofs['0'].calib_data['calib_tpeak'].values,
+        peak_pos1=palm.etofs['1'].calib_data['calib_tpeak'].values)
 
 def update_calibration_plot(calib_res):
     etof_ref = palm.etofs['0']
@@ -352,12 +353,12 @@ def update_calibration_plot(calib_res):
 
     calib_waveform_source0.data.update(
         xs=len(etof_ref.calib_data)*[list(range(etof_ref.internal_time_bins))],
-        ys=etof_ref.calib_data['waveform'].tolist(),
+        ys=etof_ref.calib_data['waveform'].values,
         en=etof_ref.calib_data.index.values)
 
     calib_waveform_source1.data.update(
         xs=len(etof_str.calib_data)*[list(range(etof_str.internal_time_bins))],
-        ys=etof_str.calib_data['waveform'].tolist(),
+        ys=etof_str.calib_data['waveform'].values,
         en=etof_str.calib_data.index.values)
 
     phot_peak_pos_ref.location = etof_ref.calib_t0
@@ -401,14 +402,10 @@ def load_button_callback(selection):
     if selection:
         palm.load_etof_calib(calib_path_textinput.value, selection)
 
-        calib_res = {}
-        for etof_key in palm.etofs:
-            calib_res[etof_key] = palm.etofs[etof_key].fit_calibration_curve()
-
         calibres_table_source.data.update(
-            energy=calib_res['0'][1].index.values,
-            peak_pos0=palm.etofs['0'].calib_data.calib_tpeak.values,
-            peak_pos1=palm.etofs['1'].calib_data.calib_tpeak.values)
+            energy=palm.etofs['0'].calib_data.index.values,
+            peak_pos0=palm.etofs['0'].calib_data['calib_tpeak'].values,
+            peak_pos1=palm.etofs['1'].calib_data['calib_tpeak'].values)
 
         # Drop selection, so that this callback can be triggered again on the same dropdown menu
         # item from the user perspective
