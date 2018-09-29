@@ -76,7 +76,9 @@ class Spectrometer:
             return (a / time) ** 2 + b
 
         valid = ~(np.isnan(time_delays) | np.isnan(pulse_energies))
-        popt, _pcov = curve_fit(fit_func, time_delays[valid], pulse_energies[valid])
+        popt, _pcov = curve_fit(
+            fit_func, time_delays[valid], pulse_energies[valid],
+            bounds=([0, -np.inf], [np.inf, np.inf]))
         self.calib_a, self.calib_b = popt
 
         return popt, time_delays, pulse_energies
