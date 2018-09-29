@@ -136,8 +136,8 @@ calib_fit_plot.legend.click_policy = "hide"
 # Calibration results datatable
 def calibres_table_source_callback(_attr, _old, new):
     for en, ps0, ps1 in zip(new['energy'], new['peak_pos0'], new['peak_pos1']):
-        palm.etofs['0'].calib_data.loc[en, 'calib_tpeak'] = ps0
-        palm.etofs['1'].calib_data.loc[en, 'calib_tpeak'] = ps1
+        palm.etofs['0'].calib_data.loc[en, 'calib_tpeak'] = (ps0 if ps0 != 'NaN' else np.nan)
+        palm.etofs['1'].calib_data.loc[en, 'calib_tpeak'] = (ps1 if ps1 != 'NaN' else np.nan)
 
     calib_res = {}
     for etof_key in palm.etofs:
@@ -343,9 +343,9 @@ def calibrate_button_callback():
     palm.calibrate_etof(folder_name=calib_path_textinput.value)
 
     calibres_table_source.data.update(
-        energy=palm.etofs['0'].calib_data.index.values,
-        peak_pos0=palm.etofs['0'].calib_data['calib_tpeak'].values,
-        peak_pos1=palm.etofs['1'].calib_data['calib_tpeak'].values)
+        energy=palm.etofs['0'].calib_data.index.tolist(),
+        peak_pos0=palm.etofs['0'].calib_data['calib_tpeak'].tolist(),
+        peak_pos1=palm.etofs['1'].calib_data['calib_tpeak'].tolist())
 
 def update_calibration_plot(calib_res):
     etof_ref = palm.etofs['0']
@@ -353,19 +353,19 @@ def update_calibration_plot(calib_res):
 
     calib_waveform_source0.data.update(
         xs=len(etof_ref.calib_data)*[list(range(etof_ref.internal_time_bins))],
-        ys=etof_ref.calib_data['waveform'].values,
-        en=etof_ref.calib_data.index.values)
+        ys=etof_ref.calib_data['waveform'].tolist(),
+        en=etof_ref.calib_data.index.tolist())
 
     calib_waveform_source1.data.update(
         xs=len(etof_str.calib_data)*[list(range(etof_str.internal_time_bins))],
-        ys=etof_str.calib_data['waveform'].values,
-        en=etof_str.calib_data.index.values)
+        ys=etof_str.calib_data['waveform'].tolist(),
+        en=etof_str.calib_data.index.tolist())
 
     phot_peak_pos_ref.location = etof_ref.calib_t0
     phot_peak_pos_str.location = etof_str.calib_t0
 
     def plot_fit(time, calib_a, calib_b):
-        time_fit = np.linspace(time.min(), time.max(), 100)
+        time_fit = np.linspace(np.nanmin(time), np.nanmax(time), 100)
         en_fit = (calib_a / time_fit) ** 2 + calib_b
         return time_fit, en_fit
 
@@ -403,9 +403,9 @@ def load_button_callback(selection):
         palm.load_etof_calib(calib_path_textinput.value, selection)
 
         calibres_table_source.data.update(
-            energy=palm.etofs['0'].calib_data.index.values,
-            peak_pos0=palm.etofs['0'].calib_data['calib_tpeak'].values,
-            peak_pos1=palm.etofs['1'].calib_data['calib_tpeak'].values)
+            energy=palm.etofs['0'].calib_data.index.tolist(),
+            peak_pos0=palm.etofs['0'].calib_data['calib_tpeak'].tolist(),
+            peak_pos1=palm.etofs['1'].calib_data['calib_tpeak'].tolist())
 
         # Drop selection, so that this callback can be triggered again on the same dropdown menu
         # item from the user perspective

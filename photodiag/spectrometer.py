@@ -15,8 +15,8 @@ class Spectrometer:
         # index of self.calib_data DataFrame is 'energy'
         self.calib_data = pd.DataFrame({
             'waveform': np.array([], dtype=float),
-            'calib_t0': np.array([], dtype=int),
-            'calib_tpeak': np.array([], dtype=int),
+            'calib_t0': np.array([], dtype=float),
+            'calib_tpeak': np.array([], dtype=float),
             'noise_mean': np.array([], dtype=float),
             'noise_std': np.array([], dtype=float)})
 
@@ -47,7 +47,10 @@ class Spectrometer:
         waveform = calib_waveforms.mean(axis=0) - noise_mean
 
         calib_t0, _ = self._detect_photon_peak(waveform, noise_std)
-        calib_tpeak = self._detect_electron_peak(waveform, noise_std)
+        try:
+            calib_tpeak = self._detect_electron_peak(waveform, noise_std)
+        except:
+            calib_tpeak = np.nan
 
         self.calib_data.loc[energy] = {
             'waveform': waveform,
@@ -62,7 +65,8 @@ class Spectrometer:
         Returns:
             calibration constants and a goodness of fit
         """
-        time_delays_df = self.calib_data['calib_tpeak'] - self.calib_data['calib_t0']
+        self.calib_t0 = np.round(self.calib_data['calib_t0'].median()).astype(int)
+        time_delays_df = self.calib_data['calib_tpeak'] - self.calib_t0
 
         # convert to numpy arrays
         time_delays = time_delays_df.values
@@ -71,10 +75,9 @@ class Spectrometer:
         def fit_func(time, a, b):
             return (a / time) ** 2 + b
 
-        popt, _pcov = curve_fit(fit_func, time_delays, pulse_energies)
-
+        valid = ~(np.isnan(time_delays) | np.isnan(pulse_energies))
+        popt, _pcov = curve_fit(fit_func, time_delays[valid], pulse_energies[valid])
         self.calib_a, self.calib_b = popt
-        self.calib_t0 = np.round(self.calib_data['calib_t0'].mean()).astype(int)
 
         return popt, time_delays, pulse_energies
 
