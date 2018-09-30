@@ -91,8 +91,8 @@ class PalmSetup:
         with open(os.path.join(path, file), 'rb') as f:
             self.etofs = pickle.load(f)
 
-    def process(self, waveforms, method='xcorr', jacobian=False, noise_thr=3, debug=False,
-                peak='com'):
+    def process(self, waveforms, method='xcorr', jacobian=False, noise_thr=0, debug=False,
+                peak='max'):
         """Main function to analyse PALM data that pipelines separate stages of data processing.
 
         Args:
@@ -157,7 +157,7 @@ class PalmSetup:
         results = self.process(data_raw, debug=debug)
         return (tags, *results)
 
-    def _cross_corr_analysis(self, input_data, debug=False, peak='com'):
+    def _cross_corr_analysis(self, input_data, debug=False, peak='max'):
         """Perform analysis to determine arrival times via cross correlation.
 
         Usually, this data can be used to initally identify pulses that are falling within linear
