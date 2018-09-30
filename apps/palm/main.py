@@ -35,9 +35,13 @@ HDF5_FILE_PATH_UPDATE_PERIOD = 10000  # ms
 HDF5_DATASET_PATH = '/entry/data/data'
 hdf5_file_data = []
 
+energy_min = 4850
+energy_max = 5150
+energy_num_points = 301
+
 palm = photodiag.PalmSetup(
     channels={'0': receiver.reference, '1': receiver.streaked},
-    noise_range=[0, 250], energy_range=np.linspace(4850, 5150, 301))
+    noise_range=[0, 250], energy_range=np.linspace(energy_min, energy_max, energy_num_points))
 
 
 # Calibration averaged waveforms per photon energy
@@ -230,6 +234,54 @@ waveform_plot.add_layout(Legend(items=[
 waveform_plot.legend.click_policy = "hide"
 
 
+# Energy range and number of interpolation points text inputs
+def energy_max_ti_callback(_attr, old, new):
+    global energy_max
+    try:
+        new_value = float(new)
+        if new_value > energy_min:
+            energy_max = new_value
+            palm.energy_range = np.linspace(energy_min, energy_max, energy_num_points)
+        else:
+            energy_max_ti.value = old
+
+    except ValueError:
+        energy_max_ti.value = old
+
+def energy_min_ti_callback(_attr, old, new):
+    global energy_min
+    try:
+        new_value = float(new)
+        if new_value < energy_max:
+            energy_min = new_value
+            palm.energy_range = np.linspace(energy_min, energy_max, energy_num_points)
+        else:
+            energy_min_ti.value = old
+
+    except ValueError:
+        energy_min_ti.value = old
+
+def energy_num_points_ti_callback(_attr, old, new):
+    global energy_num_points
+    try:
+        new_value = int(new)
+        if new_value > 1:
+            energy_num_points = new_value
+            palm.energy_range = np.linspace(energy_min, energy_max, energy_num_points)
+        else:
+            energy_num_points_ti.value = old
+
+    except ValueError:
+        energy_num_points_ti.value = old
+
+energy_max_ti = TextInput(title='Maximal Energy, eV:', value=str(energy_max))
+energy_max_ti.on_change('value', energy_max_ti_callback)
+energy_min_ti = TextInput(title='Minimal Energy, eV:', value=str(energy_min))
+energy_min_ti.on_change('value', energy_min_ti_callback)
+energy_num_points_ti = TextInput(title='Number of interp points:', value=str(energy_num_points))
+energy_num_points_ti.on_change('value', energy_num_points_ti_callback)
+
+
 # Cross-correlation plot
 xcorr_plot = Plot(
     title=Title(text="Cross-correlation"),
@@ -261,6 +313,7 @@ xcorr_plot.add_glyph(
 xcorr_plot.add_glyph(xcorr_source, Line(x='lags', y='xcorr2', line_color='purple'))
 xcorr_plot_pos = Span(location=0, dimension='height')
 xcorr_plot.add_layout(xcorr_plot_pos)
+
 
 # Delays plot
 delay_plot = Plot(
@@ -592,6 +645,7 @@ layout_fit_res = column(fit_eq_div, calib_const_div)
 final_layout = column(
     row(layout_calib),
     row(layout_proc, calib_thz_plot),
+    row(energy_min_ti, energy_max_ti, energy_num_points_ti),
     row(layout_res, Spacer(width=10), data_source_tabs, Spacer(width=30), layout_fit_res))
 
 doc.add_root(final_layout)
