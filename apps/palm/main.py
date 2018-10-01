@@ -242,6 +242,7 @@ def energy_max_ti_callback(_attr, old, new):
         if new_value > energy_min:
             energy_max = new_value
             palm.energy_range = np.linspace(energy_min, energy_max, energy_num_points)
+            saved_runs_dropdown_callback(saved_runs_dropdown.label)
         else:
             energy_max_ti.value = old
 
@@ -255,6 +256,7 @@ def energy_min_ti_callback(_attr, old, new):
         if new_value < energy_max:
             energy_min = new_value
             palm.energy_range = np.linspace(energy_min, energy_max, energy_num_points)
+            saved_runs_dropdown_callback(saved_runs_dropdown.label)
         else:
             energy_min_ti.value = old
 
@@ -268,6 +270,7 @@ def energy_num_points_ti_callback(_attr, old, new):
         if new_value > 1:
             energy_num_points = new_value
             palm.energy_range = np.linspace(energy_min, energy_max, energy_num_points)
+            saved_runs_dropdown_callback(saved_runs_dropdown.label)
         else:
             energy_num_points_ti.value = old
 
@@ -580,22 +583,23 @@ def hdf5_update(pulse, delays, debug_data):
 
 
 def saved_runs_dropdown_callback(selection):
-    global hdf5_update_fun, current_results
-    saved_runs_dropdown.label = selection
-    filepath = os.path.join(hdf5_file_path.value, selection)
-    tags, delays, pulse_lengths, debug_data = palm.process_hdf5_file(filepath=filepath, debug=True)
-    current_results = (selection, tags, delays, pulse_lengths)
+    if selection != "Saved Runs":
+        global hdf5_update_fun, current_results
+        saved_runs_dropdown.label = selection
+        filepath = os.path.join(hdf5_file_path.value, selection)
+        tags, delays, pulse_lengths, debug_data = palm.process_hdf5_file(filepath=filepath, debug=True)
+        current_results = (selection, tags, delays, pulse_lengths)
 
-    if autosave_cb.active:
-        save_b_callback()
+        if autosave_cb.active:
+            save_b_callback()
 
-    delay_source.data.update(pulse=np.arange(len(delays)), delay=delays)
-    pulse_len_source.data.update(x=np.arange(len(pulse_lengths)), y=pulse_lengths)
-    hdf5_update_fun = partial(hdf5_update, delays=delays, debug_data=debug_data)
+        delay_source.data.update(pulse=np.arange(len(delays)), delay=delays)
+        pulse_len_source.data.update(x=np.arange(len(pulse_lengths)), y=pulse_lengths)
+        hdf5_update_fun = partial(hdf5_update, delays=delays, debug_data=debug_data)
 
-    hdf5_pulse_slider.end = len(delays) - 1
-    hdf5_pulse_slider.value = 0
-    hdf5_update_fun(0)
+        hdf5_pulse_slider.end = len(delays) - 1
+        hdf5_pulse_slider.value = 0
+        hdf5_update_fun(0)
 
 saved_runs_dropdown = Dropdown(label="Saved Runs", button_type='primary', menu=[])
 saved_runs_dropdown.on_click(saved_runs_dropdown_callback)
