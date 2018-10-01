@@ -112,7 +112,7 @@ calib_fit_plot.add_tools(PanTool(), BoxZoomTool(), WheelZoomTool(), ResetTool())
 # ---- axes
 calib_fit_plot.add_layout(LinearAxis(axis_label='Photoelectron peak shift'), place='below')
 calib_fit_plot.add_layout(
-    LinearAxis(axis_label='X-fel energy, eV', major_label_orientation='vertical'), place='left')
+    LinearAxis(axis_label='Photon energy, eV', major_label_orientation='vertical'), place='left')
 
 # ---- grid lines
 calib_fit_plot.add_layout(Grid(dimension=0, ticker=BasicTicker()))
@@ -199,7 +199,7 @@ thz_fit_l = calib_thz_plot.add_glyph(calib_thz_fit_source, Line(x='x', y='y', li
 
 # Streaked and reference waveforms plot
 waveform_plot = Plot(
-    title=Title(text="Waveforms"),
+    title=Title(text="eTOF waveforms"),
     x_range=DataRange1d(),
     y_range=DataRange1d(),
     plot_height=WAVEFORM_CANVAS_HEIGHT,
@@ -281,13 +281,14 @@ energy_max_ti = TextInput(title='Maximal Energy, eV:', value=str(energy_max))
 energy_max_ti.on_change('value', energy_max_ti_callback)
 energy_min_ti = TextInput(title='Minimal Energy, eV:', value=str(energy_min))
 energy_min_ti.on_change('value', energy_min_ti_callback)
-energy_num_points_ti = TextInput(title='Number of interp points:', value=str(energy_num_points))
+energy_num_points_ti = TextInput(
+    title='Number of interpolation points:', value=str(energy_num_points))
 energy_num_points_ti.on_change('value', energy_num_points_ti_callback)
 
 
 # Cross-correlation plot
 xcorr_plot = Plot(
-    title=Title(text="Cross-correlation"),
+    title=Title(text="Waveforms cross-correlation"),
     x_range=DataRange1d(),
     y_range=DataRange1d(),
     plot_height=WAVEFORM_CANVAS_HEIGHT,
@@ -300,9 +301,9 @@ xcorr_plot = Plot(
 xcorr_plot.add_tools(PanTool(), WheelZoomTool(), ResetTool())
 
 # ---- axes
-xcorr_plot.add_layout(LinearAxis(axis_label='Delay, eV'), place='below')
+xcorr_plot.add_layout(LinearAxis(axis_label='Energy shift, eV'), place='below')
 xcorr_plot.add_layout(
-    LinearAxis(axis_label='Xcorr, a.u.', major_label_orientation='vertical'), place='left')
+    LinearAxis(axis_label='Cross-correlation', major_label_orientation='vertical'), place='left')
 
 # ---- grid lines
 xcorr_plot.add_layout(Grid(dimension=0, ticker=BasicTicker()))
@@ -320,7 +321,7 @@ xcorr_plot.add_layout(xcorr_plot_pos)
 
 # Delays plot
 delay_plot = Plot(
-    title=Title(text="Delays"),
+    title=Title(text="Pulse delays"),
     x_range=DataRange1d(),
     y_range=DataRange1d(),
     plot_height=WAVEFORM_CANVAS_HEIGHT,
@@ -333,9 +334,10 @@ delay_plot = Plot(
 delay_plot.add_tools(PanTool(), WheelZoomTool(), ResetTool())
 
 # ---- axes
-delay_plot.add_layout(LinearAxis(axis_label='Shot number'), place='below')
+delay_plot.add_layout(LinearAxis(axis_label='Pulse number'), place='below')
 delay_plot.add_layout(
-    LinearAxis(axis_label='Delay, eV', major_label_orientation='vertical'), place='left')
+    LinearAxis(axis_label='Pulse delay (uncalib), eV', major_label_orientation='vertical'),
+    place='left')
 
 # ---- grid lines
 delay_plot.add_layout(Grid(dimension=0, ticker=BasicTicker()))
@@ -364,9 +366,10 @@ pulse_len_plot = Plot(
 pulse_len_plot.add_tools(PanTool(), WheelZoomTool(), ResetTool())
 
 # ---- axes
-pulse_len_plot.add_layout(LinearAxis(axis_label='Shot number'), place='below')
+pulse_len_plot.add_layout(LinearAxis(axis_label='Pulse number'), place='below')
 pulse_len_plot.add_layout(
-    LinearAxis(axis_label='Pulse length', major_label_orientation='vertical'), place='left')
+    LinearAxis(axis_label='Pulse length (uncalib), eV', major_label_orientation='vertical'),
+    place='left')
 
 # ---- grid lines
 pulse_len_plot.add_layout(Grid(dimension=0, ticker=BasicTicker()))
