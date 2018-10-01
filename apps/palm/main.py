@@ -23,7 +23,7 @@ current_results = ()
 connected = False
 
 # Currently, it's possible to control only a canvas size, but not a size of the plotting area.
-WAVEFORM_CANVAS_WIDTH = 660
+WAVEFORM_CANVAS_WIDTH = 620
 WAVEFORM_CANVAS_HEIGHT = 380
 
 APP_FPS = 1
@@ -155,12 +155,13 @@ calibres_table_source.on_change('data', calibres_table_source_callback)
 calibres_table = DataTable(
     source=calibres_table_source,
     columns=[
-        TableColumn(field='energy', title="Photon Energy", editor=IntEditor()),
+        TableColumn(field='energy', title="Photon Energy, eV", editor=IntEditor()),
         TableColumn(field='peak_pos0', title="Reference Peak Position", editor=IntEditor()),
         TableColumn(field='peak_pos1', title="Streaked Peak Position", editor=IntEditor())],
     index_position=None,
     editable=True,
-    height=300,
+    height=200,
+    width=500,
 )
 
 
@@ -386,7 +387,14 @@ pulse_len_plot.add_layout(pulse_len_plot_pos)
 fit_eq_div = Div(text="""Fitting equation:<br><br><img src="/palm/static/5euwuy.gif">""")
 
 # Calibration constants
-calib_const_div = Div(text="")
+calib_const_div = Div(
+    text=f"""
+    a_str = {0}<br>
+    b_str = {0}<br>
+    <br>
+    a_ref = {0}<br>
+    b_ref = {0}
+    """)
 
 # Calibration panel
 # ---- calibration folder path text input
@@ -394,7 +402,7 @@ def calib_path_textinput_callback(_attr, _old, _new):
     update_calib_load_menu()
 
 calib_path_textinput = TextInput(
-    title="Calibration Folder Path:", value=os.path.join(os.path.expanduser('~')))
+    title="Calibration Folder Path:", value=os.path.join(os.path.expanduser('~')), width=525)
 calib_path_textinput.on_change('value', calib_path_textinput_callback)
 
 # ---- calibrate button
@@ -490,12 +498,13 @@ load_button = Dropdown(label="Load", menu=[], width=135)
 load_button.on_click(load_button_callback)
 
 # assemble
-tab_calibration = Panel(
-    child=column(
-        calib_path_textinput,
-        calibrate_button,
-        row(save_button, Spacer(width=10), load_button)),
-    title="Calibration")
+tab_calibration_layout = row(
+    column(calib_wf_plot, calib_fit_plot, calib_thz_plot), Spacer(width=30),
+    column(
+        calib_path_textinput, calibrate_button, row(save_button, Spacer(width=10), load_button),
+        calibres_table, fit_eq_div, calib_const_div))
+
+tab_calibration = Panel(child=tab_calibration_layout, title="Calibration")
 
 
 # Stream panel
@@ -508,7 +517,8 @@ buffer_slider_source = ColumnDataSource(dict(value=[]))
 buffer_slider_source.on_change('data', buffer_slider_callback)
 
 buffer_slider = Slider(
-    start=0, end=1, value=0, step=1, title="Buffered Image", callback_policy='mouseup')
+    start=0, end=1, value=0, step=1, title="Buffered Image", callback_policy='mouseup',
+    disabled=True)
 
 buffer_slider.callback = CustomJS(
     args=dict(source=buffer_slider_source),
@@ -529,7 +539,7 @@ def stream_button_callback(state):
         stream_button.button_type = 'default'
 
 
-stream_button = Toggle(label="Connect", button_type='default')
+stream_button = Toggle(label="Connect", button_type='default', disabled=True)
 stream_button.on_click(stream_button_callback)
 
 
@@ -538,12 +548,13 @@ def intensity_stream_reset_button_callback():
     global stream_t
     stream_t = 1  # keep the latest point in order to prevent full axis reset
 
-intensity_stream_reset_button = Button(label="Reset", button_type='default')
+intensity_stream_reset_button = Button(label="Reset", button_type='default', disabled=True)
 intensity_stream_reset_button.on_click(intensity_stream_reset_button_callback)
 
 # assemble
-tab_stream = Panel(
-    child=column(buffer_slider, stream_button, intensity_stream_reset_button), title="Stream")
+tab_stream_layout = column(buffer_slider, stream_button, intensity_stream_reset_button)
+
+tab_stream = Panel(child=tab_stream_layout, title="Stream")
 
 
 # HDF5 File panel
@@ -564,7 +575,7 @@ def hdf5_file_path_callback(_attr, _old, new):
     save_ti.value = new
     hdf5_file_path_update()
 
-hdf5_file_path = TextInput(title="Folder Path:", value=HDF5_FILE_PATH)
+hdf5_file_path = TextInput(title="Folder Path:", value=HDF5_FILE_PATH, width=525)
 hdf5_file_path.on_change('value', hdf5_file_path_callback)
 
 
@@ -608,7 +619,7 @@ saved_runs_dropdown = Dropdown(label="Saved Runs", button_type='primary', menu=[
 saved_runs_dropdown.on_click(saved_runs_dropdown_callback)
 
 # ---- save location
-save_ti = TextInput(title="Save Folder Path:", value=HDF5_FILE_PATH)
+save_ti = TextInput(title="Save Folder Path:", value=HDF5_FILE_PATH, width=525)
 
 # ---- autosave checkbox
 autosave_cb = CheckboxButtonGroup(labels=["Auto Save"], active=[], width=100)
@@ -629,33 +640,24 @@ def hdf5_pulse_slider_callback(_attr, _old, new):
     global hdf5_update_fun
     hdf5_update_fun(pulse=new)
 
-hdf5_pulse_slider = Slider(start=0, end=99999, value=0, step=1, title="Pulse ID")
+hdf5_pulse_slider = Slider(start=0, end=99999, value=0, step=1, title="Pulse ID", width=500)
 hdf5_pulse_slider.on_change('value', hdf5_pulse_slider_callback)
 
-
 # assemble
-tab_hdf5file = Panel(
-    child=column(
-        hdf5_file_path, saved_runs_dropdown, hdf5_pulse_slider, save_ti, autosave_cb, save_b),
-    title="HDF5 File")
+tab_hdf5file_layout = column(
+    row(
+        column(waveform_plot, xcorr_plot), Spacer(width=30),
+        column(
+            hdf5_file_path, saved_runs_dropdown, hdf5_pulse_slider, Spacer(height=30),
+            energy_min_ti, energy_max_ti, energy_num_points_ti, Spacer(height=30),
+            save_ti, autosave_cb, save_b)),
+    row(delay_plot, Spacer(width=10), pulse_len_plot))
 
-data_source_tabs = Tabs(tabs=[tab_calibration, tab_hdf5file, tab_stream])
+tab_hdf5file = Panel(child=tab_hdf5file_layout, title="HDF5 File")
 
-# Final layouts
-layout_calib = row(
-    calib_wf_plot,
-    calib_fit_plot, Spacer(width=10),
-    calibres_table)
-layout_proc = row(waveform_plot, xcorr_plot)
-layout_res = row(delay_plot, pulse_len_plot)
-layout_fit_res = column(fit_eq_div, calib_const_div)
-final_layout = column(
-    row(layout_calib),
-    row(layout_proc, calib_thz_plot),
-    row(energy_min_ti, energy_max_ti, energy_num_points_ti),
-    row(layout_res, Spacer(width=10), data_source_tabs, Spacer(width=30), layout_fit_res))
 
-doc.add_root(final_layout)
+# Final layout
+doc.add_root(Tabs(tabs=[tab_calibration, tab_hdf5file, tab_stream]))
 
 
 @gen.coroutine
