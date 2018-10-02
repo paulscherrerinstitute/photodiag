@@ -1,12 +1,23 @@
+import numpy as np
 from bokeh.io import curdoc
 from bokeh.models import Tabs
 
-from panel_calib import tab_calibration
-from panel_h5file import tab_hdf5file
-from panel_stream import tab_stream
+import photodiag
+import receiver
+import panel_calib
+import panel_h5file
+import panel_stream
 
 doc = curdoc()
 doc.title = "PALM"
 
+# Create a palm setup object
+palm = photodiag.PalmSetup(
+    channels={'0': receiver.reference, '1': receiver.streaked},
+    noise_range=[0, 250], energy_range=np.linspace(4850, 5150, 301))
+
 # Final layout
-doc.add_root(Tabs(tabs=[tab_calibration, tab_hdf5file, tab_stream]))
+tab_calib = panel_calib.create(palm)
+tab_h5file = panel_h5file.create(palm)
+tab_stream = panel_stream.create(palm)
+doc.add_root(Tabs(tabs=[tab_calib, tab_h5file, tab_stream]))
