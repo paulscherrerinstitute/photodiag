@@ -11,8 +11,8 @@ from bokeh.models import BasicTicker, BoxZoomTool, Button, CheckboxButtonGroup, 
     Slider, Spacer, Span, TableColumn, Tabs, TextInput, Title, Toggle, WheelZoomTool
 from tornado import gen
 
-import photodiag
 import receiver
+from common import WAVEFORM_CANVAS_HEIGHT, WAVEFORM_CANVAS_WIDTH, palm
 
 doc = curdoc()
 doc.title = "PALM"
@@ -21,10 +21,6 @@ current_message = None
 current_results = ()
 
 connected = False
-
-# Currently, it's possible to control only a canvas size, but not a size of the plotting area.
-WAVEFORM_CANVAS_WIDTH = 620
-WAVEFORM_CANVAS_HEIGHT = 380
 
 APP_FPS = 1
 stream_t = 0
@@ -38,10 +34,6 @@ hdf5_file_data = []
 energy_min = 4850
 energy_max = 5150
 energy_num_points = 301
-
-palm = photodiag.PalmSetup(
-    channels={'0': receiver.reference, '1': receiver.streaked},
-    noise_range=[0, 250], energy_range=np.linspace(energy_min, energy_max, energy_num_points))
 
 
 # CALIBRATION PANEL

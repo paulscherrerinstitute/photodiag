@@ -3,7 +3,6 @@ from collections import deque
 
 from bsread import source
 
-
 parser = argparse.ArgumentParser()
 parser.add_argument('beamline')
 args = parser.parse_args()
