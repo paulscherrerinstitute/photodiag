@@ -46,17 +46,17 @@ def create(palm):
 
     # ---- multiline glyphs
     waveform_ref_source = ColumnDataSource(dict(xs=[], ys=[], en=[]))
-    ref_multiline = waveform_plot.add_glyph(
+    waveform_ref_multiline = waveform_plot.add_glyph(
         waveform_ref_source, MultiLine(xs='xs', ys='ys', line_color='blue'))
 
     waveform_str_source = ColumnDataSource(dict(xs=[], ys=[], en=[]))
-    str_multiline = waveform_plot.add_glyph(
+    waveform_str_multiline = waveform_plot.add_glyph(
         waveform_str_source, MultiLine(xs='xs', ys='ys', line_color='red'))
 
     # ---- legend
     waveform_plot.add_layout(Legend(items=[
-        ("reference", [ref_multiline]),
-        ("streaked", [str_multiline])
+        ("reference", [waveform_ref_multiline]),
+        ("streaked", [waveform_str_multiline])
     ]))
     waveform_plot.legend.click_policy = "hide"
 
@@ -96,27 +96,31 @@ def create(palm):
 
     # ---- circle glyphs
     fit_ref_circle_source = ColumnDataSource(dict(x=[], y=[]))
-    ref_circle = fit_plot.add_glyph(fit_ref_circle_source, Circle(x='x', y='y', line_color='blue'))
+    fit_ref_circle = fit_plot.add_glyph(
+        fit_ref_circle_source, Circle(x='x', y='y', line_color='blue'))
     fit_str_circle_source = ColumnDataSource(dict(x=[], y=[]))
-    str_circle = fit_plot.add_glyph(fit_str_circle_source, Circle(x='x', y='y', line_color='red'))
+    fit_str_circle = fit_plot.add_glyph(
+        fit_str_circle_source, Circle(x='x', y='y', line_color='red'))
 
     # ---- line glyphs
     fit_ref_line_source = ColumnDataSource(dict(x=[], y=[]))
-    ref_line = fit_plot.add_glyph(fit_ref_line_source, Line(x='x', y='y', line_color='blue'))
+    fit_ref_line = fit_plot.add_glyph(
+        fit_ref_line_source, Line(x='x', y='y', line_color='blue'))
     fit_str_line_source = ColumnDataSource(dict(x=[], y=[]))
-    str_line = fit_plot.add_glyph(fit_str_line_source, Line(x='x', y='y', line_color='red'))
+    fit_str_line = fit_plot.add_glyph(
+        fit_str_line_source, Line(x='x', y='y', line_color='red'))
 
     # ---- legend
     fit_plot.add_layout(Legend(items=[
-        ("reference", [ref_circle, ref_line]),
-        ("streaked", [str_circle, str_line])
+        ("reference", [fit_ref_circle, fit_ref_line]),
+        ("streaked", [fit_str_circle, fit_str_line])
     ]))
     fit_plot.legend.click_policy = "hide"
 
 
     # Calibration results datatable
     def datatable_source_callback(_attr, _old, new):
-        for en, ps0, ps1 in zip(new['energy'], new['peak_pos0'], new['peak_pos1']):
+        for en, ps0, ps1 in zip(new['energy'], new['peak_pos_ref'], new['peak_pos_str']):
             palm.etofs['0'].calib_data.loc[en, 'calib_tpeak'] = (ps0 if ps0 != 'NaN' else np.nan)
             palm.etofs['1'].calib_data.loc[en, 'calib_tpeak'] = (ps1 if ps1 != 'NaN' else np.nan)
 
@@ -126,15 +130,15 @@ def create(palm):
         update_calibration_plot(calib_res)
 
     datatable_source = ColumnDataSource(
-        dict(energy=['', '', ''], peak_pos0=['', '', ''], peak_pos1=['', '', '']))
+        dict(energy=['', '', ''], peak_pos_ref=['', '', ''], peak_pos_str=['', '', '']))
     datatable_source.on_change('data', datatable_source_callback)
 
     datatable = DataTable(
         source=datatable_source,
         columns=[
             TableColumn(field='energy', title="Photon Energy, eV", editor=IntEditor()),
-            TableColumn(field='peak_pos0', title="Reference Peak Position", editor=IntEditor()),
-            TableColumn(field='peak_pos1', title="Streaked Peak Position", editor=IntEditor())],
+            TableColumn(field='peak_pos_ref', title="Reference Peak Position", editor=IntEditor()),
+            TableColumn(field='peak_pos_str', title="Streaked Peak Position", editor=IntEditor())],
         index_position=None,
         editable=True,
         height=200,
@@ -190,8 +194,8 @@ def create(palm):
 
         datatable_source.data.update(
             energy=palm.etofs['0'].calib_data.index.tolist(),
-            peak_pos0=palm.etofs['0'].calib_data['calib_tpeak'].tolist(),
-            peak_pos1=palm.etofs['1'].calib_data['calib_tpeak'].tolist())
+            peak_pos_ref=palm.etofs['0'].calib_data['calib_tpeak'].tolist(),
+            peak_pos_str=palm.etofs['1'].calib_data['calib_tpeak'].tolist())
 
     def update_calibration_plot(calib_res):
         etof_ref = palm.etofs['0']
@@ -252,8 +256,8 @@ def create(palm):
 
             datatable_source.data.update(
                 energy=palm.etofs['0'].calib_data.index.tolist(),
-                peak_pos0=palm.etofs['0'].calib_data['calib_tpeak'].tolist(),
-                peak_pos1=palm.etofs['1'].calib_data['calib_tpeak'].tolist())
+                peak_pos_ref=palm.etofs['0'].calib_data['calib_tpeak'].tolist(),
+                peak_pos_str=palm.etofs['1'].calib_data['calib_tpeak'].tolist())
 
             # Drop selection, so that this callback can be triggered again on the same dropdown menu
             # item from the user perspective
@@ -273,7 +277,7 @@ def create(palm):
             load_dropdown.menu = new_menu
 
     doc.add_next_tick_callback(update_load_dropdown_menu)
-    doc.add_periodic_callback(update_load_dropdown_menu, 10000)
+    doc.add_periodic_callback(update_load_dropdown_menu, 5000)
 
     load_dropdown = Dropdown(label="Load", menu=[], width=135)
     load_dropdown.on_click(load_dropdown_callback)

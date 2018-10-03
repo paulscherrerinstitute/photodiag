@@ -13,9 +13,9 @@ PLOT_CANVAS_WIDTH = 620
 PLOT_CANVAS_HEIGHT = 380
 
 def create(palm):
-    energy_min = 4850
-    energy_max = 5150
-    energy_npoints = 301
+    energy_min = palm.energy_range.min()
+    energy_max = palm.energy_range.max()
+    energy_npoints = palm.energy_range.size
 
     current_results = (0, 0, 0, 0)
 

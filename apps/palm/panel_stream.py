@@ -14,11 +14,8 @@ PLOT_CANVAS_WIDTH = 620
 PLOT_CANVAS_HEIGHT = 380
 
 def create(palm):
-    current_message = None
-
     connected = False
-
-    APP_FPS = 1
+    current_message = None
     stream_t = 0
 
     doc = curdoc()
@@ -251,7 +248,7 @@ def create(palm):
 
         doc.add_next_tick_callback(partial(update, message=current_message))
 
-    doc.add_periodic_callback(internal_periodic_callback, 1000 / APP_FPS)
+    doc.add_periodic_callback(internal_periodic_callback, 1000)
 
 
     # assemble
