@@ -13,16 +13,11 @@ PLOT_CANVAS_WIDTH = 620
 PLOT_CANVAS_HEIGHT = 380
 
 def create(palm):
-    HDF5_FILE_PATH = '/filepath'
-    HDF5_FILE_PATH_UPDATE_PERIOD = 10000  # ms
-    HDF5_DATASET_PATH = '/entry/data/data'
-    hdf5_file_data = []
-
     energy_min = 4850
     energy_max = 5150
-    energy_num_points = 301
+    energy_npoints = 301
 
-    current_results = ()
+    current_results = (0, 0, 0, 0)
 
     doc = curdoc()
 
@@ -52,15 +47,15 @@ def create(palm):
 
     # ---- line glyphs
     waveform_source = ColumnDataSource(dict(x_str=[], y_str=[], x_ref=[], y_ref=[]))
-    reference_l = waveform_plot.add_glyph(
+    waveform_ref_line = waveform_plot.add_glyph(
         waveform_source, Line(x='x_ref', y='y_ref', line_color='blue'))
-    streaked_l = waveform_plot.add_glyph(
+    waveform_str_line = waveform_plot.add_glyph(
         waveform_source, Line(x='x_str', y='y_str', line_color='red'))
 
     # ---- legend
     waveform_plot.add_layout(Legend(items=[
-        ("reference", [reference_l]),
-        ("streaked", [streaked_l])
+        ("reference", [waveform_ref_line]),
+        ("streaked", [waveform_str_line])
     ]))
     waveform_plot.legend.click_policy = "hide"
 
@@ -92,18 +87,17 @@ def create(palm):
 
     # ---- line glyphs
     xcorr_source = ColumnDataSource(dict(lags=[], xcorr1=[], xcorr2=[]))
-    xcorr_pos_source = ColumnDataSource(dict(pos=[]))
     xcorr_plot.add_glyph(
         xcorr_source, Line(x='lags', y='xcorr1', line_color='purple', line_dash='dashed'))
     xcorr_plot.add_glyph(xcorr_source, Line(x='lags', y='xcorr2', line_color='purple'))
 
     # ---- vertical span
-    xcorr_plot_pos = Span(location=0, dimension='height')
-    xcorr_plot.add_layout(xcorr_plot_pos)
+    xcorr_center_span = Span(location=0, dimension='height')
+    xcorr_plot.add_layout(xcorr_center_span)
 
 
     # Delays plot
-    delay_plot = Plot(
+    pulse_delay_plot = Plot(
         title=Title(text="Pulse delays"),
         x_range=DataRange1d(),
         y_range=DataRange1d(),
@@ -114,31 +108,31 @@ def create(palm):
     )
 
     # ---- tools
-    delay_plot.add_tools(PanTool(), WheelZoomTool(), ResetTool())
+    pulse_delay_plot.add_tools(PanTool(), WheelZoomTool(), ResetTool())
 
     # ---- axes
-    delay_plot.add_layout(
+    pulse_delay_plot.add_layout(
         LinearAxis(axis_label='Pulse number'), place='below')
-    delay_plot.add_layout(
+    pulse_delay_plot.add_layout(
         LinearAxis(axis_label='Pulse delay (uncalib), eV', major_label_orientation='vertical'),
         place='left')
 
     # ---- grid lines
-    delay_plot.add_layout(Grid(dimension=0, ticker=BasicTicker()))
-    delay_plot.add_layout(Grid(dimension=1, ticker=BasicTicker()))
+    pulse_delay_plot.add_layout(Grid(dimension=0, ticker=BasicTicker()))
+    pulse_delay_plot.add_layout(Grid(dimension=1, ticker=BasicTicker()))
 
     # ---- line glyphs
-    delay_source = ColumnDataSource(dict(pulse=[], delay=[]))
-    pulse_pos_source = ColumnDataSource(dict(pos=[]))
-    delay_plot.add_glyph(delay_source, Line(x='pulse', y='delay', line_color='steelblue'))
+    pulse_delay_source = ColumnDataSource(dict(pulse=[], delay=[]))
+    pulse_delay_plot.add_glyph(
+        pulse_delay_source, Line(x='pulse', y='delay', line_color='steelblue'))
 
     # ---- vertical span
-    delay_plot_pos = Span(location=0, dimension='height')
-    delay_plot.add_layout(delay_plot_pos)
+    pulse_delay_plot_span = Span(location=0, dimension='height')
+    pulse_delay_plot.add_layout(pulse_delay_plot_span)
 
 
     # Pulse lengths plot
-    pulse_len_plot = Plot(
+    pulse_length_plot = Plot(
         title=Title(text="Pulse lengths"),
         x_range=DataRange1d(),
         y_range=DataRange1d(),
@@ -149,40 +143,40 @@ def create(palm):
     )
 
     # ---- tools
-    pulse_len_plot.add_tools(PanTool(), WheelZoomTool(), ResetTool())
+    pulse_length_plot.add_tools(PanTool(), WheelZoomTool(), ResetTool())
 
     # ---- axes
-    pulse_len_plot.add_layout(
+    pulse_length_plot.add_layout(
         LinearAxis(axis_label='Pulse number'), place='below')
-    pulse_len_plot.add_layout(
+    pulse_length_plot.add_layout(
         LinearAxis(axis_label='Pulse length (uncalib), eV', major_label_orientation='vertical'),
         place='left')
 
     # ---- grid lines
-    pulse_len_plot.add_layout(Grid(dimension=0, ticker=BasicTicker()))
-    pulse_len_plot.add_layout(Grid(dimension=1, ticker=BasicTicker()))
+    pulse_length_plot.add_layout(Grid(dimension=0, ticker=BasicTicker()))
+    pulse_length_plot.add_layout(Grid(dimension=1, ticker=BasicTicker()))
 
     # ---- line glyphs
-    pulse_len_source = ColumnDataSource(dict(x=[], y=[]))
-    pulse_len_plot.add_glyph(pulse_len_source, Line(x='x', y='y', line_color='steelblue'))
+    pulse_length_source = ColumnDataSource(dict(x=[], y=[]))
+    pulse_length_plot.add_glyph(pulse_length_source, Line(x='x', y='y', line_color='steelblue'))
 
     # ---- vertical span
-    pulse_len_plot_pos = Span(location=0, dimension='height')
-    pulse_len_plot.add_layout(pulse_len_plot_pos)
+    pulse_length_plot_span = Span(location=0, dimension='height')
+    pulse_length_plot.add_layout(pulse_length_plot_span)
 
 
     # Folder path text input
-    def hdf5_file_path_callback(_attr, _old, new):
-        save_ti.value = new
-        hdf5_file_path_update()
+    def path_textinput_callback(_attr, _old, new):
+        save_textinput.value = new
+        path_periodic_update()
 
-    hdf5_file_path = TextInput(title="Folder Path:", value=HDF5_FILE_PATH, width=525)
-    hdf5_file_path.on_change('value', hdf5_file_path_callback)
+    path_textinput = TextInput(
+        title="Folder Path:", value=os.path.join(os.path.expanduser('~')), width=525)
+    path_textinput.on_change('value', path_textinput_callback)
 
 
     # Saved runs dropdown menu
-    hdf5_update_fun = []
-    def hdf5_update(pulse, delays, debug_data):
+    def h5_update(pulse, delays, debug_data):
         prep_data, lags, corr_res_uncut, corr_results = debug_data
 
         waveform_source.data.update(
@@ -192,140 +186,145 @@ def create(palm):
         xcorr_source.data.update(
             lags=lags, xcorr1=corr_res_uncut[pulse, :], xcorr2=corr_results[pulse, :])
 
-        xcorr_plot_pos.location = delays[pulse]
-        delay_plot_pos.location = pulse
-        pulse_len_plot_pos.location = pulse
+        xcorr_center_span.location = delays[pulse]
+        pulse_delay_plot_span.location = pulse
+        pulse_length_plot_span.location = pulse
+
+    # this placeholder function should be reassigned in 'saved_runs_dropdown_callback'
+    h5_update_fun = lambda pulse: None
 
     def saved_runs_dropdown_callback(selection):
         if selection != "Saved Runs":
-            nonlocal hdf5_update_fun, current_results
+            nonlocal h5_update_fun, current_results
             saved_runs_dropdown.label = selection
-            filepath = os.path.join(hdf5_file_path.value, selection)
-            tags, delays, pulse_lengths, debug_data = palm.process_hdf5_file(filepath=filepath, debug=True)
-            current_results = (selection, tags, delays, pulse_lengths)
+            filepath = os.path.join(path_textinput.value, selection)
+            tags, delays, lengths, debug_data = palm.process_hdf5_file(filepath, debug=True)
+            current_results = (selection, tags, delays, lengths)
 
-            if autosave_cb.active:
-                save_b_callback()
+            if autosave_checkbox.active:
+                save_button_callback()
 
-            delay_source.data.update(pulse=np.arange(len(delays)), delay=delays)
-            pulse_len_source.data.update(x=np.arange(len(pulse_lengths)), y=pulse_lengths)
-            hdf5_update_fun = partial(hdf5_update, delays=delays, debug_data=debug_data)
+            pulse_delay_source.data.update(pulse=np.arange(len(delays)), delay=delays)
+            pulse_length_source.data.update(x=np.arange(len(lengths)), y=lengths)
+            h5_update_fun = partial(h5_update, delays=delays, debug_data=debug_data)
 
-            hdf5_pulse_slider.end = len(delays) - 1
-            hdf5_pulse_slider.value = 0
-            hdf5_update_fun(0)
+            pulse_slider.end = len(delays) - 1
+            pulse_slider.value = 0
+            h5_update_fun(0)
 
     saved_runs_dropdown = Dropdown(label="Saved Runs", button_type='primary', menu=[])
     saved_runs_dropdown.on_click(saved_runs_dropdown_callback)
 
     # ---- saved run periodic update
-    def hdf5_file_path_update():
+    def path_periodic_update():
         new_menu = []
-        if os.path.isdir(hdf5_file_path.value):
-            with os.scandir(hdf5_file_path.value) as it:
+        if os.path.isdir(path_textinput.value):
+            with os.scandir(path_textinput.value) as it:
                 for entry in it:
                     if entry.is_file() and entry.name.endswith(('.hdf5', '.h5')):
                         new_menu.append((entry.name, entry.name))
         saved_runs_dropdown.menu = sorted(new_menu, reverse=True)
 
-    doc.add_periodic_callback(hdf5_file_path_update, HDF5_FILE_PATH_UPDATE_PERIOD)
+    doc.add_periodic_callback(path_periodic_update, 10000)
 
 
     # Pulse number slider
-    def hdf5_pulse_slider_callback(_attr, _old, new):
-        nonlocal hdf5_update_fun
-        hdf5_update_fun(pulse=new)
+    def pulse_slider_callback(_attr, _old, new):
+        h5_update_fun(pulse=new)
 
-    hdf5_pulse_slider = Slider(start=0, end=99999, value=0, step=1, title="Pulse ID", width=500)
-    hdf5_pulse_slider.on_change('value', hdf5_pulse_slider_callback)
+    pulse_slider = Slider(start=0, end=99999, value=0, step=1, title="Pulse ID", width=500)
+    pulse_slider.on_change('value', pulse_slider_callback)
 
 
     # Energy maximal range value text input
-    def energy_max_ti_callback(_attr, old, new):
+    def energy_max_textinput_callback(_attr, old, new):
         nonlocal energy_max
         try:
             new_value = float(new)
             if new_value > energy_min:
                 energy_max = new_value
-                palm.energy_range = np.linspace(energy_min, energy_max, energy_num_points)
+                palm.energy_range = np.linspace(energy_min, energy_max, energy_npoints)
                 saved_runs_dropdown_callback(saved_runs_dropdown.label)
             else:
-                energy_max_ti.value = old
+                energy_max_textinput.value = old
 
         except ValueError:
-            energy_max_ti.value = old
+            energy_max_textinput.value = old
 
-    energy_max_ti = TextInput(title='Maximal Energy, eV:', value=str(energy_max))
-    energy_max_ti.on_change('value', energy_max_ti_callback)
+    energy_max_textinput = TextInput(title='Maximal Energy, eV:', value=str(energy_max))
+    energy_max_textinput.on_change('value', energy_max_textinput_callback)
 
 
     # Energy minimal range value text input
-    def energy_min_ti_callback(_attr, old, new):
+    def energy_min_textinput_callback(_attr, old, new):
         nonlocal energy_min
         try:
             new_value = float(new)
             if new_value < energy_max:
                 energy_min = new_value
-                palm.energy_range = np.linspace(energy_min, energy_max, energy_num_points)
+                palm.energy_range = np.linspace(energy_min, energy_max, energy_npoints)
                 saved_runs_dropdown_callback(saved_runs_dropdown.label)
             else:
-                energy_min_ti.value = old
+                energy_min_textinput.value = old
 
         except ValueError:
-            energy_min_ti.value = old
+            energy_min_textinput.value = old
 
-    energy_min_ti = TextInput(title='Minimal Energy, eV:', value=str(energy_min))
-    energy_min_ti.on_change('value', energy_min_ti_callback)
+    energy_min_textinput = TextInput(title='Minimal Energy, eV:', value=str(energy_min))
+    energy_min_textinput.on_change('value', energy_min_textinput_callback)
 
 
     # Energy number of interpolation points text input
-    def energy_num_points_ti_callback(_attr, old, new):
-        nonlocal energy_num_points
+    def energy_npoints_textinput_callback(_attr, old, new):
+        nonlocal energy_npoints
         try:
             new_value = int(new)
             if new_value > 1:
-                energy_num_points = new_value
-                palm.energy_range = np.linspace(energy_min, energy_max, energy_num_points)
+                energy_npoints = new_value
+                palm.energy_range = np.linspace(energy_min, energy_max, energy_npoints)
                 saved_runs_dropdown_callback(saved_runs_dropdown.label)
             else:
-                energy_num_points_ti.value = old
+                energy_npoints_textinput.value = old
 
         except ValueError:
-            energy_num_points_ti.value = old
+            energy_npoints_textinput.value = old
 
-    energy_num_points_ti = TextInput(
-        title='Number of interpolation points:', value=str(energy_num_points))
-    energy_num_points_ti.on_change('value', energy_num_points_ti_callback)
+    energy_npoints_textinput = TextInput(
+        title='Number of interpolation points:', value=str(energy_npoints))
+    energy_npoints_textinput.on_change('value', energy_npoints_textinput_callback)
 
 
     # Save location
-    save_ti = TextInput(title="Save Folder Path:", value=HDF5_FILE_PATH, width=525)
+    save_textinput = TextInput(
+        title="Save Folder Path:", value=os.path.join(os.path.expanduser('~')), width=525)
 
 
     # Autosave checkbox
-    autosave_cb = CheckboxButtonGroup(labels=["Auto Save"], active=[], width=100)
+    autosave_checkbox = CheckboxButtonGroup(labels=["Auto Save"], active=[], width=100)
 
 
     # Save button
-    def save_b_callback():
-        if current_results:
-            filename, tags, delays, pulse_lengths = current_results
+    def save_button_callback():
+        if current_results[0]:
+            filename, tags, delays, lengths = current_results
             save_filename = os.path.splitext(filename)[0] + '.csv'
-            df = pd.DataFrame({'pulse_id': tags, 'pulse_delay': delays, 'pulse_length': pulse_lengths})
-            df.to_csv(os.path.join(save_ti.value, save_filename), index=False)
+            df = pd.DataFrame({'pulse_id': tags, 'pulse_delay': delays, 'pulse_length': lengths})
+            df.to_csv(os.path.join(save_textinput.value, save_filename), index=False)
 
-    save_b = Button(label="Save Results", button_type='default')
-    save_b.on_click(save_b_callback)
+    save_button = Button(label="Save Results", button_type='default')
+    save_button.on_click(save_button_callback)
 
 
     # assemble
-    tab_hdf5file_layout = column(
+    tab_h5file_layout = column(
         row(
             column(waveform_plot, xcorr_plot), Spacer(width=30),
             column(
-                hdf5_file_path, saved_runs_dropdown, hdf5_pulse_slider, Spacer(height=30),
-                energy_min_ti, energy_max_ti, energy_num_points_ti, Spacer(height=30),
-                save_ti, autosave_cb, save_b)),
-        row(delay_plot, Spacer(width=10), pulse_len_plot))
+                path_textinput, saved_runs_dropdown, pulse_slider,
+                Spacer(height=30),
+                energy_min_textinput, energy_max_textinput, energy_npoints_textinput,
+                Spacer(height=30),
+                save_textinput, autosave_checkbox, save_button)),
+        row(pulse_delay_plot, Spacer(width=10), pulse_length_plot))
 
-    return Panel(child=tab_hdf5file_layout, title="HDF5 File")
+    return Panel(child=tab_h5file_layout, title="HDF5 File")
