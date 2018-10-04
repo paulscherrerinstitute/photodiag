@@ -1,10 +1,13 @@
 import datetime
+import json
 import os
 import pickle
 import re
 
 import h5py
 import numpy as np
+import pandas as pd
+from scipy.optimize import curve_fit
 
 from photodiag.spectrometer import Spectrometer
 
@@ -28,6 +31,13 @@ class PalmSetup:
         self.channels = channels
         self.etofs = {'0': Spectrometer(noise_range), '1': Spectrometer(noise_range)}
         self.energy_range = energy_range
+
+        self.thz_calib_data = pd.DataFrame({
+            'peak_shift': np.array([], dtype=float),
+            'peak_shift_mean': np.array([], dtype=float),
+            'peak_shift_std': np.array([], dtype=float)})
+        self.thz_slope = None
+        self.thz_motor_name = None
 
     def calibrate_etof(self, folder_name, etofs=None, overwrite=True):
         """General routine for a calibration process of the eTOF spectrometers.
@@ -123,10 +133,33 @@ class PalmSetup:
 
         return results
 
-    def calibrate_thz(self):
+    def calibrate_thz(self, path):
         """Calibrate THz pulse.
         """
-        pass
+        with open(path) as eco_scan:
+            data = json.load(eco_scan)
+
+        # Flatten lists
+        scan_files = [item for sublist in data['scan_files'] for item in sublist]
+        scan_readbacks = [item for sublist in data['scan_readbacks'] for item in sublist]
+
+        self.thz_motor_name = data['scan_parameters']['Id'][0]
+
+        self.thz_calib_data.drop(self.thz_calib_data.index[:], inplace=True)
+        for scan_file, scan_readback in zip(scan_files, scan_readbacks):
+            _, peak_shift, _ = self.process_hdf5_file(scan_file)
+            self.thz_calib_data.loc[scan_readback] = {
+                'peak_shift': peak_shift,
+                'peak_shift_mean': peak_shift.mean(),
+                'peak_shift_std': peak_shift.std()}
+
+        def fit_func(shift, a, b):
+            return a * shift + b
+
+        popt, _pcov = curve_fit(
+            fit_func, self.thz_calib_data['peak_shift_mean'], self.thz_calib_data.index)
+
+        self.thz_slope, _ = popt
 
     def save_thz_calib(self, file):
         """ Save THz pulse calibration to a file.
@@ -370,8 +403,12 @@ def get_tags_and_data(filepath, etof_path):
                 tags = h5f['/scan 1/SLAAR21-LMOT-M552:MOT.VAL'][:]
                 data = -h5f[f'/scan 1/{etof_path} averager'][:]
             except KeyError:
-                tags = h5f[f'/data/{etof_path}/pulse_id'][:]
-                data = -h5f[f'/data/{etof_path}/data'][:]
+                try:
+                    tags = h5f[f'/data/{etof_path}/pulse_id'][:]
+                    data = -h5f[f'/data/{etof_path}/data'][:]
+                except KeyError:
+                    tags = []
+                    data = -h5f[f'/{etof_path}'][:]
 
     return tags, data
 
