@@ -161,15 +161,30 @@ class PalmSetup:
 
         self.thz_slope, _ = popt
 
-    def save_thz_calib(self, file):
+    def save_thz_calib(self, path, file=None):
         """ Save THz pulse calibration to a file.
         """
-        pass
+        if not file:
+            file = f"{datetime.datetime.now().isoformat(sep='_', timespec='seconds')}"
 
-    def load_thz_calib(self, file):
+        if not file.endswith('.palm_thz'):
+            file += '.palm_thz'
+
+        if not os.path.exists(path):
+            os.makedirs(path)
+
+        with open(os.path.join(path, file), 'wb') as f:
+            pickle.dump(self.thz_calib_data, f)
+            pickle.dump(self.thz_slope, f)
+            pickle.dump(self.thz_motor_name, f)
+
+    def load_thz_calib(self, path, file):
         """Load THz pulse calibration from a file.
         """
-        pass
+        with open(os.path.join(path, file), 'rb') as f:
+            self.thz_calib_data = pickle.load(f)
+            self.thz_slope = pickle.load(f)
+            self.thz_motor_name = pickle.load(f)
 
     def process_hdf5_file(self, filepath, debug=False):
         """Load data for all registered spectrometers from an hdf5 file. This method is to be
