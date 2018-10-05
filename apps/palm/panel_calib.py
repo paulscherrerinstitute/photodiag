@@ -335,7 +335,7 @@ def create(palm):
         update_thz_calibration_plot()
 
     def update_thz_calibration_plot():
-        thz_scan_plot.xaxis.axis_label = palm.thz_motor_name
+        thz_scan_plot.xaxis.axis_label = f'{palm.thz_motor_name}, {palm.thz_motor_unit}'
 
         thz_scan_circle_source.data.update(
             x=palm.thz_calib_data.index.tolist(),

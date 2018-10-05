@@ -38,6 +38,7 @@ class PalmSetup:
             'peak_shift_std': np.array([], dtype=float)})
         self.thz_slope = None
         self.thz_motor_name = None
+        self.thz_motor_unit = None
 
     def calibrate_etof(self, folder_name, etofs=None, overwrite=True):
         """General routine for a calibration process of the eTOF spectrometers.
@@ -142,6 +143,10 @@ class PalmSetup:
         # Flatten lists
         scan_files = [item for sublist in data['scan_files'] for item in sublist]
         scan_readbacks = [item for sublist in data['scan_readbacks'] for item in sublist]
+
+        # Convert to fs
+        scan_readbacks = [1e15 * item for item in scan_readbacks]
+        self.thz_motor_unit = 'fs'
 
         self.thz_motor_name = data['scan_parameters']['Id'][0]
 
