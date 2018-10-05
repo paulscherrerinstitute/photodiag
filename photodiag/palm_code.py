@@ -134,7 +134,7 @@ class PalmSetup:
 
         return results
 
-    def calibrate_thz(self, path):
+    def calibrate_thz(self, path, fit_range=(-np.inf, np.inf)):
         """Calibrate THz pulse.
         """
         with open(path) as eco_scan:
@@ -161,8 +161,11 @@ class PalmSetup:
         def fit_func(shift, a, b):
             return a * shift + b
 
-        popt, _pcov = curve_fit(
-            fit_func, self.thz_calib_data['peak_shift_mean'], self.thz_calib_data.index)
+        x_fit = self.thz_calib_data.index.values
+        y_fit = self.thz_calib_data['peak_shift_mean'].values
+
+        in_range = np.logical_and(fit_range[0] <= x_fit, x_fit <= fit_range[1])
+        popt, _pcov = curve_fit(fit_func, x_fit[in_range], y_fit[in_range])
 
         self.thz_slope, _ = popt
 
