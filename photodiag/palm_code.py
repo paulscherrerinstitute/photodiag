@@ -95,10 +95,10 @@ class PalmSetup:
         with open(os.path.join(path, file), 'wb') as f:
             pickle.dump(self.etofs, f)
 
-    def load_etof_calib(self, path, file):
+    def load_etof_calib(self, filepath):
         """Load eTOF calibration from a file.
         """
-        with open(os.path.join(path, file), 'rb') as f:
+        with open(filepath, 'rb') as f:
             self.etofs = pickle.load(f)
 
     def process(self, waveforms, method='xcorr', jacobian=False, noise_thr=0, debug=False,
@@ -178,10 +178,10 @@ class PalmSetup:
             pickle.dump(self.thz_slope, f)
             pickle.dump(self.thz_motor_name, f)
 
-    def load_thz_calib(self, path, file):
+    def load_thz_calib(self, filepath):
         """Load THz pulse calibration from a file.
         """
-        with open(os.path.join(path, file), 'rb') as f:
+        with open(filepath, 'rb') as f:
             self.thz_calib_data = pickle.load(f)
             self.thz_slope = pickle.load(f)
             self.thz_motor_name = pickle.load(f)

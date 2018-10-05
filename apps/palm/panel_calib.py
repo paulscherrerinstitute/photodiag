@@ -252,7 +252,7 @@ def create(palm):
     # Load calibration button
     def load_dropdown_callback(selection):
         if selection:
-            palm.load_etof_calib(path_textinput.value, selection)
+            palm.load_etof_calib(os.path.join(path_textinput.value, selection))
 
             datatable_source.data.update(
                 energy=palm.etofs['0'].calib_data.index.tolist(),
