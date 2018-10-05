@@ -127,7 +127,7 @@ def create(palm):
         calib_res = {}
         for etof_key in palm.etofs:
             calib_res[etof_key] = palm.etofs[etof_key].fit_calibration_curve()
-        update_calibration_plot(calib_res)
+        update_etof_calibration_plot(calib_res)
 
     datatable_source = ColumnDataSource(
         dict(energy=['', '', ''], peak_pos_ref=['', '', ''], peak_pos_str=['', '', '']))
@@ -179,25 +179,25 @@ def create(palm):
     thz_scan_plot.add_glyph(thz_fit_line_source, Line(x='x', y='y', line_color='purple'))
 
 
-    # Calibration folder path text input
-    def path_textinput_callback(_attr, _old, _new):
-        update_load_dropdown_menu()
+    # eTOF calibration folder path text input
+    def etof_path_textinput_callback(_attr, _old, _new):
+        update_etof_load_dropdown_menu()
 
-    path_textinput = TextInput(
-        title="Calibration Folder Path:", value=os.path.join(os.path.expanduser('~')), width=525)
-    path_textinput.on_change('value', path_textinput_callback)
+    etof_path_textinput = TextInput(
+        title="eTOF calibration path:", value=os.path.join(os.path.expanduser('~')), width=525)
+    etof_path_textinput.on_change('value', etof_path_textinput_callback)
 
 
     # Calibrate button
-    def calibrate_button_callback():
-        palm.calibrate_etof(folder_name=path_textinput.value)
+    def etof_calibrate_button_callback():
+        palm.calibrate_etof(folder_name=etof_path_textinput.value)
 
         datatable_source.data.update(
             energy=palm.etofs['0'].calib_data.index.tolist(),
             peak_pos_ref=palm.etofs['0'].calib_data['calib_tpeak'].tolist(),
             peak_pos_str=palm.etofs['1'].calib_data['calib_tpeak'].tolist())
 
-    def update_calibration_plot(calib_res):
+    def update_etof_calibration_plot(calib_res):
         etof_ref = palm.etofs['0']
         etof_str = palm.etofs['1']
 
@@ -228,7 +228,7 @@ def create(palm):
         update_plot(calib_res['0'], fit_ref_circle_source, fit_ref_line_source)
         update_plot(calib_res['1'], fit_str_circle_source, fit_str_line_source)
 
-        calib_const_div.text = f"""
+        etof_calib_const_div.text = f"""
         a_str = {etof_str.calib_a:.2f}<br>
         b_str = {etof_str.calib_b:.2f}<br>
         <br>
@@ -236,23 +236,23 @@ def create(palm):
         b_ref = {etof_ref.calib_b:.2f}
         """
 
-    calibrate_button = Button(label="Calibrate", button_type='default')
-    calibrate_button.on_click(calibrate_button_callback)
+    etof_calibrate_button = Button(label="Calibrate eTOF", button_type='default')
+    etof_calibrate_button.on_click(etof_calibrate_button_callback)
 
 
     # Save calibration button
-    def save_button_callback():
-        palm.save_etof_calib(path=path_textinput.value)
-        update_load_dropdown_menu()
+    def etof_save_button_callback():
+        palm.save_etof_calib(path=etof_path_textinput.value)
+        update_etof_load_dropdown_menu()
 
-    save_button = Button(label="Save", button_type='default', width=135)
-    save_button.on_click(save_button_callback)
+    etof_save_button = Button(label="Save", button_type='default', width=135)
+    etof_save_button.on_click(etof_save_button_callback)
 
 
     # Load calibration button
-    def load_dropdown_callback(selection):
+    def etof_load_dropdown_callback(selection):
         if selection:
-            palm.load_etof_calib(os.path.join(path_textinput.value, selection))
+            palm.load_etof_calib(os.path.join(etof_path_textinput.value, selection))
 
             datatable_source.data.update(
                 energy=palm.etofs['0'].calib_data.index.tolist(),
@@ -261,35 +261,35 @@ def create(palm):
 
             # Drop selection, so that this callback can be triggered again on the same dropdown menu
             # item from the user perspective
-            load_dropdown.value = ''
+            etof_load_dropdown.value = ''
 
-    def update_load_dropdown_menu():
+    def update_etof_load_dropdown_menu():
         new_menu = []
         calib_file_ext = '.palm_etof'
-        if os.path.isdir(path_textinput.value):
-            with os.scandir(path_textinput.value) as it:
+        if os.path.isdir(etof_path_textinput.value):
+            with os.scandir(etof_path_textinput.value) as it:
                 for entry in it:
                     if entry.is_file() and entry.name.endswith((calib_file_ext)):
                         new_menu.append((entry.name[:-len(calib_file_ext)], entry.name))
-            load_dropdown.button_type = 'default'
-            load_dropdown.menu = sorted(new_menu, reverse=True)
+            etof_load_dropdown.button_type = 'default'
+            etof_load_dropdown.menu = sorted(new_menu, reverse=True)
         else:
-            load_dropdown.button_type = 'danger'
-            load_dropdown.menu = new_menu
+            etof_load_dropdown.button_type = 'danger'
+            etof_load_dropdown.menu = new_menu
 
-    doc.add_next_tick_callback(update_load_dropdown_menu)
-    doc.add_periodic_callback(update_load_dropdown_menu, 5000)
+    doc.add_next_tick_callback(update_etof_load_dropdown_menu)
+    doc.add_periodic_callback(update_etof_load_dropdown_menu, 5000)
 
-    load_dropdown = Dropdown(label="Load", menu=[], width=135)
-    load_dropdown.on_click(load_dropdown_callback)
+    etof_load_dropdown = Dropdown(label="Load", menu=[], width=135)
+    etof_load_dropdown.on_click(etof_load_dropdown_callback)
 
 
-    # Fitting equation
-    fit_eq_div = Div(text="""Fitting equation:<br><br><img src="/palm/static/5euwuy.gif">""")
+    # eTOF fitting equation
+    etof_fit_eq_div = Div(text="""Fitting equation:<br><br><img src="/palm/static/5euwuy.gif">""")
 
 
     # Calibration constants
-    calib_const_div = Div(
+    etof_calib_const_div = Div(
         text=f"""
         a_str = {0}<br>
         b_str = {0}<br>
@@ -303,7 +303,8 @@ def create(palm):
     tab_calibration_layout = row(
         column(waveform_plot, fit_plot, thz_scan_plot), Spacer(width=30),
         column(
-            path_textinput, calibrate_button, row(save_button, Spacer(width=10), load_dropdown),
-            datatable, fit_eq_div, calib_const_div))
+            etof_path_textinput, etof_calibrate_button,
+            row(etof_save_button, Spacer(width=10), etof_load_dropdown),
+            datatable, etof_fit_eq_div, etof_calib_const_div))
 
     return Panel(child=tab_calibration_layout, title="Calibration")
