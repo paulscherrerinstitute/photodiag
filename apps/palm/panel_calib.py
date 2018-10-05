@@ -265,11 +265,12 @@ def create(palm):
 
     def update_load_dropdown_menu():
         new_menu = []
+        calib_file_ext = '.palm_etof'
         if os.path.isdir(path_textinput.value):
             with os.scandir(path_textinput.value) as it:
                 for entry in it:
-                    if entry.is_file() and entry.name.endswith(('.palm')):
-                        new_menu.append((entry.name[:-5], entry.name))
+                    if entry.is_file() and entry.name.endswith((calib_file_ext)):
+                        new_menu.append((entry.name[:-len(calib_file_ext)], entry.name))
             load_dropdown.button_type = 'default'
             load_dropdown.menu = sorted(new_menu, reverse=True)
         else:
