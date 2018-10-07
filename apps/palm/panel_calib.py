@@ -11,6 +11,9 @@ PLOT_CANVAS_WIDTH = 620
 PLOT_CANVAS_HEIGHT = 380
 
 def create(palm):
+    thz_fit_max = 1
+    thz_fit_min = 0
+
     doc = curdoc()
 
     # Calibration averaged waveforms per photon energy
@@ -332,6 +335,8 @@ def create(palm):
     # Calibrate button
     def thz_calibrate_button_callback():
         palm.calibrate_thz(path=os.path.join(thz_path_textinput.value, thz_scans_dropdown.value))
+        thz_fit_max_textinput.value = str(np.ceil(palm.thz_calib_data.index.values.max()))
+        thz_fit_min_textinput.value = str(np.floor(palm.thz_calib_data.index.values.min()))
         update_thz_calibration_plot()
 
     def update_thz_calibration_plot():
@@ -347,6 +352,48 @@ def create(palm):
 
     thz_calibrate_button = Button(label="Calibrate THz", button_type='default')
     thz_calibrate_button.on_click(thz_calibrate_button_callback)
+
+
+    # THz fit maximal value text input
+    def thz_fit_max_textinput_callback(_attr, old, new):
+        nonlocal thz_fit_max
+        try:
+            new_value = float(new)
+            if new_value > thz_fit_min:
+                thz_fit_max = new_value
+                palm.calibrate_thz(
+                    path=os.path.join(thz_path_textinput.value, thz_scans_dropdown.value),
+                    fit_range=(thz_fit_min, thz_fit_max))
+                update_thz_calibration_plot()
+            else:
+                thz_fit_max_textinput.value = old
+
+        except ValueError:
+            thz_fit_max_textinput.value = old
+
+    thz_fit_max_textinput = TextInput(title='Maximal fit value:', value=str(thz_fit_max))
+    thz_fit_max_textinput.on_change('value', thz_fit_max_textinput_callback)
+
+
+    # THz fit maximal value text input
+    def thz_fit_min_textinput_callback(_attr, old, new):
+        nonlocal thz_fit_min
+        try:
+            new_value = float(new)
+            if new_value < thz_fit_max:
+                thz_fit_min = new_value
+                palm.calibrate_thz(
+                    path=os.path.join(thz_path_textinput.value, thz_scans_dropdown.value),
+                    fit_range=(thz_fit_min, thz_fit_max))
+                update_thz_calibration_plot()
+            else:
+                thz_fit_min_textinput.value = old
+
+        except ValueError:
+            thz_fit_min_textinput.value = old
+
+    thz_fit_min_textinput = TextInput(title='Minimal fit value:', value=str(thz_fit_min))
+    thz_fit_min_textinput.on_change('value', thz_fit_min_textinput_callback)
 
 
     # Save calibration button
@@ -403,6 +450,7 @@ def create(palm):
             thz_scan_plot, Spacer(width=30),
             column(
                 thz_path_textinput, thz_scans_dropdown, thz_calibrate_button,
+                thz_fit_max_textinput, thz_fit_min_textinput,
                 row(thz_save_button, Spacer(width=10), thz_load_dropdown),
                 thz_calib_const_div)))
 
