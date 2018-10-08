@@ -37,6 +37,7 @@ class PalmSetup:
             'peak_shift_mean': np.array([], dtype=float),
             'peak_shift_std': np.array([], dtype=float)})
         self.thz_slope = None
+        self.thz_intersect = None
         self.thz_motor_name = None
         self.thz_motor_unit = None
 
@@ -167,7 +168,7 @@ class PalmSetup:
         in_range = np.logical_and(fit_range[0] <= x_fit, x_fit <= fit_range[1])
         popt, _pcov = curve_fit(fit_func, x_fit[in_range], y_fit[in_range])
 
-        self.thz_slope, _ = popt
+        self.thz_slope, self.thz_intersect = popt
 
     def save_thz_calib(self, path, file=None):
         """ Save THz pulse calibration to a file.
@@ -184,6 +185,7 @@ class PalmSetup:
         with open(os.path.join(path, file), 'wb') as f:
             pickle.dump(self.thz_calib_data, f)
             pickle.dump(self.thz_slope, f)
+            pickle.dump(self.thz_intersect, f)
             pickle.dump(self.thz_motor_name, f)
 
     def load_thz_calib(self, filepath):
@@ -192,6 +194,7 @@ class PalmSetup:
         with open(filepath, 'rb') as f:
             self.thz_calib_data = pickle.load(f)
             self.thz_slope = pickle.load(f)
+            self.thz_intersect = pickle.load(f)
             self.thz_motor_name = pickle.load(f)
 
     def process_hdf5_file(self, filepath, debug=False):

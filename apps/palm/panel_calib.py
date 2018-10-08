@@ -346,6 +346,10 @@ def create(palm):
             x=palm.thz_calib_data.index.tolist(),
             y=palm.thz_calib_data['peak_shift_mean'].tolist())
 
+        x = np.linspace(thz_fit_min, thz_fit_max, 100)
+        y = palm.thz_slope * x + palm.thz_intersect
+        thz_fit_line_source.data.update(x=x, y=y)
+
         thz_calib_const_div.text = f"""
         thz_slope = {palm.thz_slope}
         """
