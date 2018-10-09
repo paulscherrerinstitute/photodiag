@@ -151,6 +151,7 @@ def create(palm):
 
     # eTOF calibration folder path text input
     def etof_path_textinput_callback(_attr, _old, _new):
+        etof_path_periodic_update()
         update_etof_load_dropdown_menu()
 
     etof_path_textinput = TextInput(
@@ -158,9 +159,29 @@ def create(palm):
     etof_path_textinput.on_change('value', etof_path_textinput_callback)
 
 
+    # eTOF calibration eco scans dropdown
+    def etof_scans_dropdown_callback(selection):
+        etof_scans_dropdown.label = selection
+
+    etof_scans_dropdown = Dropdown(label="ECO scans", button_type='default', menu=[])
+    etof_scans_dropdown.on_click(etof_scans_dropdown_callback)
+
+    # ---- etof scans periodic update
+    def etof_path_periodic_update():
+        new_menu = []
+        if os.path.isdir(etof_path_textinput.value):
+            with os.scandir(etof_path_textinput.value) as it:
+                for entry in it:
+                    if entry.is_file() and entry.name.endswith('.json'):
+                        new_menu.append((entry.name, entry.name))
+        etof_scans_dropdown.menu = sorted(new_menu, reverse=True)
+
+    doc.add_periodic_callback(etof_path_periodic_update, 5000)
+
     # Calibrate button
     def etof_calibrate_button_callback():
-        palm.calibrate_etof(folder_name=etof_path_textinput.value)
+        palm.calibrate_etof_eco(
+            eco_scan_filename=os.path.join(etof_path_textinput.value, etof_scans_dropdown.value))
 
         datatable_source.data.update(
             energy=palm.etofs['0'].calib_data.index.tolist(),
@@ -316,7 +337,7 @@ def create(palm):
     def thz_scans_dropdown_callback(selection):
         thz_scans_dropdown.label = selection
 
-    thz_scans_dropdown = Dropdown(label="THz ECO scans", button_type='default', menu=[])
+    thz_scans_dropdown = Dropdown(label="ECO scans", button_type='default', menu=[])
     thz_scans_dropdown.on_click(thz_scans_dropdown_callback)
 
     # ---- eco scans periodic update
@@ -447,7 +468,7 @@ def create(palm):
         row(
             column(waveform_plot, fit_plot), Spacer(width=30),
             column(
-                etof_path_textinput, etof_calibrate_button,
+                etof_path_textinput, etof_scans_dropdown, etof_calibrate_button,
                 row(etof_save_button, Spacer(width=10), etof_load_dropdown),
                 datatable, etof_fit_eq_div, etof_calib_const_div)),
         row(

@@ -154,7 +154,7 @@ class Spectrometer:
         return position, amplitude
 
     @staticmethod
-    def _detect_electron_peak(waveform, noise_std, noise_thr=3):
+    def _detect_electron_peak(waveform, noise_std, noise_thr=10):
         """Estimate position of an electron peak.
 
         Under assumption that the electron peak is the last peak encontered above the specified

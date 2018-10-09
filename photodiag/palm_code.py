@@ -82,6 +82,30 @@ class PalmSetup:
 
         return calib_results
 
+    def calibrate_etof_eco(self, eco_scan_filename):
+        with open(eco_scan_filename) as eco_scan:
+            data = json.load(eco_scan)
+
+        # Flatten scan_files list
+        scan_files = [item for sublist in data['scan_files'] for item in sublist]
+        scan_values = data['scan_values']
+
+        for scan_file, scan_value in zip(scan_files, scan_values):
+            with h5py.File(scan_file, 'r') as h5f:
+                energy = scan_value[0]
+                channel0 = self.channels['0']
+                channel1 = self.channels['1']
+                calib_waveforms0 = -h5f[f'/{channel0}'][:]
+                calib_waveforms1 = -h5f[f'/{channel1}'][:]
+                self.etofs['0'].add_calibration_point(8600-1000*energy, calib_waveforms0)
+                self.etofs['1'].add_calibration_point(8600-1000*energy, calib_waveforms1)
+
+        calib_results = {}
+        for etof_key in self.etofs:
+            calib_results[etof_key] = self.etofs[etof_key].fit_calibration_curve()
+
+        return calib_results
+
     def save_etof_calib(self, path, file=None):
         """ Save eTOF calibration to a file.
         """
