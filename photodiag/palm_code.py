@@ -90,6 +90,9 @@ class PalmSetup:
         scan_files = [item for sublist in data['scan_files'] for item in sublist]
         scan_values = data['scan_values']
 
+        for etof in self.etofs.values():
+            etof.calib_data.drop(etof.calib_data.index[:], inplace=True)
+
         for scan_file, scan_value in zip(scan_files, scan_values):
             with h5py.File(scan_file, 'r') as h5f:
                 energy = scan_value[0]
