@@ -85,10 +85,8 @@ def create(palm):
     xcorr_plot.add_layout(Grid(dimension=1, ticker=BasicTicker()))
 
     # ---- line glyphs
-    xcorr_source = ColumnDataSource(dict(lags=[], xcorr1=[], xcorr2=[]))
-    xcorr_plot.add_glyph(
-        xcorr_source, Line(x='lags', y='xcorr1', line_color='purple', line_dash='dashed'))
-    xcorr_plot.add_glyph(xcorr_source, Line(x='lags', y='xcorr2', line_color='purple'))
+    xcorr_source = ColumnDataSource(dict(lags=[], xcorr=[]))
+    xcorr_plot.add_glyph(xcorr_source, Line(x='lags', y='xcorr', line_color='purple'))
 
     # ---- vertical span
     xcorr_center_span = Span(location=0, dimension='height')
@@ -121,13 +119,9 @@ def create(palm):
     pulse_delay_plot.add_layout(Grid(dimension=1, ticker=BasicTicker()))
 
     # ---- line glyphs
-    pulse_delay_source = ColumnDataSource(dict(pulse=[], delay=[]))
+    pulse_delay_source = ColumnDataSource(dict(x=[], y=[]))
     pulse_delay_plot.add_glyph(
-        pulse_delay_source, Line(x='pulse', y='delay', line_color='steelblue'))
-
-    # ---- vertical span
-    pulse_delay_plot_span = Span(location=0, dimension='height')
-    pulse_delay_plot.add_layout(pulse_delay_plot_span)
+        pulse_delay_source, Line(x='x', y='y', line_color='steelblue'))
 
 
     # Pulse lengths plot
@@ -158,10 +152,6 @@ def create(palm):
     # ---- line glyphs
     pulse_length_source = ColumnDataSource(dict(x=[], y=[]))
     pulse_length_plot.add_glyph(pulse_length_source, Line(x='x', y='y', line_color='steelblue'))
-
-    # ---- vertical span
-    pulse_length_plot_span = Span(location=0, dimension='height')
-    pulse_length_plot.add_layout(pulse_length_plot_span)
 
 
     # Image buffer slider
@@ -209,16 +199,25 @@ def create(palm):
     # Stream update coroutine
     @gen.coroutine
     def update(message):
+        nonlocal stream_t
         if connected and receiver.state == 'receiving':
             y_ref = message[receiver.reference].value[np.newaxis, :]
             y_str = message[receiver.streaked].value[np.newaxis, :]
 
-            y_ref = palm.etofs['0'].convert(y_ref, palm.energy_range)
-            y_str = palm.etofs['1'].convert(y_str, palm.energy_range)
+            delay, length, debug_data = palm.process({'0': y_ref, '1': y_str}, debug=True)
+            prep_data, lags, corr_res_uncut, _ = debug_data
 
             waveform_source.data.update(
-                x_str=palm.energy_range, y_str=y_str[0, :],
-                x_ref=palm.energy_range, y_ref=y_ref[0, :])
+                x_str=palm.energy_range, y_str=prep_data['1'][0, :],
+                x_ref=palm.energy_range, y_ref=prep_data['0'][0, :])
+
+            xcorr_source.data.update(lags=lags, xcorr=corr_res_uncut[0, :])
+            xcorr_center_span.location = delay[0]
+
+            pulse_delay_source.stream({'x': [stream_t], 'y': [delay]}, rollover=120)
+            pulse_length_source.stream({'x': [stream_t], 'y': [length]}, rollover=120)
+
+            stream_t += 1
 
 
     # Periodic callback to fetch data from receiver
