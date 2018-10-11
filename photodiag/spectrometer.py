@@ -26,6 +26,9 @@ class Spectrometer:
         self.noise_range = noise_range
         self.calib_t0 = np.empty(0)
 
+        self.photon_peak_noise_thr = 1
+        self.electron_peak_noise_thr = 10
+
     def add_calibration_point(self, energy, calib_waveforms):
         """Add calibration point for a specified X-ray energy.
 
@@ -46,9 +49,10 @@ class Spectrometer:
         # keep axis=0 for a situation with a single waveform
         waveform = calib_waveforms.mean(axis=0) - noise_mean
 
-        calib_t0, _ = self._detect_photon_peak(waveform, noise_std)
+        calib_t0, _ = self._detect_photon_peak(waveform, noise_std, self.photon_peak_noise_thr)
         try:
-            calib_tpeak = self._detect_electron_peak(waveform, noise_std)
+            calib_tpeak = self._detect_electron_peak(
+                waveform, noise_std, self.electron_peak_noise_thr)
         except:
             calib_tpeak = np.nan
 
