@@ -18,7 +18,7 @@ def create(palm):
         title=Title(text="eTOF calibration waveforms"),
         x_range=DataRange1d(),
         y_range=DataRange1d(),
-        plot_height=PLOT_CANVAS_HEIGHT,
+        plot_height=760,
         plot_width=PLOT_CANVAS_WIDTH,
         toolbar_location='right',
         logo=None,
@@ -141,7 +141,7 @@ def create(palm):
             TableColumn(field='peak_pos_str', title="Streaked Peak Position", editor=IntEditor())],
         index_position=None,
         editable=True,
-        height=200,
+        height=400,
         width=500,
     )
 
@@ -174,6 +174,7 @@ def create(palm):
         etof_scans_dropdown.menu = sorted(new_menu, reverse=True)
 
     doc.add_periodic_callback(etof_path_periodic_update, 5000)
+
 
     # Calibrate button
     def etof_calibrate_button_callback():
@@ -234,6 +235,40 @@ def create(palm):
 
     etof_calibrate_button = Button(label="Calibrate eTOF", button_type='default')
     etof_calibrate_button.on_click(etof_calibrate_button_callback)
+
+
+    # Photon peak noise threshold value text input
+    def phot_peak_noise_thr_textinput_callback(_attr, old, new):
+        try:
+            new_value = float(new)
+            if new_value > 0:
+                for etof in palm.etofs.values():
+                    etof.photon_peak_noise_thr = new_value
+            else:
+                phot_peak_noise_thr_textinput.value = old
+
+        except ValueError:
+            phot_peak_noise_thr_textinput.value = old
+
+    phot_peak_noise_thr_textinput = TextInput(title='Photon peak noise threshold:', value=str(1))
+    phot_peak_noise_thr_textinput.on_change('value', phot_peak_noise_thr_textinput_callback)
+
+
+    # Electron peak noise threshold value text input
+    def el_peak_noise_thr_textinput_callback(_attr, old, new):
+        try:
+            new_value = float(new)
+            if new_value > 0:
+                for etof in palm.etofs.values():
+                    etof.electron_peak_noise_thr = new_value
+            else:
+                el_peak_noise_thr_textinput.value = old
+
+        except ValueError:
+            el_peak_noise_thr_textinput.value = old
+
+    el_peak_noise_thr_textinput = TextInput(title='Electron peak noise threshold:', value=str(10))
+    el_peak_noise_thr_textinput.on_change('value', el_peak_noise_thr_textinput_callback)
 
 
     # Save calibration button
@@ -301,7 +336,8 @@ def create(palm):
             column(waveform_plot, fit_plot), Spacer(width=30),
             column(
                 etof_path_textinput, etof_scans_dropdown, etof_calibrate_button,
+                phot_peak_noise_thr_textinput, el_peak_noise_thr_textinput,
                 row(etof_save_button, Spacer(width=10), etof_load_dropdown),
                 datatable, etof_fit_eq_div, etof_calib_const_div)))
 
-    return Panel(child=tab_calibration_layout, title="Calibration")
+    return Panel(child=tab_calibration_layout, title="eTOF Calibration")
