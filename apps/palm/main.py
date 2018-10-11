@@ -5,6 +5,7 @@ from bokeh.models import Tabs
 import photodiag
 import receiver
 import panel_calib
+import panel_thz_calib
 import panel_h5file
 import panel_stream
 
@@ -18,6 +19,7 @@ palm = photodiag.PalmSetup(
 
 # Final layout
 tab_calib = panel_calib.create(palm)
+tab_thz_calib = panel_thz_calib.create(palm)
 tab_h5file = panel_h5file.create(palm)
 tab_stream = panel_stream.create(palm)
-doc.add_root(Tabs(tabs=[tab_calib, tab_h5file, tab_stream]))
+doc.add_root(Tabs(tabs=[tab_calib, tab_thz_calib, tab_h5file, tab_stream]))
