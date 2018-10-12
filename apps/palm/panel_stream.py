@@ -3,9 +3,9 @@ from functools import partial
 import numpy as np
 from bokeh.io import curdoc
 from bokeh.layouts import column, row
-from bokeh.models import BasicTicker, Button, ColumnDataSource, CustomJS, \
-    DataRange1d, Grid, Legend, Line, LinearAxis, Panel, PanTool, Plot, \
-    ResetTool, Slider, Spacer, Span, Title, Toggle, WheelZoomTool
+from bokeh.models import BasicTicker, BoxZoomTool, Button, ColumnDataSource, \
+    CustomJS, DataRange1d, Grid, Legend, Line, LinearAxis, Panel, PanTool, \
+    Plot, ResetTool, Slider, Spacer, Span, Title, Toggle, WheelZoomTool
 from tornado import gen
 
 import receiver
@@ -32,7 +32,7 @@ def create(palm):
     )
 
     # ---- tools
-    waveform_plot.add_tools(PanTool(), WheelZoomTool(), ResetTool())
+    waveform_plot.add_tools(PanTool(), BoxZoomTool(), WheelZoomTool(), ResetTool())
 
     # ---- axes
     waveform_plot.add_layout(
@@ -71,7 +71,7 @@ def create(palm):
     )
 
     # ---- tools
-    xcorr_plot.add_tools(PanTool(), WheelZoomTool(), ResetTool())
+    xcorr_plot.add_tools(PanTool(), BoxZoomTool(), WheelZoomTool(), ResetTool())
 
     # ---- axes
     xcorr_plot.add_layout(
@@ -105,7 +105,7 @@ def create(palm):
     )
 
     # ---- tools
-    pulse_delay_plot.add_tools(PanTool(), WheelZoomTool(), ResetTool())
+    pulse_delay_plot.add_tools(PanTool(), BoxZoomTool(), WheelZoomTool(), ResetTool())
 
     # ---- axes
     pulse_delay_plot.add_layout(
@@ -136,7 +136,7 @@ def create(palm):
     )
 
     # ---- tools
-    pulse_length_plot.add_tools(PanTool(), WheelZoomTool(), ResetTool())
+    pulse_length_plot.add_tools(PanTool(), BoxZoomTool(), WheelZoomTool(), ResetTool())
 
     # ---- axes
     pulse_length_plot.add_layout(
