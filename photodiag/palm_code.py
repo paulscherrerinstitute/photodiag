@@ -101,8 +101,14 @@ class PalmSetup:
                 energy = scan_value[0]
                 channel0 = self.channels['0']
                 channel1 = self.channels['1']
-                calib_waveforms0 = -h5f[f'/{channel0}'][:]
-                calib_waveforms1 = -h5f[f'/{channel1}'][:]
+
+                try:
+                    calib_waveforms0 = -h5f[f'/{channel0}'][:]
+                    calib_waveforms1 = -h5f[f'/{channel1}'][:]
+                except:
+                    calib_waveforms0 = -h5f[f'/{channel0}/data'][:]
+                    calib_waveforms1 = -h5f[f'/{channel1}/data'][:]
+
                 eff_bind_en = self.binding_energy + (self.zero_drift_tube - 1000*energy)
                 self.etofs['0'].add_calibration_point(eff_bind_en, calib_waveforms0)
                 self.etofs['1'].add_calibration_point(eff_bind_en, calib_waveforms1)
@@ -459,13 +465,17 @@ def get_tags_and_data(filepath, etof_path):
             try:
                 tags = h5f['/scan 1/SLAAR21-LMOT-M552:MOT.VAL'][:]
                 data = -h5f[f'/scan 1/{etof_path} averager'][:]
-            except KeyError:
+            except:
                 try:
                     tags = h5f[f'/data/{etof_path}/pulse_id'][:]
                     data = -h5f[f'/data/{etof_path}/data'][:]
-                except KeyError:
-                    tags = []
-                    data = -h5f[f'/{etof_path}'][:]
+                except:
+                    try:
+                        tags = []
+                        data = -h5f[f'/{etof_path}'][:]
+                    except:
+                        tags = h5f['/pulse_id'][:]
+                        data = -h5f[f'/{etof_path}/data'][:]
 
     return tags, data
 
