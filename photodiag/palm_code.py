@@ -41,6 +41,9 @@ class PalmSetup:
         self.thz_motor_name = None
         self.thz_motor_unit = None
 
+        self.zero_drift_tube = 7500
+        self.binding_energy = 1148.7
+
     def calibrate_etof(self, folder_name, etofs=None, overwrite=True):
         """General routine for a calibration process of the eTOF spectrometers.
 
@@ -100,8 +103,9 @@ class PalmSetup:
                 channel1 = self.channels['1']
                 calib_waveforms0 = -h5f[f'/{channel0}'][:]
                 calib_waveforms1 = -h5f[f'/{channel1}'][:]
-                self.etofs['0'].add_calibration_point(8600-1000*energy, calib_waveforms0)
-                self.etofs['1'].add_calibration_point(8600-1000*energy, calib_waveforms1)
+                eff_bind_en = self.binding_energy + (self.zero_drift_tube - 1000*energy)
+                self.etofs['0'].add_calibration_point(eff_bind_en, calib_waveforms0)
+                self.etofs['1'].add_calibration_point(eff_bind_en, calib_waveforms1)
 
         calib_results = {}
         for etof_key in self.etofs:
