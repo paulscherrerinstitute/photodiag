@@ -95,7 +95,7 @@ def create(palm):
 
         x = np.linspace(thz_fit_min, thz_fit_max, 100)
         y = palm.thz_slope * x + palm.thz_intersect
-        thz_fit_line_source.data.update(x=x, y=y)
+        thz_fit_line_source.data.update(x=np.round(x, decimals=5), y=np.round(y, decimals=5))
 
         thz_calib_const_div.text = f"""
         thz_slope = {palm.thz_slope}
