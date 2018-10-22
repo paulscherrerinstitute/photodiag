@@ -127,7 +127,7 @@ def create(palm):
         calib_res = {}
         for etof_key in palm.etofs:
             calib_res[etof_key] = palm.etofs[etof_key].fit_calibration_curve()
-        update_etof_calibration_plot(calib_res)
+        update_calibration_plot(calib_res)
 
     datatable_source = ColumnDataSource(
         dict(energy=['', '', ''], peak_pos_ref=['', '', ''], peak_pos_str=['', '', '']))
@@ -147,46 +147,46 @@ def create(palm):
 
 
     # eTOF calibration folder path text input
-    def etof_path_textinput_callback(_attr, _old, _new):
-        etof_path_periodic_update()
-        update_etof_load_dropdown_menu()
+    def path_textinput_callback(_attr, _old, _new):
+        path_periodic_update()
+        update_load_dropdown_menu()
 
-    etof_path_textinput = TextInput(
+    path_textinput = TextInput(
         title="eTOF calibration path:", value=os.path.join(os.path.expanduser('~')), width=525)
-    etof_path_textinput.on_change('value', etof_path_textinput_callback)
+    path_textinput.on_change('value', path_textinput_callback)
 
 
     # eTOF calibration eco scans dropdown
-    def etof_scans_dropdown_callback(selection):
-        etof_scans_dropdown.label = selection
+    def scans_dropdown_callback(selection):
+        scans_dropdown.label = selection
 
-    etof_scans_dropdown = Dropdown(label="ECO scans", button_type='default', menu=[])
-    etof_scans_dropdown.on_click(etof_scans_dropdown_callback)
+    scans_dropdown = Dropdown(label="ECO scans", button_type='default', menu=[])
+    scans_dropdown.on_click(scans_dropdown_callback)
 
     # ---- etof scans periodic update
-    def etof_path_periodic_update():
+    def path_periodic_update():
         new_menu = []
-        if os.path.isdir(etof_path_textinput.value):
-            with os.scandir(etof_path_textinput.value) as it:
+        if os.path.isdir(path_textinput.value):
+            with os.scandir(path_textinput.value) as it:
                 for entry in it:
                     if entry.is_file() and entry.name.endswith('.json'):
                         new_menu.append((entry.name, entry.name))
-        etof_scans_dropdown.menu = sorted(new_menu, reverse=True)
+        scans_dropdown.menu = sorted(new_menu, reverse=True)
 
-    doc.add_periodic_callback(etof_path_periodic_update, 5000)
+    doc.add_periodic_callback(path_periodic_update, 5000)
 
 
     # Calibrate button
-    def etof_calibrate_button_callback():
+    def calibrate_button_callback():
         palm.calibrate_etof_eco(
-            eco_scan_filename=os.path.join(etof_path_textinput.value, etof_scans_dropdown.value))
+            eco_scan_filename=os.path.join(path_textinput.value, scans_dropdown.value))
 
         datatable_source.data.update(
             energy=palm.etofs['0'].calib_data.index.tolist(),
             peak_pos_ref=palm.etofs['0'].calib_data['calib_tpeak'].tolist(),
             peak_pos_str=palm.etofs['1'].calib_data['calib_tpeak'].tolist())
 
-    def update_etof_calibration_plot(calib_res):
+    def update_calibration_plot(calib_res):
         etof_ref = palm.etofs['0']
         etof_str = palm.etofs['1']
 
@@ -225,7 +225,7 @@ def create(palm):
         update_plot(calib_res['0'], fit_ref_circle_source, fit_ref_line_source)
         update_plot(calib_res['1'], fit_str_circle_source, fit_str_line_source)
 
-        etof_calib_const_div.text = f"""
+        calib_const_div.text = f"""
         a_str = {etof_str.calib_a:.2f}<br>
         b_str = {etof_str.calib_b:.2f}<br>
         <br>
@@ -233,8 +233,8 @@ def create(palm):
         b_ref = {etof_ref.calib_b:.2f}
         """
 
-    etof_calibrate_button = Button(label="Calibrate eTOF", button_type='default')
-    etof_calibrate_button.on_click(etof_calibrate_button_callback)
+    calibrate_button = Button(label="Calibrate eTOF", button_type='default')
+    calibrate_button.on_click(calibrate_button_callback)
 
 
     # Photon peak noise threshold value text input
@@ -304,18 +304,18 @@ def create(palm):
 
 
     # Save calibration button
-    def etof_save_button_callback():
-        palm.save_etof_calib(path=etof_path_textinput.value)
-        update_etof_load_dropdown_menu()
+    def save_button_callback():
+        palm.save_etof_calib(path=path_textinput.value)
+        update_load_dropdown_menu()
 
-    etof_save_button = Button(label="Save", button_type='default', width=135)
-    etof_save_button.on_click(etof_save_button_callback)
+    save_button = Button(label="Save", button_type='default', width=135)
+    save_button.on_click(save_button_callback)
 
 
     # Load calibration button
-    def etof_load_dropdown_callback(selection):
+    def load_dropdown_callback(selection):
         if selection:
-            palm.load_etof_calib(os.path.join(etof_path_textinput.value, selection))
+            palm.load_etof_calib(os.path.join(path_textinput.value, selection))
 
             datatable_source.data.update(
                 energy=palm.etofs['0'].calib_data.index.tolist(),
@@ -324,35 +324,35 @@ def create(palm):
 
             # Drop selection, so that this callback can be triggered again on the same dropdown menu
             # item from the user perspective
-            etof_load_dropdown.value = ''
+            load_dropdown.value = ''
 
-    def update_etof_load_dropdown_menu():
+    def update_load_dropdown_menu():
         new_menu = []
         calib_file_ext = '.palm_etof'
-        if os.path.isdir(etof_path_textinput.value):
-            with os.scandir(etof_path_textinput.value) as it:
+        if os.path.isdir(path_textinput.value):
+            with os.scandir(path_textinput.value) as it:
                 for entry in it:
                     if entry.is_file() and entry.name.endswith((calib_file_ext)):
                         new_menu.append((entry.name[:-len(calib_file_ext)], entry.name))
-            etof_load_dropdown.button_type = 'default'
-            etof_load_dropdown.menu = sorted(new_menu, reverse=True)
+            load_dropdown.button_type = 'default'
+            load_dropdown.menu = sorted(new_menu, reverse=True)
         else:
-            etof_load_dropdown.button_type = 'danger'
-            etof_load_dropdown.menu = new_menu
+            load_dropdown.button_type = 'danger'
+            load_dropdown.menu = new_menu
 
-    doc.add_next_tick_callback(update_etof_load_dropdown_menu)
-    doc.add_periodic_callback(update_etof_load_dropdown_menu, 5000)
+    doc.add_next_tick_callback(update_load_dropdown_menu)
+    doc.add_periodic_callback(update_load_dropdown_menu, 5000)
 
-    etof_load_dropdown = Dropdown(label="Load", menu=[], width=135)
-    etof_load_dropdown.on_click(etof_load_dropdown_callback)
+    load_dropdown = Dropdown(label="Load", menu=[], width=135)
+    load_dropdown.on_click(load_dropdown_callback)
 
 
     # eTOF fitting equation
-    etof_fit_eq_div = Div(text="""Fitting equation:<br><br><img src="/palm/static/5euwuy.gif">""")
+    fit_eq_div = Div(text="""Fitting equation:<br><br><img src="/palm/static/5euwuy.gif">""")
 
 
     # Calibration constants
-    etof_calib_const_div = Div(
+    calib_const_div = Div(
         text=f"""
         a_str = {0}<br>
         b_str = {0}<br>
@@ -367,10 +367,10 @@ def create(palm):
         row(
             column(waveform_plot, fit_plot), Spacer(width=30),
             column(
-                etof_path_textinput, etof_scans_dropdown, etof_calibrate_button,
+                path_textinput, scans_dropdown, calibrate_button,
                 phot_peak_noise_thr_textinput, el_peak_noise_thr_textinput,
                 bind_energy_textinput, zero_drift_textinput,
-                row(etof_save_button, Spacer(width=10), etof_load_dropdown),
-                datatable, etof_fit_eq_div, etof_calib_const_div)))
+                row(save_button, Spacer(width=10), load_dropdown),
+                datatable, fit_eq_div, calib_const_div)))
 
     return Panel(child=tab_calibration_layout, title="eTOF Calibration")
