@@ -100,21 +100,13 @@ class PalmSetup:
             etof.calib_data.drop(etof.calib_data.index[:], inplace=True)
 
         for scan_file, scan_value in zip(scan_files, scan_values):
-            with h5py.File(scan_file, 'r') as h5f:
-                energy = scan_value[0]
-                channel0 = self.channels['0']
-                channel1 = self.channels['1']
+            energy = scan_value[0]
+            _, calib_waveforms0 = get_tags_and_data(scan_file, self.channels['0'])
+            _, calib_waveforms1 = get_tags_and_data(scan_file, self.channels['1'])
 
-                try:
-                    calib_waveforms0 = -h5f[f'/{channel0}'][:]
-                    calib_waveforms1 = -h5f[f'/{channel1}'][:]
-                except:
-                    calib_waveforms0 = -h5f[f'/{channel0}/data'][:]
-                    calib_waveforms1 = -h5f[f'/{channel1}/data'][:]
-
-                eff_bind_en = self.binding_energy + (self.zero_drift_tube - 1000*energy)
-                self.etofs['0'].add_calibration_point(eff_bind_en, calib_waveforms0)
-                self.etofs['1'].add_calibration_point(eff_bind_en, calib_waveforms1)
+            eff_bind_en = self.binding_energy + (self.zero_drift_tube - 1000*energy)
+            self.etofs['0'].add_calibration_point(eff_bind_en, calib_waveforms0)
+            self.etofs['1'].add_calibration_point(eff_bind_en, calib_waveforms1)
 
         calib_results = {}
         for etof_key in self.etofs:
@@ -465,26 +457,42 @@ def get_tags_and_data(filepath, etof_path):
         tags and data
     """
     with h5py.File(filepath, 'r') as h5f:
-        if 'monofiles' in filepath:  # calibration data
+        try:
             tags = h5f['/pulseId'][:]
             data = -h5f[f'/{etof_path}'][:]
-        else:
-            try:
-                tags = h5f['/scan 1/SLAAR21-LMOT-M552:MOT.VAL'][:]
-                data = -h5f[f'/scan 1/{etof_path} averager'][:]
-            except:
-                try:
-                    tags = h5f[f'/data/{etof_path}/pulse_id'][:]
-                    data = -h5f[f'/data/{etof_path}/data'][:]
-                except:
-                    try:
-                        tags = []
-                        data = -h5f[f'/{etof_path}'][:]
-                    except:
-                        tags = h5f['/pulse_id'][:]
-                        data = -h5f[f'/{etof_path}/data'][:]
+            return tags, data
+        except (KeyError, AttributeError):
+            pass
 
-    return tags, data
+        try:
+            tags = h5f['/scan 1/SLAAR21-LMOT-M552:MOT.VAL'][:]
+            data = -h5f[f'/scan 1/{etof_path} averager'][:]
+            return tags, data
+        except (KeyError, AttributeError):
+            pass
+
+        try:
+            tags = h5f[f'/data/{etof_path}/pulse_id'][:]
+            data = -h5f[f'/data/{etof_path}/data'][:]
+            return tags, data
+        except (KeyError, AttributeError):
+            pass
+
+        try:
+            tags = h5f['/pulse_id'][:]
+            data = -h5f[f'/{etof_path}/data'][:]
+            return tags, data
+        except (KeyError, AttributeError):
+            pass
+
+        try:
+            tags = []
+            data = -h5f[f'/{etof_path}'][:]
+            return tags, data
+        except (KeyError, AttributeError):
+            pass
+
+        raise Exception(f"Could not find data in {filepath}")
 
 
 def richardson_lucy_deconv(streaked_signal, reference_signal, iterations=200, noise=0.3):
