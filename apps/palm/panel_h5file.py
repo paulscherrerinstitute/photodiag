@@ -12,6 +12,7 @@ from bokeh.models import BasicTicker, BoxZoomTool, Button, CheckboxButtonGroup, 
 PLOT_CANVAS_WIDTH = 620
 PLOT_CANVAS_HEIGHT = 380
 
+
 def create(palm):
     energy_min = palm.energy_range.min()
     energy_max = palm.energy_range.max()
@@ -225,7 +226,7 @@ def create(palm):
                         new_menu.append((entry.name, entry.name))
         saved_runs_dropdown.menu = sorted(new_menu, reverse=True)
 
-    doc.add_periodic_callback(path_periodic_update, 10000)
+    doc.add_periodic_callback(path_periodic_update, 5000)
 
 
     # Pulse number slider
@@ -316,7 +317,7 @@ def create(palm):
 
 
     # assemble
-    tab_h5file_layout = column(
+    tab_layout = column(
         row(
             column(waveform_plot, xcorr_plot), Spacer(width=30),
             column(
@@ -327,4 +328,4 @@ def create(palm):
                 save_textinput, autosave_checkbox, save_button)),
         row(pulse_delay_plot, Spacer(width=10), pulse_length_plot))
 
-    return Panel(child=tab_h5file_layout, title="HDF5 File")
+    return Panel(child=tab_layout, title="HDF5 File")

@@ -13,6 +13,7 @@ import receiver
 PLOT_CANVAS_WIDTH = 620
 PLOT_CANVAS_HEIGHT = 380
 
+
 def create(palm):
     connected = False
     current_message = None
@@ -251,10 +252,10 @@ def create(palm):
 
 
     # assemble
-    tab_stream_layout = column(
+    tab_layout = column(
         row(
             column(waveform_plot, xcorr_plot), Spacer(width=30),
             column(buffer_slider, connect_toggle, reset_button)),
         row(pulse_delay_plot, Spacer(width=10), pulse_length_plot))
 
-    return Panel(child=tab_stream_layout, title="Stream")
+    return Panel(child=tab_layout, title="Stream")

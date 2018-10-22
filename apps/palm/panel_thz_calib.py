@@ -10,6 +10,7 @@ from bokeh.models import BasicTicker, BoxZoomTool, Button, Circle, \
 PLOT_CANVAS_WIDTH = 620
 PLOT_CANVAS_HEIGHT = 380
 
+
 def create(palm):
     fit_max = 1
     fit_min = 0
@@ -190,7 +191,7 @@ def create(palm):
 
 
     # assemble
-    tab_calibration_layout = column(
+    tab_layout = column(
         row(
             scan_plot, Spacer(width=30),
             column(
@@ -199,4 +200,4 @@ def create(palm):
                 row(save_button, Spacer(width=10), load_dropdown),
                 calib_const_div)))
 
-    return Panel(child=tab_calibration_layout, title="THz Calibration")
+    return Panel(child=tab_layout, title="THz Calibration")
