@@ -1,5 +1,6 @@
 import datetime
 import json
+import logging
 import os
 import pickle
 import re
@@ -10,6 +11,8 @@ import pandas as pd
 from scipy.optimize import curve_fit
 
 from photodiag.spectrometer import Spectrometer
+
+log = logging.getLogger(__name__)
 
 
 class PalmSetup:
@@ -133,12 +136,14 @@ class PalmSetup:
 
         with open(os.path.join(path, file), 'wb') as f:
             pickle.dump(self.etofs, f)
+            log.info(f"Save etof calibration to a file: {os.path.join(path, file)}")
 
     def load_etof_calib(self, filepath):
         """Load eTOF calibration from a file.
         """
         with open(filepath, 'rb') as f:
             self.etofs = pickle.load(f)
+            log.info(f"Load etof calibration from a file: {filepath}")
 
     def process(self, waveforms, method='xcorr', jacobian=False, noise_thr=0, debug=False,
                 peak='max'):
@@ -224,6 +229,7 @@ class PalmSetup:
             pickle.dump(self.thz_slope, f)
             pickle.dump(self.thz_intersect, f)
             pickle.dump(self.thz_motor_name, f)
+            log.info(f"Save THz calibration to a file: {os.path.join(path, file)}")
 
     def load_thz_calib(self, filepath):
         """Load THz pulse calibration from a file.
@@ -233,6 +239,7 @@ class PalmSetup:
             self.thz_slope = pickle.load(f)
             self.thz_intersect = pickle.load(f)
             self.thz_motor_name = pickle.load(f)
+            log.info(f"Load etof calibration from a file: {filepath}")
 
     def process_hdf5_file(self, filepath, debug=False):
         """Load data for all registered spectrometers from an hdf5 file. This method is to be
