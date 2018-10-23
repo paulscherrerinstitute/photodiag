@@ -3,9 +3,10 @@ import os
 import numpy as np
 from bokeh.io import curdoc
 from bokeh.layouts import column, row
-from bokeh.models import BasicTicker, BoxZoomTool, Button, Circle, ColumnDataSource, DataRange1d, \
-    DataTable, Div, Dropdown, Grid, HoverTool, IntEditor, Legend, Line, LinearAxis, MultiLine, \
-    Panel, PanTool, Plot, ResetTool, Spacer, Span, TableColumn, TextInput, Title, WheelZoomTool
+from bokeh.models import BasicTicker, BoxZoomTool, Button, CheckboxEditor, \
+    Circle, ColumnDataSource, DataRange1d, DataTable, Div, Dropdown, Grid, \
+    HoverTool, IntEditor, Legend, Line, LinearAxis, MultiLine, Panel, PanTool, \
+    Plot, ResetTool, Spacer, Span, TableColumn, TextInput, Title, WheelZoomTool
 
 PLOT_CANVAS_WIDTH = 620
 PLOT_CANVAS_HEIGHT = 380
@@ -121,49 +122,55 @@ def create(palm):
 
     # Calibration results datatables
     def datatable_ref_source_callback(_attr, _old, new):
-        for en, ps in zip(new['energy'], new['peak_pos_ref']):
+        for en, ps, use in zip(new['energy'], new['peak_pos_ref'], new['use_in_fit']):
             palm.etofs['0'].calib_data.loc[en, 'calib_tpeak'] = (ps if ps != 'NaN' else np.nan)
+            palm.etofs['0'].calib_data.loc[en, 'use_in_fit'] = use
 
         calib_res = {}
         for etof_key in palm.etofs:
             calib_res[etof_key] = palm.etofs[etof_key].fit_calibration_curve()
         update_calibration_plot(calib_res)
 
-    datatable_ref_source = ColumnDataSource(dict(energy=['', '', ''], peak_pos_ref=['', '', '']))
+    datatable_ref_source = ColumnDataSource(
+        dict(energy=['', '', ''], peak_pos_ref=['', '', ''], use_in_fit=[True, True, True]))
     datatable_ref_source.on_change('data', datatable_ref_source_callback)
 
     datatable_ref = DataTable(
         source=datatable_ref_source,
         columns=[
             TableColumn(field='energy', title="Photon Energy, eV", editor=IntEditor()),
-            TableColumn(field='peak_pos_ref', title="Reference Peak", editor=IntEditor())],
+            TableColumn(field='peak_pos_ref', title="Reference Peak", editor=IntEditor()),
+            TableColumn(field='use_in_fit', title=" ", editor=CheckboxEditor(), width=80)],
         index_position=None,
         editable=True,
         height=300,
-        width=200,
+        width=250,
     )
 
     def datatable_str_source_callback(_attr, _old, new):
-        for en, ps in zip(new['energy'], new['peak_pos_str']):
+        for en, ps, use in zip(new['energy'], new['peak_pos_str'], new['use_in_fit']):
             palm.etofs['1'].calib_data.loc[en, 'calib_tpeak'] = (ps if ps != 'NaN' else np.nan)
+            palm.etofs['1'].calib_data.loc[en, 'use_in_fit'] = use
 
         calib_res = {}
         for etof_key in palm.etofs:
             calib_res[etof_key] = palm.etofs[etof_key].fit_calibration_curve()
         update_calibration_plot(calib_res)
 
-    datatable_str_source = ColumnDataSource(dict(energy=['', '', ''], peak_pos_str=['', '', '']))
+    datatable_str_source = ColumnDataSource(
+        dict(energy=['', '', ''], peak_pos_str=['', '', ''], use_in_fit=[True, True, True]))
     datatable_str_source.on_change('data', datatable_str_source_callback)
 
     datatable_str = DataTable(
         source=datatable_str_source,
         columns=[
             TableColumn(field='energy', title="Photon Energy, eV", editor=IntEditor()),
-            TableColumn(field='peak_pos_str', title="Streaked Peak", editor=IntEditor())],
+            TableColumn(field='peak_pos_str', title="Streaked Peak", editor=IntEditor()),
+            TableColumn(field='use_in_fit', title=" ", editor=CheckboxEditor(), width=80)],
         index_position=None,
         editable=True,
         height=300,
-        width=200,
+        width=250,
     )
 
 
@@ -207,11 +214,13 @@ def create(palm):
 
         datatable_ref_source.data.update(
             energy=palm.etofs['0'].calib_data.index.tolist(),
-            peak_pos_ref=palm.etofs['0'].calib_data['calib_tpeak'].tolist())
+            peak_pos_ref=palm.etofs['0'].calib_data['calib_tpeak'].tolist(),
+            use_in_fit=palm.etofs['0'].calib_data['use_in_fit'].tolist())
 
         datatable_str_source.data.update(
             energy=palm.etofs['0'].calib_data.index.tolist(),
-            peak_pos_str=palm.etofs['1'].calib_data['calib_tpeak'].tolist())
+            peak_pos_str=palm.etofs['1'].calib_data['calib_tpeak'].tolist(),
+            use_in_fit=palm.etofs['1'].calib_data['use_in_fit'].tolist())
 
     def update_calibration_plot(calib_res):
         etof_ref = palm.etofs['0']
@@ -346,11 +355,13 @@ def create(palm):
 
             datatable_ref_source.data.update(
                 energy=palm.etofs['0'].calib_data.index.tolist(),
-                peak_pos_ref=palm.etofs['0'].calib_data['calib_tpeak'].tolist())
+                peak_pos_ref=palm.etofs['0'].calib_data['calib_tpeak'].tolist(),
+                use_in_fit=palm.etofs['0'].calib_data['use_in_fit'].tolist())
 
             datatable_str_source.data.update(
                 energy=palm.etofs['0'].calib_data.index.tolist(),
-                peak_pos_str=palm.etofs['1'].calib_data['calib_tpeak'].tolist())
+                peak_pos_str=palm.etofs['1'].calib_data['calib_tpeak'].tolist(),
+                use_in_fit=palm.etofs['1'].calib_data['use_in_fit'].tolist())
 
             # Drop selection, so that this callback can be triggered again on the same dropdown menu
             # item from the user perspective
