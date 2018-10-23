@@ -119,31 +119,51 @@ def create(palm):
     fit_plot.legend.click_policy = "hide"
 
 
-    # Calibration results datatable
-    def datatable_source_callback(_attr, _old, new):
-        for en, ps0, ps1 in zip(new['energy'], new['peak_pos_ref'], new['peak_pos_str']):
-            palm.etofs['0'].calib_data.loc[en, 'calib_tpeak'] = (ps0 if ps0 != 'NaN' else np.nan)
-            palm.etofs['1'].calib_data.loc[en, 'calib_tpeak'] = (ps1 if ps1 != 'NaN' else np.nan)
+    # Calibration results datatables
+    def datatable_ref_source_callback(_attr, _old, new):
+        for en, ps in zip(new['energy'], new['peak_pos_ref']):
+            palm.etofs['0'].calib_data.loc[en, 'calib_tpeak'] = (ps if ps != 'NaN' else np.nan)
 
         calib_res = {}
         for etof_key in palm.etofs:
             calib_res[etof_key] = palm.etofs[etof_key].fit_calibration_curve()
         update_calibration_plot(calib_res)
 
-    datatable_source = ColumnDataSource(
-        dict(energy=['', '', ''], peak_pos_ref=['', '', ''], peak_pos_str=['', '', '']))
-    datatable_source.on_change('data', datatable_source_callback)
+    datatable_ref_source = ColumnDataSource(dict(energy=['', '', ''], peak_pos_ref=['', '', '']))
+    datatable_ref_source.on_change('data', datatable_ref_source_callback)
 
-    datatable = DataTable(
-        source=datatable_source,
+    datatable_ref = DataTable(
+        source=datatable_ref_source,
         columns=[
             TableColumn(field='energy', title="Photon Energy, eV", editor=IntEditor()),
-            TableColumn(field='peak_pos_ref', title="Reference Peak Position", editor=IntEditor()),
-            TableColumn(field='peak_pos_str', title="Streaked Peak Position", editor=IntEditor())],
+            TableColumn(field='peak_pos_ref', title="Reference Peak", editor=IntEditor())],
         index_position=None,
         editable=True,
         height=300,
-        width=500,
+        width=200,
+    )
+
+    def datatable_str_source_callback(_attr, _old, new):
+        for en, ps in zip(new['energy'], new['peak_pos_str']):
+            palm.etofs['1'].calib_data.loc[en, 'calib_tpeak'] = (ps if ps != 'NaN' else np.nan)
+
+        calib_res = {}
+        for etof_key in palm.etofs:
+            calib_res[etof_key] = palm.etofs[etof_key].fit_calibration_curve()
+        update_calibration_plot(calib_res)
+
+    datatable_str_source = ColumnDataSource(dict(energy=['', '', ''], peak_pos_str=['', '', '']))
+    datatable_str_source.on_change('data', datatable_str_source_callback)
+
+    datatable_str = DataTable(
+        source=datatable_str_source,
+        columns=[
+            TableColumn(field='energy', title="Photon Energy, eV", editor=IntEditor()),
+            TableColumn(field='peak_pos_str', title="Streaked Peak", editor=IntEditor())],
+        index_position=None,
+        editable=True,
+        height=300,
+        width=200,
     )
 
 
@@ -185,9 +205,12 @@ def create(palm):
         except:
             palm.calibrate_etof(folder_name=path_textinput.value)
 
-        datatable_source.data.update(
+        datatable_ref_source.data.update(
             energy=palm.etofs['0'].calib_data.index.tolist(),
-            peak_pos_ref=palm.etofs['0'].calib_data['calib_tpeak'].tolist(),
+            peak_pos_ref=palm.etofs['0'].calib_data['calib_tpeak'].tolist())
+
+        datatable_str_source.data.update(
+            energy=palm.etofs['0'].calib_data.index.tolist(),
             peak_pos_str=palm.etofs['1'].calib_data['calib_tpeak'].tolist())
 
     def update_calibration_plot(calib_res):
@@ -321,9 +344,12 @@ def create(palm):
         if selection:
             palm.load_etof_calib(os.path.join(path_textinput.value, selection))
 
-            datatable_source.data.update(
+            datatable_ref_source.data.update(
                 energy=palm.etofs['0'].calib_data.index.tolist(),
-                peak_pos_ref=palm.etofs['0'].calib_data['calib_tpeak'].tolist(),
+                peak_pos_ref=palm.etofs['0'].calib_data['calib_tpeak'].tolist())
+
+            datatable_str_source.data.update(
+                energy=palm.etofs['0'].calib_data.index.tolist(),
                 peak_pos_str=palm.etofs['1'].calib_data['calib_tpeak'].tolist())
 
             # Drop selection, so that this callback can be triggered again on the same dropdown menu
@@ -375,6 +401,7 @@ def create(palm):
                 phot_peak_noise_thr_textinput, el_peak_noise_thr_textinput,
                 bind_energy_textinput, zero_drift_textinput,
                 row(save_button, Spacer(width=10), load_dropdown),
-                datatable, fit_eq_div, calib_const_div)))
+                row(datatable_ref, Spacer(width=10), datatable_str),
+                fit_eq_div, calib_const_div)))
 
     return Panel(child=tab_layout, title="eTOF Calibration")
