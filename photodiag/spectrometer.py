@@ -18,7 +18,8 @@ class Spectrometer:
             'calib_t0': np.array([], dtype=float),
             'calib_tpeak': np.array([], dtype=float),
             'noise_mean': np.array([], dtype=float),
-            'noise_std': np.array([], dtype=float)})
+            'noise_std': np.array([], dtype=float),
+            'use_in_fit': np.array([], dtype=bool)})
 
         self.calib_a = None
         self.calib_b = None
@@ -61,7 +62,8 @@ class Spectrometer:
             'calib_t0': calib_t0,
             'calib_tpeak': calib_tpeak,
             'noise_mean': noise_mean,
-            'noise_std': noise_std}
+            'noise_std': noise_std,
+            'use_in_fit': True}
 
     def fit_calibration_curve(self):
         """Perform fitting of calibration data.
@@ -69,8 +71,10 @@ class Spectrometer:
         Returns:
             calibration constants and a goodness of fit
         """
-        self.calib_t0 = np.round(self.calib_data['calib_t0'].median()).astype(int)
-        time_delays_df = self.calib_data['calib_tpeak'] - self.calib_t0
+        calib_data = self.calib_data[self.calib_data['use_in_fit']]
+
+        self.calib_t0 = np.round(calib_data['calib_t0'].median()).astype(int)
+        time_delays_df = calib_data['calib_tpeak'] - self.calib_t0
 
         # convert to numpy arrays
         time_delays = time_delays_df.values
