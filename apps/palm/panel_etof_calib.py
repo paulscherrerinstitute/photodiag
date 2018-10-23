@@ -179,8 +179,11 @@ def create(palm):
 
     # Calibrate button
     def calibrate_button_callback():
-        palm.calibrate_etof_eco(
-            eco_scan_filename=os.path.join(path_textinput.value, scans_dropdown.value))
+        try:
+            palm.calibrate_etof_eco(
+                eco_scan_filename=os.path.join(path_textinput.value, scans_dropdown.value))
+        except:
+            palm.calibrate_etof(folder_name=path_textinput.value)
 
         datatable_source.data.update(
             energy=palm.etofs['0'].calib_data.index.tolist(),
