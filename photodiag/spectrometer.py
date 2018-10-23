@@ -65,6 +65,8 @@ class Spectrometer:
             'noise_std': noise_std,
             'use_in_fit': True}
 
+        self.calib_data.sort_index(inplace=True)
+
     def fit_calibration_curve(self):
         """Perform fitting of calibration data.
 
