@@ -195,10 +195,9 @@ def create(palm):
     def path_periodic_update():
         new_menu = []
         if os.path.isdir(path_textinput.value):
-            with os.scandir(path_textinput.value) as it:
-                for entry in it:
-                    if entry.is_file() and entry.name.endswith('.json'):
-                        new_menu.append((entry.name, entry.name))
+            for entry in os.scandir(path_textinput.value):
+                if entry.is_file() and entry.name.endswith('.json'):
+                    new_menu.append((entry.name, entry.name))
         scans_dropdown.menu = sorted(new_menu, reverse=True)
 
     doc.add_periodic_callback(path_periodic_update, 5000)
@@ -371,10 +370,9 @@ def create(palm):
         new_menu = []
         calib_file_ext = '.palm_etof'
         if os.path.isdir(path_textinput.value):
-            with os.scandir(path_textinput.value) as it:
-                for entry in it:
-                    if entry.is_file() and entry.name.endswith((calib_file_ext)):
-                        new_menu.append((entry.name[:-len(calib_file_ext)], entry.name))
+            for entry in os.scandir(path_textinput.value):
+                if entry.is_file() and entry.name.endswith((calib_file_ext)):
+                    new_menu.append((entry.name[:-len(calib_file_ext)], entry.name))
             load_dropdown.button_type = 'default'
             load_dropdown.menu = sorted(new_menu, reverse=True)
         else:

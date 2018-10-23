@@ -68,19 +68,18 @@ class PalmSetup:
                 etof = self.etofs[etof_key]
                 etof.calib_data.drop(etof.calib_data.index[:], inplace=True)
 
-        with os.scandir(folder_name) as it:
-            for entry in it:
-                if entry.is_file() and entry.name.endswith(('.hdf5', '.h5')):
-                    energy = get_energy_from_filename(entry.name)
+        for entry in os.scandir(folder_name):
+            if entry.is_file() and entry.name.endswith(('.hdf5', '.h5')):
+                energy = get_energy_from_filename(entry.name)
 
-                    for etof_key in calibrated_etofs:
-                        etof = self.etofs[etof_key]
-                        if not overwrite and energy in etof.calib_data.index:
-                            continue
+                for etof_key in calibrated_etofs:
+                    etof = self.etofs[etof_key]
+                    if not overwrite and energy in etof.calib_data.index:
+                        continue
 
-                        _, calib_waveforms = get_tags_and_data(entry.path, self.channels[etof_key])
+                    _, calib_waveforms = get_tags_and_data(entry.path, self.channels[etof_key])
 
-                        etof.add_calibration_point(energy, calib_waveforms)
+                    etof.add_calibration_point(energy, calib_waveforms)
 
         calib_results = {}
         for etof_key in self.etofs:

@@ -220,10 +220,9 @@ def create(palm):
     def path_periodic_update():
         new_menu = []
         if os.path.isdir(path_textinput.value):
-            with os.scandir(path_textinput.value) as it:
-                for entry in it:
-                    if entry.is_file() and entry.name.endswith(('.hdf5', '.h5')):
-                        new_menu.append((entry.name, entry.name))
+            for entry in os.scandir(path_textinput.value):
+                if entry.is_file() and entry.name.endswith(('.hdf5', '.h5')):
+                    new_menu.append((entry.name, entry.name))
         saved_runs_dropdown.menu = sorted(new_menu, reverse=True)
 
     doc.add_periodic_callback(path_periodic_update, 5000)
