@@ -39,7 +39,7 @@ class Spectrometer:
         """
         if self.internal_time_bins:
             if self.internal_time_bins != calib_waveforms.shape[1]:
-                raise Exception('eTOF number of bins is inconsistent.')
+                raise AssertionError('eTOF number of bins is inconsistent.')
         else:
             self.internal_time_bins = calib_waveforms.shape[1]
 
@@ -54,7 +54,7 @@ class Spectrometer:
         try:
             calib_tpeak = self._detect_electron_peak(
                 waveform, noise_std, self.electron_peak_noise_thr)
-        except:
+        except ValueError:
             calib_tpeak = np.nan
 
         self.calib_data.loc[energy] = {
@@ -147,14 +147,12 @@ class Spectrometer:
         # TODO: the code could be improved once the following issue is resolved,
         # https://github.com/numpy/numpy/issues/2269
         if not above_thr.any():
-            # no values above the noise threshold in the waveform
-            raise Exception('Can not detect a photon peak')
+            raise ValueError('No photon peak values above the noise threshold in the waveform')
 
         ind_l = np.argmax(above_thr)
 
         if not above_thr[ind_l:].any():
-            # no values below the noise threshold along the peak
-            raise Exception('Can not detect a photon peak')
+            raise ValueError('No photon peak values below the noise threshold along the peak')
 
         ind_r = ind_l + np.argmin(above_thr[ind_l:])
 
@@ -184,14 +182,12 @@ class Spectrometer:
         # TODO: the code could be improved once the following issue is resolved,
         # https://github.com/numpy/numpy/issues/2269
         if not above_thr.any():
-            # no values above the noise threshold in the waveform
-            raise Exception('Can not detect a peak')
+            raise ValueError('No electron peak values above the noise threshold in the waveform')
 
         ind_l = np.argmax(above_thr)
 
         if not above_thr[ind_l:].any():
-            # no values below the noise threshold along the peak
-            raise Exception('Can not detect a peak')
+            raise ValueError('No electron peak values below the noise threshold along the peak')
 
         ind_r = ind_l + np.argmin(above_thr[ind_l:])
         ind_l = len(above_thr) - ind_l - 1

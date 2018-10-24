@@ -16,7 +16,7 @@ elif args.beamline == 'bernina':
     streaked = 'SAROP21-PALMK134:CH2_BUFFER'
 
 else:
-    raise Exception(f"{args.beamline} - unknown beamline")
+    raise RuntimeError(f"{args.beamline} - unknown beamline")
 
 
 BUFFER_SIZE = 100

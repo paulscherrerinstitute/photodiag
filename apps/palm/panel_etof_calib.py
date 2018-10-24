@@ -208,7 +208,7 @@ def create(palm):
         try:
             palm.calibrate_etof_eco(
                 eco_scan_filename=os.path.join(path_textinput.value, scans_dropdown.value))
-        except:
+        except Exception:
             palm.calibrate_etof(folder_name=path_textinput.value)
 
         datatable_ref_source.data.update(

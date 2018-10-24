@@ -103,8 +103,8 @@ class PalmSetup:
             try:
                 _, calib_waveforms0 = get_tags_and_data(scan_file, self.channels['0'])
                 _, calib_waveforms1 = get_tags_and_data(scan_file, self.channels['1'])
-            except Exception:
-                log.warning(f'Can not read {scan_file}')
+            except Exception as e:
+                log.warning(e)
             else:
                 eff_bind_en = self.binding_energy + (self.zero_drift_tube - 1000*energy)
                 self.etofs['0'].add_calibration_point(eff_bind_en, calib_waveforms0)
@@ -191,8 +191,8 @@ class PalmSetup:
         for scan_file, scan_readback in zip(scan_files, scan_readbacks):
             try:
                 _, peak_shift, _ = self.process_hdf5_file(scan_file)
-            except Exception:
-                log.warning(f'Can not read {scan_file}')
+            except Exception as e:
+                log.warning(e)
             else:
                 self.thz_calib_data.loc[scan_readback] = {
                     'peak_shift': peak_shift,
@@ -498,7 +498,7 @@ def get_tags_and_data(filepath, etof_path):
         except (KeyError, AttributeError):
             pass
 
-        raise Exception(f"Could not find data in {filepath}")
+        raise Exception(f"Could not locate data in {filepath}")
 
 
 def richardson_lucy_deconv(streaked_signal, reference_signal, iterations=200, noise=0.3):
