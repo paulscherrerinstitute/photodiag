@@ -50,7 +50,11 @@ class Spectrometer:
         # keep axis=0 for a situation with a single waveform
         waveform = calib_waveforms.mean(axis=0) - noise_mean
 
-        calib_t0, _ = self._detect_photon_peak(waveform, noise_std, self.photon_peak_noise_thr)
+        try:
+            calib_t0, _ = self._detect_photon_peak(waveform, noise_std, self.photon_peak_noise_thr)
+        except ValueError:
+            calib_t0 = np.nan
+
         try:
             calib_tpeak = self._detect_electron_peak(
                 waveform, noise_std, self.electron_peak_noise_thr)
