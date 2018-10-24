@@ -100,12 +100,15 @@ class PalmSetup:
 
         for scan_file, scan_value in zip(scan_files, scan_values):
             energy = scan_value[0]
-            _, calib_waveforms0 = get_tags_and_data(scan_file, self.channels['0'])
-            _, calib_waveforms1 = get_tags_and_data(scan_file, self.channels['1'])
-
-            eff_bind_en = self.binding_energy + (self.zero_drift_tube - 1000*energy)
-            self.etofs['0'].add_calibration_point(eff_bind_en, calib_waveforms0)
-            self.etofs['1'].add_calibration_point(eff_bind_en, calib_waveforms1)
+            try:
+                _, calib_waveforms0 = get_tags_and_data(scan_file, self.channels['0'])
+                _, calib_waveforms1 = get_tags_and_data(scan_file, self.channels['1'])
+            except Exception:
+                log.warning(f'Can not read {scan_file}')
+            else:
+                eff_bind_en = self.binding_energy + (self.zero_drift_tube - 1000*energy)
+                self.etofs['0'].add_calibration_point(eff_bind_en, calib_waveforms0)
+                self.etofs['1'].add_calibration_point(eff_bind_en, calib_waveforms1)
 
         calib_results = {}
         for etof_key in self.etofs:
@@ -186,11 +189,15 @@ class PalmSetup:
 
         self.thz_calib_data.drop(self.thz_calib_data.index[:], inplace=True)
         for scan_file, scan_readback in zip(scan_files, scan_readbacks):
-            _, peak_shift, _ = self.process_hdf5_file(scan_file)
-            self.thz_calib_data.loc[scan_readback] = {
-                'peak_shift': peak_shift,
-                'peak_shift_mean': peak_shift.mean(),
-                'peak_shift_std': peak_shift.std()}
+            try:
+                _, peak_shift, _ = self.process_hdf5_file(scan_file)
+            except Exception:
+                log.warning(f'Can not read {scan_file}')
+            else:
+                self.thz_calib_data.loc[scan_readback] = {
+                    'peak_shift': peak_shift,
+                    'peak_shift_mean': peak_shift.mean(),
+                    'peak_shift_std': peak_shift.std()}
 
         def fit_func(shift, a, b):
             return a * shift + b
