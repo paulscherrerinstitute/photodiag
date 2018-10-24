@@ -1,8 +1,8 @@
-import numpy as np
 """
 The class currently works with SACLA timing tool results.
 The data analysis part for swissfel is to be implemented...
 """
+import numpy as np
 
 
 class PsenSetup:
