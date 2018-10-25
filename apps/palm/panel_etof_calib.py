@@ -225,22 +225,22 @@ def create(palm):
         etof_ref = palm.etofs['0']
         etof_str = palm.etofs['1']
 
-        etof_ref_wf_shift = []
-        etof_str_wf_shift = []
         shift_val = 0
+        etof_ref_wf_shifted = []
+        etof_str_wf_shifted = []
         for wf_ref, wf_str in zip(etof_ref.calib_data['waveform'], etof_str.calib_data['waveform']):
-            etof_ref_wf_shift.append(wf_ref + shift_val)
-            etof_str_wf_shift.append(wf_str + shift_val)
-            shift_val += max(wf_ref.max(), wf_str.max())
+            shift_val -= max(wf_ref.max(), wf_str.max())
+            etof_ref_wf_shifted.append(wf_ref + shift_val)
+            etof_str_wf_shifted.append(wf_str + shift_val)
 
         waveform_ref_source.data.update(
             xs=len(etof_ref.calib_data)*[list(range(etof_ref.internal_time_bins))],
-            ys=etof_ref_wf_shift,
+            ys=etof_ref_wf_shifted,
             en=etof_ref.calib_data.index.tolist())
 
         waveform_str_source.data.update(
             xs=len(etof_str.calib_data)*[list(range(etof_str.internal_time_bins))],
-            ys=etof_str_wf_shift,
+            ys=etof_str_wf_shifted,
             en=etof_str.calib_data.index.tolist())
 
         photon_peak_ref_span.location = etof_ref.calib_t0
