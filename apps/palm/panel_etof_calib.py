@@ -27,18 +27,18 @@ def create(palm):
     )
 
     # ---- tools
-    waveform_plot_hovertool = HoverTool(tooltips=[
-        ("energy, eV", '@en'),
-        ("etof time, a.u.", '$x'),
-        ("intensity, a.u.", '$y'),
-    ])
+    waveform_plot_hovertool = HoverTool(
+        tooltips=[
+            ("energy, eV", '@en'),
+            ("eTOF bin", '$x{0.}'),
+            ])
 
     waveform_plot.add_tools(
         PanTool(), BoxZoomTool(), WheelZoomTool(), ResetTool(), waveform_plot_hovertool)
 
     # ---- axes
     waveform_plot.add_layout(
-        LinearAxis(axis_label='Spectrometer internal time'), place='below')
+        LinearAxis(axis_label='eTOF time bin'), place='below')
     waveform_plot.add_layout(
         LinearAxis(axis_label='Intensity', major_label_orientation='vertical'), place='left')
 
