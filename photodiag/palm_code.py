@@ -44,6 +44,7 @@ class PalmSetup:
         self.thz_motor_name = None
         self.thz_motor_unit = None
 
+        self.xfel_energy = 7085
         self.zero_drift_tube = 7500
         self.binding_energy = 1148.7
 
@@ -70,7 +71,8 @@ class PalmSetup:
 
         for entry in os.scandir(folder_name):
             if entry.is_file() and entry.name.endswith(('.hdf5', '.h5')):
-                energy = get_energy_from_filename(entry.name)
+                energy = self.xfel_energy - self.binding_energy - \
+                         get_energy_from_filename(entry.name)
 
                 for etof_key in calibrated_etofs:
                     etof = self.etofs[etof_key]

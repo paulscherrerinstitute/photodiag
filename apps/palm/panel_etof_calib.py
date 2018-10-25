@@ -169,7 +169,7 @@ def create(palm):
             TableColumn(field='use_in_fit', title=" ", editor=CheckboxEditor(), width=80)],
         index_position=None,
         editable=True,
-        height=300,
+        height=350,
         width=250,
     )
 
@@ -306,38 +306,6 @@ def create(palm):
     el_peak_noise_thr_textinput.on_change('value', el_peak_noise_thr_textinput_callback)
 
 
-    # Binding energy value text input
-    def bind_energy_textinput_callback(_attr, old, new):
-        try:
-            new_value = float(new)
-            if new_value > 0:
-                palm.binding_energy = new_value
-            else:
-                bind_energy_textinput.value = old
-
-        except ValueError:
-            bind_energy_textinput.value = old
-
-    bind_energy_textinput = TextInput(title='Binding energy:', value=str(palm.binding_energy))
-    bind_energy_textinput.on_change('value', bind_energy_textinput_callback)
-
-
-    # Zero drift tube value text input
-    def zero_drift_textinput_callback(_attr, old, new):
-        try:
-            new_value = float(new)
-            if new_value > 0:
-                palm.zero_drift_tube = new_value
-            else:
-                zero_drift_textinput.value = old
-
-        except ValueError:
-            zero_drift_textinput.value = old
-
-    zero_drift_textinput = TextInput(title='Zero drift tube:', value=str(palm.zero_drift_tube))
-    zero_drift_textinput.on_change('value', zero_drift_textinput_callback)
-
-
     # Save calibration button
     def save_button_callback():
         palm.save_etof_calib(path=path_textinput.value)
@@ -408,7 +376,6 @@ def create(palm):
             column(
                 path_textinput, scans_dropdown, calibrate_button,
                 phot_peak_noise_thr_textinput, el_peak_noise_thr_textinput,
-                bind_energy_textinput, zero_drift_textinput,
                 row(save_button, Spacer(width=10), load_dropdown),
                 row(datatable_ref, Spacer(width=10), datatable_str),
                 fit_eq_div, calib_const_div)))

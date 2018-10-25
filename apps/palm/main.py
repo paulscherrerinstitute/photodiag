@@ -25,4 +25,4 @@ tab_h5file = panel_h5file.create(palm)
 tab_stream = panel_stream.create(palm)
 tab_setup = panel_setup.create(palm)
 
-doc.add_root(Tabs(tabs=[tab_etof_calib, tab_thz_calib, tab_h5file, tab_stream, tab_setup]))
+doc.add_root(Tabs(tabs=[tab_setup, tab_etof_calib, tab_h5file, tab_thz_calib, tab_stream]))
