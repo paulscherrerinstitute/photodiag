@@ -41,9 +41,14 @@ def create(palm):
     scan_plot.add_layout(Grid(dimension=0, ticker=BasicTicker()))
     scan_plot.add_layout(Grid(dimension=1, ticker=BasicTicker()))
 
-    # ---- circle glyphs
+    # ---- circle cluster glyphs
     scan_circle_source = ColumnDataSource(dict(x=[], y=[]))
-    scan_plot.add_glyph(scan_circle_source, Circle(x='x', y='y', line_color='purple'))
+    scan_plot.add_glyph(scan_circle_source, Circle(x='x', y='y', line_alpha=0, fill_alpha=0.5))
+
+    # ---- circle glyphs
+    scan_avg_circle_source = ColumnDataSource(dict(x=[], y=[]))
+    scan_plot.add_glyph(
+        scan_avg_circle_source, Circle(x='x', y='y', line_color='purple', fill_color='purple'))
 
     # ---- line glyphs
     fit_line_source = ColumnDataSource(dict(x=[], y=[]))
@@ -90,6 +95,11 @@ def create(palm):
         scan_plot.xaxis.axis_label = f'{palm.thz_motor_name}, {palm.thz_motor_unit}'
 
         scan_circle_source.data.update(
+            x=np.repeat(
+                palm.thz_calib_data.index, palm.thz_calib_data['peak_shift'].apply(len)).tolist(),
+            y=np.concatenate(palm.thz_calib_data['peak_shift'].values).tolist())
+
+        scan_avg_circle_source.data.update(
             x=palm.thz_calib_data.index.tolist(),
             y=palm.thz_calib_data['peak_shift_mean'].tolist())
 
