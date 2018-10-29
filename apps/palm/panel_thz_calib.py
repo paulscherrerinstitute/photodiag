@@ -25,10 +25,10 @@ def create(palm):
         plot_height=PLOT_CANVAS_HEIGHT,
         plot_width=PLOT_CANVAS_WIDTH,
         toolbar_location='right',
-        logo=None,
     )
 
     # ---- tools
+    scan_plot.toolbar.logo = None
     scan_plot.add_tools(PanTool(), BoxZoomTool(), WheelZoomTool(), ResetTool())
 
     # ---- axes

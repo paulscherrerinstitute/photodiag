@@ -23,10 +23,10 @@ def create(palm):
         plot_height=760,
         plot_width=PLOT_CANVAS_WIDTH,
         toolbar_location='right',
-        logo=None,
     )
 
     # ---- tools
+    waveform_plot.toolbar.logo = None
     waveform_plot_hovertool = HoverTool(
         tooltips=[
             ("energy, eV", '@en'),
@@ -79,10 +79,10 @@ def create(palm):
         plot_height=PLOT_CANVAS_HEIGHT,
         plot_width=PLOT_CANVAS_WIDTH,
         toolbar_location='right',
-        logo=None,
     )
 
     # ---- tools
+    fit_plot.toolbar.logo = None
     fit_plot.add_tools(PanTool(), BoxZoomTool(), WheelZoomTool(), ResetTool())
 
     # ---- axes

@@ -30,10 +30,10 @@ def create(palm):
         plot_height=PLOT_CANVAS_HEIGHT,
         plot_width=PLOT_CANVAS_WIDTH,
         toolbar_location='right',
-        logo=None,
     )
 
     # ---- tools
+    waveform_plot.toolbar.logo = None
     waveform_plot.add_tools(PanTool(), BoxZoomTool(), WheelZoomTool(), ResetTool())
 
     # ---- axes
@@ -69,10 +69,10 @@ def create(palm):
         plot_height=PLOT_CANVAS_HEIGHT,
         plot_width=PLOT_CANVAS_WIDTH,
         toolbar_location='right',
-        logo=None,
     )
 
     # ---- tools
+    xcorr_plot.toolbar.logo = None
     xcorr_plot.add_tools(PanTool(), BoxZoomTool(), WheelZoomTool(), ResetTool())
 
     # ---- axes
@@ -105,10 +105,10 @@ def create(palm):
         plot_height=PLOT_CANVAS_HEIGHT,
         plot_width=PLOT_CANVAS_WIDTH,
         toolbar_location='right',
-        logo=None,
     )
 
     # ---- tools
+    pulse_delay_plot.toolbar.logo = None
     pulse_delay_plot.add_tools(PanTool(), BoxZoomTool(), WheelZoomTool(), ResetTool())
 
     # ---- axes
@@ -140,10 +140,10 @@ def create(palm):
         plot_height=PLOT_CANVAS_HEIGHT,
         plot_width=PLOT_CANVAS_WIDTH,
         toolbar_location='right',
-        logo=None,
     )
 
     # ---- tools
+    pulse_length_plot.toolbar.logo = None
     pulse_length_plot.add_tools(PanTool(), BoxZoomTool(), WheelZoomTool(), ResetTool())
 
     # ---- axes
