@@ -122,7 +122,7 @@ class PalmSetup:
         """ Save eTOF calibration to a file.
         """
         if not file:
-            file = f"{datetime.datetime.now().isoformat(sep='_', timespec='seconds')}"
+            file = str(datetime.datetime.now().isoformat(sep='_', timespec='seconds'))
 
         if not file.endswith('.palm_etof'):
             file += '.palm_etof'
@@ -132,14 +132,14 @@ class PalmSetup:
 
         with open(os.path.join(path, file), 'wb') as f:
             pickle.dump(self.etofs, f)
-            log.info(f"Save etof calibration to a file: {os.path.join(path, file)}")
+            log.info("Save etof calibration to a file: %s", os.path.join(path, file))
 
     def load_etof_calib(self, filepath):
         """Load eTOF calibration from a file.
         """
         with open(filepath, 'rb') as f:
             self.etofs = pickle.load(f)
-            log.info(f"Load etof calibration from a file: {filepath}")
+            log.info("Load etof calibration from a file: %s", filepath)
 
     def process(self, waveforms, method='xcorr', jacobian=False, noise_thr=0, debug=False,
                 peak='max'):
@@ -169,7 +169,7 @@ class PalmSetup:
             results = self._deconvolution_analysis(prep_data, debug=debug)
 
         else:
-            raise RuntimeError(f"Method '{method}' is not recognised")
+            raise RuntimeError("Method '{}' is not recognised".format(method))
 
         return results
 
@@ -216,7 +216,7 @@ class PalmSetup:
         """ Save THz pulse calibration to a file.
         """
         if not file:
-            file = f"{datetime.datetime.now().isoformat(sep='_', timespec='seconds')}"
+            file = str(datetime.datetime.now().isoformat(sep='_', timespec='seconds'))
 
         if not file.endswith('.palm_thz'):
             file += '.palm_thz'
@@ -229,7 +229,7 @@ class PalmSetup:
             pickle.dump(self.thz_slope, f)
             pickle.dump(self.thz_intersect, f)
             pickle.dump(self.thz_motor_name, f)
-            log.info(f"Save THz calibration to a file: {os.path.join(path, file)}")
+            log.info("Save THz calibration to a file: %s", os.path.join(path, file))
 
     def load_thz_calib(self, filepath):
         """Load THz pulse calibration from a file.
@@ -239,7 +239,7 @@ class PalmSetup:
             self.thz_slope = pickle.load(f)
             self.thz_intersect = pickle.load(f)
             self.thz_motor_name = pickle.load(f)
-            log.info(f"Load etof calibration from a file: {filepath}")
+            log.info("Load etof calibration from a file: %s", filepath)
 
     def process_hdf5_file(self, filepath, debug=False):
         """Load data for all registered spectrometers from an hdf5 file. This method is to be
@@ -464,43 +464,45 @@ def get_tags_and_data(filepath, etof_path):
     Returns:
         tags and data
     """
+    # TODO: for the E1130 pylint issue, see
+    # https://github.com/PyCQA/pylint/issues/2436
     with h5py.File(filepath, 'r') as h5f:
         try:
             tags = h5f['/pulseId'][:]
-            data = -h5f[f'/{etof_path}'][:]
+            data = -h5f['/{}'.format(etof_path)][:]  # pylint: disable=E1130
             return tags, data
         except (KeyError, AttributeError):
             pass
 
         try:
             tags = h5f['/scan 1/SLAAR21-LMOT-M552:MOT.VAL'][:]
-            data = -h5f[f'/scan 1/{etof_path} averager'][:]
+            data = -h5f['/scan 1/{} averager'.format(etof_path)][:]  # pylint: disable=E1130
             return tags, data
         except (KeyError, AttributeError):
             pass
 
         try:
-            tags = h5f[f'/data/{etof_path}/pulse_id'][:]
-            data = -h5f[f'/data/{etof_path}/data'][:]
+            tags = h5f['/data/{}/pulse_id'.format(etof_path)][:]
+            data = -h5f['/data/{}/data'.format(etof_path)][:]  # pylint: disable=E1130
             return tags, data
         except (KeyError, AttributeError):
             pass
 
         try:
             tags = h5f['/pulse_id'][:]
-            data = -h5f[f'/{etof_path}/data'][:]
+            data = -h5f['/{}/data'.format(etof_path)][:]  # pylint: disable=E1130
             return tags, data
         except (KeyError, AttributeError):
             pass
 
         try:
             tags = []
-            data = -h5f[f'/{etof_path}'][:]
+            data = -h5f['/{}'.format(etof_path)][:]  # pylint: disable=E1130
             return tags, data
         except (KeyError, AttributeError):
             pass
 
-        raise Exception(f"Could not locate data in {filepath}")
+        raise Exception("Could not locate data in {}".format(filepath))
 
 
 def richardson_lucy_deconv(streaked_signal, reference_signal, iterations=200, noise=0.3):

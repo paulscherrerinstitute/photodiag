@@ -43,7 +43,7 @@ class PsenSetup:
         elif method == 'average':
             data = (data[:, 1] + data[:, 2]) / 2
         else:
-            raise RuntimeError(f"Method '{method}' is not recognised")
+            raise RuntimeError("Method '{}' is not recognised".format(method))
 
         self.data = data*self.ttcalib  # convert to fs
 

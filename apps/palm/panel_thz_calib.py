@@ -92,7 +92,7 @@ def create(palm):
         update_calibration_plot()
 
     def update_calibration_plot():
-        scan_plot.xaxis.axis_label = f'{palm.thz_motor_name}, {palm.thz_motor_unit}'
+        scan_plot.xaxis.axis_label = '{}, {}'.format(palm.thz_motor_name, palm.thz_motor_unit)
 
         scan_circle_source.data.update(
             x=np.repeat(
@@ -107,9 +107,9 @@ def create(palm):
         y = palm.thz_slope * x + palm.thz_intersect
         fit_line_source.data.update(x=np.round(x, decimals=5), y=np.round(y, decimals=5))
 
-        calib_const_div.text = f"""
-        thz_slope = {palm.thz_slope}
-        """
+        calib_const_div.text = """
+        thz_slope = {}
+        """.format(palm.thz_slope)
 
     calibrate_button = Button(label="Calibrate THz", button_type='default')
     calibrate_button.on_click(calibrate_button_callback)
@@ -193,9 +193,9 @@ def create(palm):
 
     # Calibration constants
     calib_const_div = Div(
-        text=f"""
-        thz_slope = {0}
-        """)
+        text="""
+        thz_slope = {}
+        """.format(0))
 
 
     # assemble
