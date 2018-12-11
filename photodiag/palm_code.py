@@ -368,6 +368,8 @@ class PalmSetup:
                 y_1d[:ind_in[ind_max_height]] = 0
                 y_1d[ind_out[ind_max_height]:] = 0
 
+            return y_1d
+
         if y.ndim == 1:
             test_fun(y)
         else:
@@ -402,6 +404,8 @@ class PalmSetup:
 
                 y_1d[:ind_in[ind_max_length]] = 0
                 y_1d[ind_out[ind_max_length]:] = 0
+
+            return y_1d
 
         if y.ndim == 1:
             test_fun(y)
