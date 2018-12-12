@@ -1,0 +1,15 @@
+[Unit]
+Description=photodiag service
+After=docker.service
+Requires=docker.service
+
+[Install]
+WantedBy=default.target
+
+[Service]
+TimeoutStartSec=0
+ExecStartPre=-/usr/bin/docker kill photodiag
+ExecStartPre=-/usr/bin/docker rm photodiag
+ExecStart=/usr/bin/docker run --name photodiag --net=host
+ExecStop=/usr/bin/docker stop photodiag
+Restart=always
