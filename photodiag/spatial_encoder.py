@@ -1,3 +1,5 @@
+import json
+
 import h5py
 import numpy as np
 
@@ -95,6 +97,35 @@ class SpatialEncoder:
 
         return output, pulse_id[is_data_present]
 
+    def process_eco(self, filepath, step_length=50, debug=False):
+        """Process spatial encoder data from hdf5 file.
+
+        Args:
+            filepath: json eco scan file to be processed
+            step_length: length of a step waveform in pix
+            debug: return debug data
+        Returns:
+            edge position(s) in pix, corresponding pulse ids and scan readback values
+            cross-correlation results and raw data if `debug` is True
+        """
+        with open(filepath) as eco_file:
+            eco_scan = json.load(eco_file)
+
+        scan_readbacks = eco_scan['scan_readbacks']
+
+        output = []
+        pulse_id = []
+        for scan_files in eco_scan['scan_files']:
+            # bsread file is 'normally' a first file on a list, but maybe the following should be
+            # implemented in a more robust way
+            bsread_file = scan_files[0]
+            out, pid = self.process_hdf5(bsread_file, step_length=step_length, debug=debug)
+
+            output.append(out)
+            pulse_id.append(pid)
+
+        return output, pulse_id, scan_readbacks
+
     def _read_bsread_file(self, filepath):
         """Read spatial encoder data from bsread hdf5 file.
 
@@ -105,8 +136,8 @@ class SpatialEncoder:
         """
         with h5py.File(filepath, 'r') as h5f:
             channel_group = h5f["/data/{}".format(self.channel)]
-            is_data_present = channel_group["is_data_present"][:]
 
+            is_data_present = channel_group["is_data_present"][:]
             if not any(is_data_present):
                 raise Exception("is_data_present is 0 for all pulses in {}".format(self.channel))
 
