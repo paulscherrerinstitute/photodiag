@@ -10,17 +10,24 @@ class SpatialEncoder:
     Attributes:
         channel: data channel of spatial encoder
         roi: region of interest for spatial encoder image projection along y-axis
+        background_method: {'div', 'sub'} background removal method
+            'div': data = data / background - 1
+            'sub': data = data - background
     """
 
-    def __init__(self, channel, roi=(200, 300)):
+    def __init__(self, channel, roi=(200, 300), background_method='div'):
         """Initialize SpatialEncoder object.
 
         Args:
             channel: data channel of spatial encoder
             roi: region of interest for spatial encoder image projection along y-axis
+            background_method: {'div', 'sub'} background removal method
+                'div': data = data / background - 1
+                'sub': data = data - background
         """
         self.channel = channel
         self.roi = roi
+        self.background_method = background_method
         self._background = None
 
     def calibrate_background(self, filepath):
@@ -52,7 +59,13 @@ class SpatialEncoder:
             raise Exception("Background calibration is not found")
 
         # remove background
-        data /= self._background
+        if self.background_method == 'sub':
+            data -= self._background
+        elif self.background_method == 'div':
+            data /= self._background
+            data -= 1
+        else:
+            raise Exception("Unknown background removal method '{}'".format(self.background_method))
 
         # prepare a step function
         step_waveform = np.ones(shape=(step_length, ))
