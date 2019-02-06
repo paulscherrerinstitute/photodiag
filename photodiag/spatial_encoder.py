@@ -29,9 +29,10 @@ class SpatialEncoder:
         self.roi = roi
         self.background_method = background_method
         self._background = None
+        self._fs_per_pix = None
 
     def calibrate_background(self, filepath):
-        """Calibrate spatial encoder.
+        """Calibrate spatial encoder background.
 
         Args:
             filepath: hdf5 file to be processed with background signal data
@@ -40,6 +41,25 @@ class SpatialEncoder:
 
         # average over all images with data being present
         self._background = background_data[is_data_present].mean(axis=0)
+
+    def calibrate_time(self, filepath):
+        """Calibrate pixel to time conversion.
+
+        Args:
+            filepath: eco scan file to be used for pixel to femtosecond calibration
+        """
+        # TODO: maybe averaging raw waveforms per scan step and then finding edge position of the
+        # resulting waveform could be an alternative
+        results, _, scan_pos_fs = self.process_eco(filepath)
+
+        # average results for each scan position
+        edge_pos_pix = np.empty(len(results))
+        for i, data in enumerate(results):
+            edge_pos_pix[i] = data.mean()
+
+        # pixel -> fs conversion coefficient
+        fit_coeff = np.polyfit(edge_pos_pix, scan_pos_fs, 2)
+        self._fs_per_pix = fit_coeff[0]
 
     def process(self, data, step_length=50, debug=False):
         """Process spatial encoder data.
@@ -124,7 +144,8 @@ class SpatialEncoder:
         with open(filepath) as eco_file:
             eco_scan = json.load(eco_file)
 
-        scan_readbacks = eco_scan['scan_readbacks']
+        # flatten scan_readbacks array and convert values to femtoseconds
+        scan_pos_fs = np.ravel(eco_scan['scan_readbacks']) * 1e15
 
         output = []
         pulse_id = []
@@ -137,7 +158,7 @@ class SpatialEncoder:
             output.append(out)
             pulse_id.append(pid)
 
-        return output, pulse_id, scan_readbacks
+        return output, pulse_id, scan_pos_fs
 
     def _read_bsread_file(self, filepath):
         """Read spatial encoder data from bsread hdf5 file.
