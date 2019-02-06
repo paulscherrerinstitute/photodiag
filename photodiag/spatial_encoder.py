@@ -1,53 +1,119 @@
-"""
-The class currently works with SACLA timing tool results.
-The data analysis part for swissfel is to be implemented...
-"""
+import h5py
 import numpy as np
 
 
-class PsenSetup:
-    """Class describing photon spectral encoder (PSEN) setup.
+class SpatialEncoder:
+    """Class describing spatial encoder setup.
+
+    Attributes:
+        channel: data channel of spatial encoder
+        roi: region of interest for spatial encoder image projection along y-axis
     """
 
-    def __init__(self, ttcalib):
-        """Initialize PsenSetup object.
+    def __init__(self, channel, roi=(200, 300)):
+        """Initialize SpatialEncoder object.
 
         Args:
-            ttcalib: calibration constant of the timing tool in [fs/pixel]
+            channel: data channel of spatial encoder
+            roi: region of interest for spatial encoder image projection along y-axis
         """
-        self.ttcalib = ttcalib
-        self.tags = []
-        self.data = []
+        self.channel = channel
+        self.roi = roi
+        self._background = None
 
-    def load_swissfel_data(self):
-        """Load photon spectral encoder (PSEN) data.
-        """
-        pass
-
-    def load_sacla_data(self, filepath, method='average', remove_nans=True):
-        """Load SACLA timing tool data into tags and data.
+    def calibrate_background(self, filepath):
+        """Calibrate spatial encoder.
 
         Args:
-            filepath: path of a csv file with data
-            method: {'derivative', 'fitting', 'average'(default)} available methods of timing edge
-                detection
-            remove_nans: clear data from NaNs also removing the corresponding tags
+            filepath: hdf5 file to be processed with background signal data
         """
-        data = np.genfromtxt(filepath, delimiter=',', skip_header=2)
-        self.tags = data[:, 0]  # first column is a tags list
+        background_data, _, is_data_present = self._read_bsread_file(filepath)
 
-        if method == 'derivative':
-            data = data[:, 1]  # second column are timing edge derivative values (pixel)
-        elif method == 'fitting':
-            data = data[:, 2]  # first column are timing edge fitting values (pixel)
-        elif method == 'average':
-            data = (data[:, 1] + data[:, 2]) / 2
+        # average over all images with data being present
+        self._background = background_data[is_data_present].mean(axis=0)
+
+    def process(self, data, step_length=50, debug=False):
+        """Process spatial encoder data.
+
+        Edge detection is performed by finding a maximum of cross-convolution between a step
+        profile and input data waveforms.
+
+        Args:
+            data: data to be processed
+            step_length: length of a step waveform in pix
+            debug: return debug data
+        Returns:
+            edge position(s) in pix
+            cross-correlation results and raw data if `debug` is True
+        """
+        if self._background is None:
+            raise Exception("Background calibration is not found")
+
+        # remove background
+        data /= self._background
+
+        # prepare a step function
+        step_waveform = np.ones(shape=(step_length, ))
+        step_waveform[:int(step_length/2)] = -1
+
+        # broadcast cross-correlation function in case of a 2-dimentional array
+        if data.ndim == 1:
+            xcorr = np.correlate(data, step_waveform, mode='valid')
+            edge_position = np.argmax(xcorr)
+        elif data.ndim == 2:
+            xcorr = np.apply_along_axis(np.correlate, 1, data, step_waveform, mode='valid')
+            edge_position = np.argmax(xcorr, axis=1)
         else:
-            raise RuntimeError("Method '{}' is not recognised".format(method))
+            raise Exception('Input data should be either 1- or 2-dimentional array')
 
-        self.data = data*self.ttcalib  # convert to fs
+        # correct edge_position for step_length
+        edge_position += step_length/2
 
-        if remove_nans:
-            idx = ~np.isnan(data)
-            self.tags = self.tags[idx]
-            self.data = self.data[idx]
+        if debug:
+            output = edge_position, xcorr, data
+        else:
+            output = edge_position
+
+        return output
+
+    def process_hdf5(self, filepath, step_length=50, debug=False):
+        """Process spatial encoder data from hdf5 file.
+
+        Args:
+            filepath: hdf5 file to be processed
+            step_length: length of a step waveform in pix
+            debug: return debug data
+        Returns:
+            edge position(s) in pix and corresponding pulse ids
+            cross-correlation results and raw data if `debug` is True
+        """
+        if self._background is None:
+            raise Exception("Background calibration is not found")
+
+        data, pulse_id, is_data_present = self._read_bsread_file(filepath)
+        output = self.process(data[is_data_present], step_length=step_length, debug=debug)
+
+        return output, pulse_id[is_data_present]
+
+    def _read_bsread_file(self, filepath):
+        """Read spatial encoder data from bsread hdf5 file.
+
+        Args:
+            filepath: path to a bsread hdf5 file to read data from
+        Returns:
+            data, pulse_id, is_data_present
+        """
+        with h5py.File(filepath, 'r') as h5f:
+            channel_group = h5f["/data/{}".format(self.channel)]
+            is_data_present = channel_group["is_data_present"][:]
+
+            if not any(is_data_present):
+                raise Exception("is_data_present is 0 for all pulses in {}".format(self.channel))
+
+            pulse_id = channel_group["pulse_id"][:]
+
+            # data is stored as uint16 in hdf5, so has to be casted to float for further analysis,
+            # averaging every image over y-axis gives the final raw waveforms
+            data = channel_group["data"][:, slice(*self.roi), :].astype(float).mean(axis=1)
+
+        return data, pulse_id, is_data_present
