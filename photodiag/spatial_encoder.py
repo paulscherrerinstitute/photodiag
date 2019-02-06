@@ -59,10 +59,10 @@ class SpatialEncoder:
         # broadcast cross-correlation function in case of a 2-dimentional array
         if data.ndim == 1:
             xcorr = np.correlate(data, step_waveform, mode='valid')
-            edge_position = np.argmax(xcorr)
+            edge_position = np.argmax(xcorr).astype(float)
         elif data.ndim == 2:
             xcorr = np.apply_along_axis(np.correlate, 1, data, step_waveform, mode='valid')
-            edge_position = np.argmax(xcorr, axis=1)
+            edge_position = np.argmax(xcorr, axis=1).astype(float)
         else:
             raise Exception('Input data should be either 1- or 2-dimentional array')
 
