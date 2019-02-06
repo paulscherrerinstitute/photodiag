@@ -98,7 +98,7 @@ class SpatialEncoder:
         return output, pulse_id[is_data_present]
 
     def process_eco(self, filepath, step_length=50, debug=False):
-        """Process spatial encoder data from hdf5 file.
+        """Process spatial encoder data from eco scan file.
 
         Args:
             filepath: json eco scan file to be processed
