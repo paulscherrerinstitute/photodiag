@@ -44,20 +44,30 @@ class SpatialEncoder:
         # average over all images with data being present
         self._background = background_data[is_data_present].mean(axis=0)
 
-    def calibrate_time(self, filepath):
+    def calibrate_time(self, filepath, method='avg_edge'):
         """Calibrate pixel to time conversion.
 
         Args:
             filepath: eco scan file to be used for pixel to femtosecond calibration
+            method: {avg_wf, avg_edge}
+                'avg_wf': single edge position of averaged raw waveform (per scan step)
+                'avg_edge': mean of edge positions for all raw waveforms (per scan step)
         """
-        # TODO: maybe averaging raw waveforms per scan step and then finding edge position of the
-        # resulting waveform could be an alternative
-        results, _, scan_pos_fs = self.process_eco(filepath)
+        if method == 'avg_wf':
+            scan_pos_fs, bsread_files = self._read_eco_scan(filepath)
 
-        # average results for each scan position
-        edge_pos_pix = np.empty(len(results))
-        for i, data in enumerate(results):
-            edge_pos_pix[i] = data.nanmean()
+            edge_pos_pix = np.empty(len(scan_pos_fs))
+            for i, bsread_file in enumerate(bsread_files):
+                data, _, is_data_present = self._read_bsread_file(bsread_file)
+                data = data[is_data_present].mean(axis=0)
+                edge_pos_pix[i] = self.process(data)
+
+        elif method == 'avg_edge':
+            results, _, scan_pos_fs = self.process_eco(filepath)
+
+            edge_pos_pix = np.empty(len(scan_pos_fs))
+            for i, data in enumerate(results):
+                edge_pos_pix[i] = data.nanmean()
 
         # pixel -> fs conversion coefficient
         fit_coeff = np.polyfit(edge_pos_pix, scan_pos_fs, 2)
