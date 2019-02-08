@@ -70,7 +70,7 @@ class SpatialEncoder:
                 edge_pos_pix[i] = data.nanmean()
 
         # pixel -> fs conversion coefficient
-        fit_coeff = np.polyfit(edge_pos_pix, scan_pos_fs, 2)
+        fit_coeff = np.polyfit(edge_pos_pix, scan_pos_fs, 1)
         self._fs_per_pix = fit_coeff[0]
 
     def process(self, data, step_length=50, debug=False):
