@@ -117,7 +117,7 @@ class SpatialEncoder:
             raise Exception('Input data should be either 1- or 2-dimentional array')
 
         # correct edge_position for step_length
-        edge_position += step_length/2
+        edge_position += np.floor(step_length/2)
 
         if debug:
             output = edge_position, xcorr, data
