@@ -55,7 +55,7 @@ class SpatialEncoder:
         # average results for each scan position
         edge_pos_pix = np.empty(len(results))
         for i, data in enumerate(results):
-            edge_pos_pix[i] = data.mean()
+            edge_pos_pix[i] = data.nanmean()
 
         # pixel -> fs conversion coefficient
         fit_coeff = np.polyfit(edge_pos_pix, scan_pos_fs, 2)
@@ -126,9 +126,14 @@ class SpatialEncoder:
             raise Exception("Background calibration is not found")
 
         data, pulse_id, is_data_present = self._read_bsread_file(filepath)
-        output = self.process(data[is_data_present], step_length=step_length, debug=debug)
+        output = self.process(data, step_length=step_length, debug=debug)
 
-        return output, pulse_id[is_data_present]
+        if debug:
+            output[0][~is_data_present] = np.nan
+        else:
+            output[~is_data_present] = np.nan
+
+        return output, pulse_id
 
     def process_eco(self, filepath, step_length=50, debug=False):
         """Process spatial encoder data from eco scan file.
