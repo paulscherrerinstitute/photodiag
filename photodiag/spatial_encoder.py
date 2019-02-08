@@ -148,18 +148,11 @@ class SpatialEncoder:
             edge position(s) in pix, corresponding pulse ids and scan readback values
             cross-correlation results and raw data if `debug` is True
         """
-        with open(filepath) as eco_file:
-            eco_scan = json.load(eco_file)
-
-        # flatten scan_readbacks array and convert values to femtoseconds
-        scan_pos_fs = np.ravel(eco_scan['scan_readbacks']) * 1e15
+        scan_pos_fs, bsread_files = self._read_eco_scan(filepath)
 
         output = []
         pulse_id = []
-        for scan_files in eco_scan['scan_files']:
-            # bsread file is 'normally' a first file on a list, but maybe the following should be
-            # implemented in a more robust way
-            bsread_file = scan_files[0]
+        for bsread_file in bsread_files:
             out, pid = self.process_hdf5(bsread_file, step_length=step_length, debug=debug)
 
             output.append(out)
@@ -186,3 +179,25 @@ class SpatialEncoder:
             data = channel_group["data"][:, slice(*self.roi), :].astype(float).mean(axis=1)
 
         return data, pulse_id, is_data_present
+
+    @staticmethod
+    def _read_eco_scan(filepath):
+        """Extract `scan_readbacks` and corresponding bsread `scan_files` from an eco scan.
+
+        Args:
+            filepath: path to a json eco scan file to read data from
+        Returns:
+            scan_pos_fs, bsread_files
+        """
+        with open(filepath) as eco_file:
+            eco_scan = json.load(eco_file)
+
+        # flatten scan_readbacks array and convert values to femtoseconds
+        scan_pos_fs = np.ravel(eco_scan['scan_readbacks']) * 1e15
+
+        scan_files = eco_scan['scan_files']
+        # bsread file is 'normally' a first file on a list, but maybe the following should be
+        # implemented in a more robust way
+        bsread_files = [scan_file[0] for scan_file in scan_files]
+
+        return scan_pos_fs, bsread_files
