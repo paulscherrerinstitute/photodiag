@@ -38,6 +38,8 @@ class SpatialEncoder:
             filepath: hdf5 file to be processed with background signal data
         """
         background_data, _, is_data_present = self._read_bsread_file(filepath)
+        if not any(is_data_present):
+            raise Exception("is_data_present is 0 for all pulses in {}".format(self.channel))
 
         # average over all images with data being present
         self._background = background_data[is_data_present].mean(axis=0)
@@ -177,9 +179,6 @@ class SpatialEncoder:
             channel_group = h5f["/data/{}".format(self.channel)]
 
             is_data_present = channel_group["is_data_present"][:]
-            if not any(is_data_present):
-                raise Exception("is_data_present is 0 for all pulses in {}".format(self.channel))
-
             pulse_id = channel_group["pulse_id"][:]
 
             # data is stored as uint16 in hdf5, so has to be casted to float for further analysis,
