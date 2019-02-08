@@ -53,6 +53,9 @@ class SpatialEncoder:
                 'avg_wf': single edge position of averaged raw waveform (per scan step)
                 'avg_edge': mean of edge positions for all raw waveforms (per scan step)
         """
+        if self._background is None:
+            raise Exception("Background calibration is not found")
+
         if method == 'avg_wf':
             scan_pos_fs, bsread_files = self._read_eco_scan(filepath)
 
@@ -158,6 +161,9 @@ class SpatialEncoder:
             edge position(s) in pix, corresponding pulse ids and scan readback values
             cross-correlation results and raw data if `debug` is True
         """
+        if self._background is None:
+            raise Exception("Background calibration is not found")
+
         scan_pos_fs, bsread_files = self._read_eco_scan(filepath)
 
         output = []
