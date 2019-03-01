@@ -16,7 +16,10 @@ class SpatialEncoder:
         step_length: length of a step waveform in pix
     """
 
-    def __init__(self, channel, roi=(200, 300), background_method='div', step_length=50):
+    def __init__(
+            self, channel, roi=(200, 300), background_method='div', step_length=50,
+            events_channel=None,
+        ):
         """Initialize SpatialEncoder object.
 
         Args:
@@ -31,6 +34,7 @@ class SpatialEncoder:
         self.roi = roi
         self.background_method = background_method
         self.step_length = step_length
+        self.events_channel = events_channel
         self._background = None
         self._fs_per_pix = None
 
@@ -40,12 +44,13 @@ class SpatialEncoder:
         Args:
             filepath: hdf5 file to be processed with background signal data
         """
-        background_data, _, is_data_present = self._read_bsread_file(filepath)
+        background_data, _, is_data_present, is_dark = self._read_bsread_file(filepath)
         if not any(is_data_present):
             raise Exception("is_data_present is 0 for all pulses in {}".format(self.channel))
 
-        # average over all images with data being present
-        self._background = background_data[is_data_present].mean(axis=0)
+        # average over all dark images with data being present
+        filter_ind = np.logical_and(is_data_present, is_dark)
+        self._background = background_data[filter_ind].mean(axis=0)
 
     def calibrate_time(self, filepath, method='avg_edge'):
         """Calibrate pixel to time conversion.
@@ -64,7 +69,7 @@ class SpatialEncoder:
 
             edge_pos_pix = np.empty(len(scan_pos_fs))
             for i, bsread_file in enumerate(bsread_files):
-                data, _, is_data_present = self._read_bsread_file(bsread_file)
+                data, _, is_data_present, _ = self._read_bsread_file(bsread_file)
                 data = data[is_data_present].mean(axis=0)
                 edge_pos_pix[i] = self.process(data)
 
@@ -79,7 +84,7 @@ class SpatialEncoder:
         fit_coeff = np.polyfit(edge_pos_pix, scan_pos_fs, 1)
         self._fs_per_pix = fit_coeff[0]
 
-    def process(self, data, debug=False):
+    def process(self, data, is_dark=None, debug=False):
         """Process spatial encoder data.
 
         Edge detection is performed by finding a maximum of cross-convolution between a step
@@ -121,6 +126,9 @@ class SpatialEncoder:
         # correct edge_position for step_length
         edge_position += np.floor(self.step_length/2)
 
+        if is_dark is not None:
+            edge_position[is_dark] = np.nan
+
         if debug:
             output = edge_position, xcorr, data
         else:
@@ -138,11 +146,14 @@ class SpatialEncoder:
             edge position(s) in pix and corresponding pulse ids
             cross-correlation results and raw data if `debug` is True
         """
-        if self._background is None:
-            raise Exception("Background calibration is not found")
+        if self.events_channel:
+            self.calibrate_background(filepath)
+        else:
+            if self._background is None:
+                raise Exception("Background calibration is not found")
 
-        data, pulse_id, is_data_present = self._read_bsread_file(filepath)
-        output = self.process(data, debug=debug)
+        data, pulse_id, is_data_present, is_dark = self._read_bsread_file(filepath)
+        output = self.process(data, debug=debug, is_dark=is_dark)
 
         if debug:
             output[0][~is_data_present] = np.nan
@@ -161,8 +172,11 @@ class SpatialEncoder:
             edge position(s) in pix, corresponding pulse ids and scan readback values
             cross-correlation results and raw data if `debug` is True
         """
-        if self._background is None:
-            raise Exception("Background calibration is not found")
+        if self.events_channel:
+            pass
+        else:
+            if self._background is None:
+                raise Exception("Background calibration is not found")
 
         scan_pos_fs, bsread_files = self._read_eco_scan(filepath)
 
@@ -194,7 +208,15 @@ class SpatialEncoder:
             # averaging every image over y-axis gives the final raw waveforms
             data = channel_group["data"][:, slice(*self.roi), :].astype(float).mean(axis=1)
 
-        return data, pulse_id, is_data_present
+            if self.events_channel:
+                events_channel_group = h5f["/data/{}".format(self.events_channel)]
+                is_dark = events_channel_group["data"][:, 25].astype(bool)
+                ratio = int((len(is_dark) - 1) / (len(data) - 1))
+                is_dark = is_dark[::ratio]
+            else:
+                is_dark = None
+
+        return data, pulse_id, is_data_present, is_dark
 
     @staticmethod
     def _read_eco_scan(filepath):
