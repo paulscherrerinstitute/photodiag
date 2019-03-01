@@ -13,9 +13,10 @@ class SpatialEncoder:
         background_method: {'div', 'sub'} background removal method
             'div': data = data / background - 1
             'sub': data = data - background
+        step_length: length of a step waveform in pix
     """
 
-    def __init__(self, channel, roi=(200, 300), background_method='div'):
+    def __init__(self, channel, roi=(200, 300), background_method='div', step_length=50):
         """Initialize SpatialEncoder object.
 
         Args:
@@ -24,10 +25,12 @@ class SpatialEncoder:
             background_method: {'div', 'sub'} background removal method
                 'div': data = data / background - 1
                 'sub': data = data - background
+            step_length: length of a step waveform in pix
         """
         self.channel = channel
         self.roi = roi
         self.background_method = background_method
+        self.step_length = step_length
         self._background = None
         self._fs_per_pix = None
 
@@ -76,7 +79,7 @@ class SpatialEncoder:
         fit_coeff = np.polyfit(edge_pos_pix, scan_pos_fs, 1)
         self._fs_per_pix = fit_coeff[0]
 
-    def process(self, data, step_length=50, debug=False):
+    def process(self, data, debug=False):
         """Process spatial encoder data.
 
         Edge detection is performed by finding a maximum of cross-convolution between a step
@@ -84,7 +87,6 @@ class SpatialEncoder:
 
         Args:
             data: data to be processed
-            step_length: length of a step waveform in pix
             debug: return debug data
         Returns:
             edge position(s) in pix
@@ -103,8 +105,8 @@ class SpatialEncoder:
             raise Exception("Unknown background removal method '{}'".format(self.background_method))
 
         # prepare a step function
-        step_waveform = np.ones(shape=(step_length, ))
-        step_waveform[:int(step_length/2)] = -1
+        step_waveform = np.ones(shape=(self.step_length, ))
+        step_waveform[:int(self.step_length/2)] = -1
 
         # broadcast cross-correlation function in case of a 2-dimentional array
         if data.ndim == 1:
@@ -117,7 +119,7 @@ class SpatialEncoder:
             raise Exception('Input data should be either 1- or 2-dimentional array')
 
         # correct edge_position for step_length
-        edge_position += np.floor(step_length/2)
+        edge_position += np.floor(self.step_length/2)
 
         if debug:
             output = edge_position, xcorr, data
@@ -126,12 +128,11 @@ class SpatialEncoder:
 
         return output
 
-    def process_hdf5(self, filepath, step_length=50, debug=False):
+    def process_hdf5(self, filepath, debug=False):
         """Process spatial encoder data from hdf5 file.
 
         Args:
             filepath: hdf5 file to be processed
-            step_length: length of a step waveform in pix
             debug: return debug data
         Returns:
             edge position(s) in pix and corresponding pulse ids
@@ -141,7 +142,7 @@ class SpatialEncoder:
             raise Exception("Background calibration is not found")
 
         data, pulse_id, is_data_present = self._read_bsread_file(filepath)
-        output = self.process(data, step_length=step_length, debug=debug)
+        output = self.process(data, debug=debug)
 
         if debug:
             output[0][~is_data_present] = np.nan
@@ -150,12 +151,11 @@ class SpatialEncoder:
 
         return output, pulse_id
 
-    def process_eco(self, filepath, step_length=50, debug=False):
+    def process_eco(self, filepath, debug=False):
         """Process spatial encoder data from eco scan file.
 
         Args:
             filepath: json eco scan file to be processed
-            step_length: length of a step waveform in pix
             debug: return debug data
         Returns:
             edge position(s) in pix, corresponding pulse ids and scan readback values
@@ -169,7 +169,7 @@ class SpatialEncoder:
         output = []
         pulse_id = []
         for bsread_file in bsread_files:
-            out, pid = self.process_hdf5(bsread_file, step_length=step_length, debug=debug)
+            out, pid = self.process_hdf5(bsread_file, debug=debug)
 
             output.append(out)
             pulse_id.append(pid)
