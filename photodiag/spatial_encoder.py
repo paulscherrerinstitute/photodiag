@@ -49,7 +49,10 @@ class SpatialEncoder:
             raise Exception("is_data_present is 0 for all pulses in {}".format(self.channel))
 
         # average over all dark images with data being present
-        filter_ind = np.logical_and(is_data_present, is_dark)
+        if is_dark is None:
+            filter_ind = is_data_present
+        else:
+            filter_ind = np.logical_and(is_data_present, is_dark)
         self._background = background_data[filter_ind].mean(axis=0)
 
     def calibrate_time(self, filepath, method='avg_edge'):
@@ -210,9 +213,8 @@ class SpatialEncoder:
 
             if self.events_channel:
                 events_channel_group = h5f["/data/{}".format(self.events_channel)]
-                is_dark = events_channel_group["data"][:, 25].astype(bool)
-                ratio = int((len(is_dark) - 1) / (len(data) - 1))
-                is_dark = is_dark[::ratio]
+                index = pulse_id - events_channel_group["pulse_id"][0]
+                is_dark = events_channel_group["data"][index, 25].astype(bool)
             else:
                 is_dark = None
 
