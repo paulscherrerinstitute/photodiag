@@ -220,6 +220,22 @@ class SpatialEncoder:
 
         return data, pulse_id, is_data_present, is_dark
 
+    def _read_bsread_image(self, filepath):
+        """Read spatial encoder images from bsread hdf5 file.
+
+        Args:
+            filepath: path to a bsread hdf5 file to read data from
+        Returns:
+            data
+        """
+        with h5py.File(filepath, 'r') as h5f:
+            channel_group = h5f["/data/{}".format(self.channel)]
+
+            # data is stored as uint16 in hdf5, so has to be casted to float for further analysis,
+            data = channel_group["data"][:, slice(*self.roi), :].astype(float)
+
+        return data
+
     @staticmethod
     def _read_eco_scan(filepath):
         """Extract `scan_readbacks` and corresponding bsread `scan_files` from an eco scan.
