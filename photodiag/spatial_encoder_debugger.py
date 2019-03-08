@@ -54,30 +54,38 @@ class SpatialEncoderDebugger(SpatialEncoder):
                 image='image', x='x', y='y', dw='dw', dh='dh', source=source_im,
                 palette='Viridis256',
             )
-            s_im = Span(location=edge_pos[0], dimension='height', line_color='red')
-            p_im.add_layout(s_im)
 
             p_nobkg = figure(height=200, width=800, title='Projection and background')
             p_nobkg.line('x', 'y_bkg', source=source_orig, line_color='black')
             p_nobkg.line('x', 'y_proj', source=source_orig)
-            s_nobkg = Span(location=edge_pos[0], dimension='height', line_color='red')
-            p_nobkg.add_layout(s_nobkg)
-
             p_nobkg.x_range = p_im.x_range
 
             p_orig = figure(height=200, width=800, title='No background data')
             p_orig.line('x', 'y', source=source_orig)
-            s_orig = Span(location=edge_pos[0], dimension='height', line_color='red')
-            p_orig.add_layout(s_orig)
-
             p_orig.x_range = p_im.x_range
 
             p_xcorr = figure(height=200, width=800, title='Xcorr')
             p_xcorr.line('x', 'y', source=source_xcorr)
-            s_xcorr = Span(location=edge_pos[0], dimension='height', line_color='red')
-            p_xcorr.add_layout(s_xcorr)
-
             p_xcorr.x_range = p_im.x_range
+
+            span_args = dict(dimension='height', line_color='red')
+            if np.isnan(edge_pos[0]):
+                span_args['location'] = 0
+                span_args['visible'] = False
+            else:
+                span_args['location'] = edge_pos[0]
+
+            s_im = Span(**span_args)
+            p_im.add_layout(s_im)
+
+            s_nobkg = Span(**span_args)
+            p_nobkg.add_layout(s_nobkg)
+
+            s_orig = Span(**span_args)
+            p_orig.add_layout(s_orig)
+
+            s_xcorr = Span(**span_args)
+            p_xcorr.add_layout(s_xcorr)
 
             def slider_callback(_attr, _old, new):
                 source_im.data.update(image=[images[new]])
