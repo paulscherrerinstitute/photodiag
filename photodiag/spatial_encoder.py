@@ -74,14 +74,18 @@ class SpatialEncoder:
             for i, bsread_file in enumerate(bsread_files):
                 data, _, is_data_present, _ = self._read_bsread_file(bsread_file)
                 data = data[is_data_present].mean(axis=0)
-                edge_pos_pix[i] = self.process(data)
+
+                results = self.process(data)
+                edge_pos_pix[i] = results['egde_pos']
 
         elif method == 'avg_edge':
-            results, _, scan_pos_fs = self.process_eco(filepath)
+            results = self.process_eco(filepath)
 
-            edge_pos_pix = np.empty(len(scan_pos_fs))
+            scan_pos_fs = np.empty(len(results))
+            edge_pos_pix = np.empty(len(results))
             for i, data in enumerate(results):
-                edge_pos_pix[i] = data.nanmean()
+                scan_pos_fs[i] = data['scan_pos_fs']
+                edge_pos_pix[i] = data['edge_pos'].nanmean()
 
         # pixel -> fs conversion coefficient
         fit_coeff = np.polyfit(edge_pos_pix, scan_pos_fs, 1)
@@ -132,10 +136,11 @@ class SpatialEncoder:
         if is_dark is not None:
             edge_position[is_dark] = np.nan
 
+        output = {'edge_pos': edge_position}
+
         if debug:
-            output = edge_position, xcorr, data
-        else:
-            output = edge_position
+            output['xcorr'] = xcorr
+            output['raw_input'] = data
 
         return output
 
@@ -158,12 +163,10 @@ class SpatialEncoder:
         data, pulse_id, is_data_present, is_dark = self._read_bsread_file(filepath)
         output = self.process(data, debug=debug, is_dark=is_dark)
 
-        if debug:
-            output[0][~is_data_present] = np.nan
-        else:
-            output[~is_data_present] = np.nan
+        output['edge_pos'][~is_data_present] = np.nan
+        output['pulse_id'] = pulse_id
 
-        return output, pulse_id
+        return output
 
     def process_eco(self, filepath, debug=False):
         """Process spatial encoder data from eco scan file.
@@ -184,14 +187,12 @@ class SpatialEncoder:
         scan_pos_fs, bsread_files = self._read_eco_scan(filepath)
 
         output = []
-        pulse_id = []
-        for bsread_file in bsread_files:
-            out, pid = self.process_hdf5(bsread_file, debug=debug)
+        for i, bsread_file in enumerate(bsread_files):
+            step_output = self.process_hdf5(bsread_file, debug=debug)
+            step_output['scan_pos_fs'] = scan_pos_fs[i]
+            output.append(step_output)
 
-            output.append(out)
-            pulse_id.append(pid)
-
-        return output, pulse_id, scan_pos_fs
+        return output
 
     def _read_bsread_file(self, filepath):
         """Read spatial encoder data from bsread hdf5 file.

@@ -10,13 +10,13 @@ output_notebook()
 class SpatialEncoderDebugger(SpatialEncoder):
     def plot_hdf5(self, filepath, port=8888):
         def modify_doc(doc):
-            res, _ = self.process_hdf5(filepath, debug=True)
+            results = self.process_hdf5(filepath, debug=True)
             images = self._read_bsread_image(filepath)
             images_proj = images.mean(axis=1)
 
-            edge_pos = res[0]
-            xcorr_data = res[1]
-            orig_data = res[2]
+            edge_pos = results['edge_pos']
+            xcorr_data = results['xcorr']
+            orig_data = results['raw_input']
 
             source_im = ColumnDataSource(
                 data=dict(
@@ -100,7 +100,7 @@ class SpatialEncoderDebugger(SpatialEncoder):
                     s_orig.location = edge_pos[new]
                     s_xcorr.location = edge_pos[new]
 
-            slider = Slider(start=0, end=len(res[0]), value=0, step=1, title="Shot")
+            slider = Slider(start=0, end=len(edge_pos), value=0, step=1, title="Shot")
             slider.on_change('value', slider_callback)
 
             layout = gridplot(
