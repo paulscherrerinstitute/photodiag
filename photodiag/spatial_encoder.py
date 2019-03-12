@@ -147,6 +147,7 @@ class SpatialEncoder:
         # find edges
         xcorr = np.apply_along_axis(np.correlate, 1, refined_data, v=step_waveform, mode='valid')
         edge_position = np.argmax(xcorr, axis=1).astype(float) * self.refinement
+        xcorr_amplitude = np.amax(xcorr, axis=1)
 
         # correct edge_position for step_length
         edge_position += np.floor(self.step_length/2)
@@ -154,7 +155,7 @@ class SpatialEncoder:
         if is_dark is not None:
             edge_position[is_dark] = np.nan
 
-        output = {'edge_pos': edge_position}
+        output = {'edge_pos': edge_position, 'xcorr_ampl': xcorr_amplitude}
 
         if debug:
             output['xcorr'] = xcorr
