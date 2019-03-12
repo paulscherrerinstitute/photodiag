@@ -41,7 +41,7 @@ class SpatialEncoderDebugger(SpatialEncoder):
             xcorr_len = np.shape(xcorr_data)[1]
             source_xcorr = ColumnDataSource(
                 data=dict(
-                    x=np.arange(xcorr_len) + np.floor(self.step_length/2),
+                    x=np.arange(xcorr_len) * self.refinement + np.floor(self.step_length/2),
                     y=xcorr_data[0],
                 )
             )

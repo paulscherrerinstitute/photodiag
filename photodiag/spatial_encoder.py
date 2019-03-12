@@ -18,7 +18,7 @@ class SpatialEncoder:
 
     def __init__(
             self, channel, roi=(200, 300), background_method='div', step_length=50,
-            events_channel=None,
+            events_channel=None, refinement=1,
         ):
         """Initialize SpatialEncoder object.
 
@@ -34,6 +34,7 @@ class SpatialEncoder:
         self.roi = roi
         self.background_method = background_method
         self.step_length = step_length
+        self.refinement = refinement
         self.events_channel = events_channel
         self._background = None
         self._fs_per_pix = None
@@ -122,13 +123,30 @@ class SpatialEncoder:
         else:
             raise Exception("Unknown background removal method '{}'".format(self.background_method))
 
-        # prepare a step function
+        # refine data
+        def _interp(fp, xp, x):  # utility function to be used with apply_along_axis
+            return np.interp(x, xp, fp)
+
+        data_length = data.shape[1]
+        refined_data = np.apply_along_axis(
+            _interp, 1, data,
+            x=np.arange(0, data_length-1, self.refinement),
+            xp=np.arange(data_length),
+        )
+
+        # prepare a step function and refine it
         step_waveform = np.ones(shape=(self.step_length, ))
         step_waveform[:int(self.step_length/2)] = -1
 
+        step_waveform = np.interp(
+            x=np.arange(0, self.step_length-1, self.refinement),
+            xp=np.arange(self.step_length),
+            fp=step_waveform,
+        )
+
         # find edges
-        xcorr = np.apply_along_axis(np.correlate, 1, data, v=step_waveform, mode='valid')
-        edge_position = np.argmax(xcorr, axis=1).astype(float)
+        xcorr = np.apply_along_axis(np.correlate, 1, refined_data, v=step_waveform, mode='valid')
+        edge_position = np.argmax(xcorr, axis=1).astype(float) * self.refinement
 
         # correct edge_position for step_length
         edge_position += np.floor(self.step_length/2)
