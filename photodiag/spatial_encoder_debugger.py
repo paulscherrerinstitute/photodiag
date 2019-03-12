@@ -9,6 +9,12 @@ output_notebook()
 
 class SpatialEncoderDebugger(SpatialEncoder):
     def plot_hdf5(self, filepath, port=8888):
+        """Experimental debugger for hdf5 files in a jupyter notebook.
+
+        Args:
+            filepath: hdf5 file to be processed
+            port: port number of the running jupyter notebook
+        """
         def modify_doc(doc):
             results = self.process_hdf5(filepath, debug=True)
             images = self._read_bsread_image(filepath)

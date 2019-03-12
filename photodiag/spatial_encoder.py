@@ -5,17 +5,6 @@ import numpy as np
 
 
 class SpatialEncoder:
-    """Class describing spatial encoder setup.
-
-    Attributes:
-        channel: data channel of spatial encoder
-        roi: region of interest for spatial encoder image projection along y-axis
-        background_method: {'div', 'sub'} background removal method
-            'div': data = data / background - 1
-            'sub': data = data - background
-        step_length: length of a step waveform in pix
-    """
-
     def __init__(
             self, channel, roi=(200, 300), background_method='div', step_length=50,
             events_channel=None, refinement=1,
@@ -29,6 +18,8 @@ class SpatialEncoder:
                 'div': data = data / background - 1
                 'sub': data = data - background
             step_length: length of a step waveform in pix
+            events_channel: data channel of events
+            refinement: quantisation size for linear interpolation of data and a step waveform
         """
         self.channel = channel
         self.roi = roi
@@ -100,6 +91,7 @@ class SpatialEncoder:
 
         Args:
             data: data to be processed
+            is_dark: indices for dark shots
             debug: return debug data
         Returns:
             edge position(s) in pix
