@@ -83,7 +83,7 @@ class SpatialEncoder:
         fit_coeff = np.polyfit(edge_pos_pix, scan_pos_fs, 1)
         self._fs_per_pix = fit_coeff[0]
 
-    def process(self, data, is_dark=None, debug=False):
+    def process(self, data, debug=False):
         """Process spatial encoder data.
 
         Edge detection is performed by finding a maximum of cross-convolution between a step
@@ -91,7 +91,6 @@ class SpatialEncoder:
 
         Args:
             data: data to be processed
-            is_dark: indices for dark shots
             debug: return debug data
         Returns:
             edge position(s) in pix
@@ -144,9 +143,6 @@ class SpatialEncoder:
         # correct edge_position for step_length
         edge_position += np.floor(self.step_length/2)
 
-        if is_dark is not None:
-            edge_position[is_dark] = np.nan
-
         output = {'edge_pos': edge_position, 'xcorr_ampl': xcorr_amplitude}
 
         if debug:
@@ -172,7 +168,10 @@ class SpatialEncoder:
                 raise Exception("Background calibration is not found")
 
         data, pulse_id, is_data_present, is_dark = self._read_bsread_file(filepath)
-        output = self.process(data, debug=debug, is_dark=is_dark)
+        output = self.process(data, debug=debug)
+
+        if is_dark is not None:
+            output['edge_position'][is_dark] = np.nan
 
         output['edge_pos'][~is_data_present] = np.nan
         output['pulse_id'] = pulse_id
@@ -231,22 +230,6 @@ class SpatialEncoder:
                 is_dark = None
 
         return data, pulse_id, is_data_present, is_dark
-
-    def _read_bsread_image(self, filepath):
-        """Read spatial encoder images from bsread hdf5 file.
-
-        Args:
-            filepath: path to a bsread hdf5 file to read data from
-        Returns:
-            data
-        """
-        with h5py.File(filepath, 'r') as h5f:
-            channel_group = h5f["/data/{}".format(self.channel)]
-
-            # data is stored as uint16 in hdf5, so has to be casted to float for further analysis,
-            data = channel_group["data"][:, slice(*self.roi), :].astype(float)
-
-        return data
 
     @staticmethod
     def _read_eco_scan(filepath):

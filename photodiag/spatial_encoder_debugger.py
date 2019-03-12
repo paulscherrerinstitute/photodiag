@@ -1,7 +1,9 @@
+import h5py
 import numpy as np
 from bokeh.layouts import gridplot
-from bokeh.models import ColumnDataSource, Span, Slider
+from bokeh.models import ColumnDataSource, Slider, Span
 from bokeh.plotting import figure, output_notebook, show
+
 from photodiag.spatial_encoder import SpatialEncoder
 
 output_notebook()
@@ -34,7 +36,7 @@ class SpatialEncoderDebugger(SpatialEncoder):
                 )
             )
 
-            data_len = np.shape(orig_data)[1]
+            data_len = orig_data.shape[1]
             source_orig = ColumnDataSource(
                 data=dict(
                     x=np.arange(data_len),
@@ -44,7 +46,7 @@ class SpatialEncoderDebugger(SpatialEncoder):
                 )
             )
 
-            xcorr_len = np.shape(xcorr_data)[1]
+            xcorr_len = xcorr_data.shape[1]
             source_xcorr = ColumnDataSource(
                 data=dict(
                     x=np.arange(xcorr_len) * self.refinement + np.floor(self.step_length/2),
@@ -125,3 +127,19 @@ class SpatialEncoderDebugger(SpatialEncoder):
             doc.add_root(layout)
 
         show(modify_doc, notebook_url="http://localhost:{}".format(port))
+
+    def _read_bsread_image(self, filepath):
+        """Read spatial encoder images from bsread hdf5 file.
+
+        Args:
+            filepath: path to a bsread hdf5 file to read data from
+        Returns:
+            data
+        """
+        with h5py.File(filepath, 'r') as h5f:
+            channel_group = h5f["/data/{}".format(self.channel)]
+
+            # data is stored as uint16 in hdf5, so has to be casted to float for further analysis,
+            data = channel_group["data"][:, slice(*self.roi), :].astype(float)
+
+        return data
