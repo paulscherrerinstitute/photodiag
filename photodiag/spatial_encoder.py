@@ -107,6 +107,12 @@ class SpatialEncoder:
         if self._background is None:
             raise Exception("Background calibration is not found")
 
+        # transform vector to array for consistency
+        if data.ndim == 1:
+            data = data[np.newaxis, :]
+        elif data.ndim > 2:
+            raise Exception('Input data should be either 1- or 2-dimentional array')
+
         # remove background
         if self.background_method == 'sub':
             data -= self._background
@@ -120,15 +126,9 @@ class SpatialEncoder:
         step_waveform = np.ones(shape=(self.step_length, ))
         step_waveform[:int(self.step_length/2)] = -1
 
-        # broadcast cross-correlation function in case of a 2-dimentional array
-        if data.ndim == 1:
-            xcorr = np.correlate(data, step_waveform, mode='valid')
-            edge_position = np.argmax(xcorr).astype(float)
-        elif data.ndim == 2:
-            xcorr = np.apply_along_axis(np.correlate, 1, data, step_waveform, mode='valid')
-            edge_position = np.argmax(xcorr, axis=1).astype(float)
-        else:
-            raise Exception('Input data should be either 1- or 2-dimentional array')
+        # find edges
+        xcorr = np.apply_along_axis(np.correlate, 1, data, v=step_waveform, mode='valid')
+        edge_position = np.argmax(xcorr, axis=1).astype(float)
 
         # correct edge_position for step_length
         edge_position += np.floor(self.step_length/2)
