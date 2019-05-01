@@ -29,10 +29,10 @@ class SpatialEncoderDebugger(SpatialEncoder):
             source_im = ColumnDataSource(
                 data=dict(
                     image=[images[0]],
-                    x=[0],
-                    y=[0],
-                    dw=[1000],
-                    dh=[100],
+                    x=[-0.5],
+                    y=[self.roi[0]],
+                    dw=[images.shape[2]],
+                    dh=[self.roi[1]-self.roi[0]],
                 )
             )
 
@@ -56,7 +56,7 @@ class SpatialEncoderDebugger(SpatialEncoder):
 
             p_im = figure(
                 height=200, width=800, title='Camera ROI Image',
-                x_range=(0, 1000), y_range=(0, 100),
+                x_range=(0, images.shape[2]), y_range=self.roi,
             )
             p_im.image(
                 image='image', x='x', y='y', dw='dw', dh='dh', source=source_im,
