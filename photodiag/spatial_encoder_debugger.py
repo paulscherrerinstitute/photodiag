@@ -137,7 +137,10 @@ class SpatialEncoderDebugger(SpatialEncoder):
             data
         """
         with h5py.File(filepath, 'r') as h5f:
-            channel_group = h5f["/data/{}".format(self.channel)]
+            if "/data" in h5f:
+                channel_group = h5f["/data/{}".format(self.channel)]
+            else:
+                channel_group = h5f["/{}".format(self.channel)]
 
             # data is stored as uint16 in hdf5, so has to be casted to float for further analysis,
             data = channel_group["data"][:, slice(*self.roi), :].astype(float)

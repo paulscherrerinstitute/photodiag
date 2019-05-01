@@ -209,15 +209,22 @@ class SpatialEncoder:
             data, pulse_id
         """
         with h5py.File(filepath, 'r') as h5f:
-            channel_group = h5f["/data/{}".format(self.channel)]
-            pulse_id = channel_group["pulse_id"][:]
+            # get groups according to the data format
+            if "/data" in h5f:
+                channel_group = h5f["/data/{}".format(self.channel)]
+                if self.events_channel:
+                    events_channel_group = h5f["/data/{}".format(self.events_channel)]
+            else:
+                channel_group = h5f["/{}".format(self.channel)]
+                if self.events_channel:
+                    events_channel_group = h5f["/{}".format(self.events_channel)]
 
             # data is stored as uint16 in hdf5, so has to be casted to float for further analysis,
             # averaging every image over y-axis gives the final raw waveforms
             data = channel_group["data"][:, slice(*self.roi), :].astype(float).mean(axis=1)
+            pulse_id = channel_group["pulse_id"][:]
 
             if self.events_channel:
-                events_channel_group = h5f["/data/{}".format(self.events_channel)]
                 index = pulse_id - events_channel_group["pulse_id"][0]
                 is_dark = events_channel_group["data"][index, 25].astype(bool)
             else:
