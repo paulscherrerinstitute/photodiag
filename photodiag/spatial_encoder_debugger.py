@@ -116,7 +116,7 @@ class SpatialEncoderDebugger(SpatialEncoder):
                     s_orig.location = edge_pos[new]
                     s_xcorr.location = edge_pos[new]
 
-            slider = Slider(start=0, end=len(edge_pos), value=0, step=1, title="Shot")
+            slider = Slider(start=0, end=len(edge_pos)-1, value=0, step=1, title="Shot")
             slider.on_change('value', slider_callback)
 
             layout = gridplot(
