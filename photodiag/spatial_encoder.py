@@ -36,16 +36,13 @@ class SpatialEncoder:
         Args:
             filepath: hdf5 file to be processed with background signal data
         """
-        background_data, _, is_data_present, is_dark = self._read_bsread_file(filepath)
-        if not any(is_data_present):
-            raise Exception("is_data_present is 0 for all pulses in {}".format(self.channel))
+        background_data, _, is_dark = self._read_bsread_file(filepath)
 
-        # average over all dark images with data being present
+        # average over all dark images
         if is_dark is None:
-            filter_ind = is_data_present
+            self._background = background_data.mean(axis=0)
         else:
-            filter_ind = np.logical_and(is_data_present, is_dark)
-        self._background = background_data[filter_ind].mean(axis=0)
+            self._background = background_data[is_dark].mean(axis=0)
 
     def calibrate_time(self, filepath, method='avg_edge'):
         """Calibrate pixel to time conversion.
@@ -64,8 +61,8 @@ class SpatialEncoder:
 
             edge_pos_pix = np.empty(len(scan_pos_fs))
             for i, bsread_file in enumerate(bsread_files):
-                data, _, is_data_present, _ = self._read_bsread_file(bsread_file)
-                data = data[is_data_present].mean(axis=0)
+                data, _, _ = self._read_bsread_file(bsread_file)
+                data = data.mean(axis=0)
 
                 results = self.process(data)
                 edge_pos_pix[i] = results['egde_pos']
@@ -167,13 +164,12 @@ class SpatialEncoder:
             if self._background is None:
                 raise Exception("Background calibration is not found")
 
-        data, pulse_id, is_data_present, is_dark = self._read_bsread_file(filepath)
+        data, pulse_id, is_dark = self._read_bsread_file(filepath)
         output = self.process(data, debug=debug)
 
         if is_dark is not None:
             output['edge_position'][is_dark] = np.nan
 
-        output['edge_pos'][~is_data_present] = np.nan
         output['pulse_id'] = pulse_id
 
         return output
@@ -210,12 +206,10 @@ class SpatialEncoder:
         Args:
             filepath: path to a bsread hdf5 file to read data from
         Returns:
-            data, pulse_id, is_data_present
+            data, pulse_id
         """
         with h5py.File(filepath, 'r') as h5f:
             channel_group = h5f["/data/{}".format(self.channel)]
-
-            is_data_present = channel_group["is_data_present"][:]
             pulse_id = channel_group["pulse_id"][:]
 
             # data is stored as uint16 in hdf5, so has to be casted to float for further analysis,
@@ -229,7 +223,7 @@ class SpatialEncoder:
             else:
                 is_dark = None
 
-        return data, pulse_id, is_data_present, is_dark
+        return data, pulse_id, is_dark
 
     @staticmethod
     def _read_eco_scan(filepath):
