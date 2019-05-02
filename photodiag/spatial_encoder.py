@@ -219,10 +219,13 @@ class SpatialEncoder:
                 if self.events_channel:
                     events_channel_group = h5f["/{}".format(self.events_channel)]
 
+            pulse_id = channel_group["pulse_id"][:]
+            is_present = pulse_id != 0
+            pulse_id = pulse_id[is_present]
+
             # data is stored as uint16 in hdf5, so has to be casted to float for further analysis,
             # averaging every image over y-axis gives the final raw waveforms
-            data = channel_group["data"][:, slice(*self.roi), :].astype(float).mean(axis=1)
-            pulse_id = channel_group["pulse_id"][:]
+            data = channel_group["data"][is_present, slice(*self.roi), :].astype(float).mean(axis=1)
 
             if self.events_channel:
                 index = pulse_id - events_channel_group["pulse_id"][0]

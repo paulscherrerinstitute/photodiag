@@ -142,7 +142,10 @@ class SpatialEncoderDebugger(SpatialEncoder):
             else:
                 channel_group = h5f["/{}".format(self.channel)]
 
+            pulse_id = channel_group["pulse_id"][:]
+            is_present = pulse_id != 0
+
             # data is stored as uint16 in hdf5, so has to be casted to float for further analysis,
-            data = channel_group["data"][:, slice(*self.roi), :].astype(float)
+            data = channel_group["data"][is_present, slice(*self.roi), :].astype(float)
 
         return data
