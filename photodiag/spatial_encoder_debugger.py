@@ -68,7 +68,7 @@ class SpatialEncoderDebugger(SpatialEncoder):
             p_nobkg.line('x', 'y_proj', source=source_orig)
             p_nobkg.x_range = p_im.x_range
 
-            p_orig = figure(height=200, width=800, title='No background data')
+            p_orig = figure(height=200, width=800, title='Background removed')
             p_orig.line('x', 'y', source=source_orig)
             p_orig.x_range = p_im.x_range
 
