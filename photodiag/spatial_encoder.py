@@ -169,7 +169,7 @@ class SpatialEncoder:
         output = self.process(data, debug=debug)
 
         if is_dark is not None:
-            output['edge_position'][is_dark] = np.nan
+            output['edge_pos'][is_dark] = np.nan
 
         output['pulse_id'] = pulse_id
 
