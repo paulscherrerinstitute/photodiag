@@ -10,7 +10,7 @@
             "cwd": "${workspaceFolder}",
             "args": ["serve", "${workspaceFolder}/apps/palm", "--args", "alvra"],
             "stopOnEntry": false,
-            "console": "none",
+            "console": "internalConsole",
             "env": {},
         },
         {
@@ -22,7 +22,7 @@
             "cwd": "${workspaceFolder}",
             "args": ["serve", "${workspaceFolder}/apps/palm", "--args", "bernina"],
             "stopOnEntry": false,
-            "console": "none",
+            "console": "internalConsole",
             "env": {},
         },
     ]
