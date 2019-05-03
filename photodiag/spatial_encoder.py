@@ -7,7 +7,7 @@ import numpy as np
 class SpatialEncoder:
     def __init__(
             self, channel, roi=(200, 300), background_method='div', step_length=50,
-            events_channel=None, refinement=1,
+            events_channel=None, dark_shot_event=21, refinement=1,
         ):
         """Initialize SpatialEncoder object.
 
@@ -27,6 +27,7 @@ class SpatialEncoder:
         self.step_length = step_length
         self.refinement = refinement
         self.events_channel = events_channel
+        self.dark_shot_event = dark_shot_event
         self._background = None
         self._fs_per_pix = None
 
@@ -229,7 +230,7 @@ class SpatialEncoder:
 
             if self.events_channel:
                 index = pulse_id - events_channel_group["pulse_id"][0]
-                is_dark = events_channel_group["data"][index, 25].astype(bool)
+                is_dark = events_channel_group["data"][index, self.dark_shot_event].astype(bool)
             else:
                 is_dark = None
 
