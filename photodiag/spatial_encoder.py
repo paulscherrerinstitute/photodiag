@@ -1,4 +1,5 @@
 import json
+import warnings
 
 import h5py
 import numpy as np
@@ -207,32 +208,47 @@ class SpatialEncoder:
         Args:
             filepath: path to a bsread hdf5 file to read data from
         Returns:
-            data, pulse_id
+            data, pulse_id, is_dark
         """
         with h5py.File(filepath, 'r') as h5f:
-            # get groups according to the data format
             if "/data" in h5f:
-                channel_group = h5f["/data/{}".format(self.channel)]
-                if self.events_channel:
-                    events_channel_group = h5f["/data/{}".format(self.events_channel)]
+                # sf_databuffer_writer format
+                path_prefix = "/data/{}"
             else:
-                channel_group = h5f["/{}".format(self.channel)]
-                if self.events_channel:
-                    events_channel_group = h5f["/{}".format(self.events_channel)]
+                # bsread format
+                path_prefix = "/{}"
 
+            channel_group = h5f[path_prefix.format(self.channel)]
             pulse_id = channel_group["pulse_id"][:]
-            is_present = pulse_id != 0
-            pulse_id = pulse_id[is_present]
+
+            if self.events_channel:
+                events_channel_group = h5f[path_prefix.format(self.events_channel)]
+                events_pulse_id = events_channel_group["pulse_id"][:]
+
+                pid, index, event_index = np.intersect1d(
+                    pulse_id, events_pulse_id, return_indices=True,
+                )
+
+                # if both groups have 0 in their pulse_id
+                pid_zero_ind = pid == 0
+                if any(pid_zero_ind):
+                    warnings.warn(f"\n \
+                    File: {filepath}\n \
+                    Both '{self.channel}' and '{self.events_channel}' have zeroed pulse_id(s).\n")
+                    index = index[~pid_zero_ind]
+                    event_index = event_index[~pid_zero_ind]
+
+                is_dark = events_channel_group["data"][event_index, self.dark_shot_event] \
+                    .astype(bool)
+
+            else:
+                index = pulse_id != 0
+                is_dark = None
 
             # data is stored as uint16 in hdf5, so has to be casted to float for further analysis,
             # averaging every image over y-axis gives the final raw waveforms
-            data = channel_group["data"][is_present, slice(*self.roi), :].astype(float).mean(axis=1)
-
-            if self.events_channel:
-                index = pulse_id - events_channel_group["pulse_id"][0]
-                is_dark = events_channel_group["data"][index, self.dark_shot_event].astype(bool)
-            else:
-                is_dark = None
+            data = channel_group["data"][index, slice(*self.roi), :].astype(float).mean(axis=1)
+            pulse_id = pulse_id[index]
 
         return data, pulse_id, is_dark
 
