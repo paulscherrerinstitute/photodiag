@@ -1,4 +1,3 @@
-import h5py
 import numpy as np
 from IPython.display import display
 from ipywidgets import IntSlider, Layout
@@ -20,7 +19,7 @@ class SpatialEncoderViewer(SpatialEncoder):
             filepath: hdf5 file to be processed
         """
         results = self.process_hdf5(filepath, debug=True)
-        images = self._read_bsread_image(filepath)
+        _, _, _, images = self._read_bsread_file(filepath, return_images=True)
         images_proj = images.mean(axis=1)
 
         edge_pos = results['edge_pos']
@@ -135,25 +134,3 @@ class SpatialEncoderViewer(SpatialEncoder):
 
         slider.observe(slider_callback, names='value')
         display(slider)
-
-    def _read_bsread_image(self, filepath):
-        """Read spatial encoder images from bsread hdf5 file.
-
-        Args:
-            filepath: path to a bsread hdf5 file to read data from
-        Returns:
-            data
-        """
-        with h5py.File(filepath, 'r') as h5f:
-            if "/data" in h5f:
-                channel_group = h5f["/data/{}".format(self.channel)]
-            else:
-                channel_group = h5f["/{}".format(self.channel)]
-
-            pulse_id = channel_group["pulse_id"][:]
-            is_present = pulse_id != 0
-
-            # data is stored as uint16 in hdf5, so has to be casted to float for further analysis,
-            data = channel_group["data"][is_present, slice(*self.roi), :].astype(float)
-
-        return data

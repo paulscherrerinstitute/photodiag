@@ -202,7 +202,7 @@ class SpatialEncoder:
 
         return output
 
-    def _read_bsread_file(self, filepath):
+    def _read_bsread_file(self, filepath, return_images=False):
         """Read spatial encoder data from bsread hdf5 file.
 
         Args:
@@ -245,10 +245,16 @@ class SpatialEncoder:
                 index = pulse_id != 0
                 is_dark = None
 
-            # data is stored as uint16 in hdf5, so has to be casted to float for further analysis,
-            # averaging every image over y-axis gives the final raw waveforms
-            data = channel_group["data"][index, slice(*self.roi), :].astype(float).mean(axis=1)
             pulse_id = pulse_id[index]
+
+            # data is stored as uint16 in hdf5, so has to be casted to float for further analysis,
+            images = channel_group["data"][index, slice(*self.roi), :].astype(float)
+
+            # averaging every image over y-axis gives the final raw waveforms
+            data = images.mean(axis=1)
+
+        if return_images:
+            return data, pulse_id, is_dark, images
 
         return data, pulse_id, is_dark
 
