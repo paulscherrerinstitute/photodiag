@@ -1,5 +1,7 @@
 import json
 import warnings
+from functools import partial
+from multiprocessing import Pool
 
 import h5py
 import numpy as np
@@ -46,7 +48,7 @@ class SpatialEncoder:
         else:
             self._background = background_data[is_dark].mean(axis=0)
 
-    def calibrate_time(self, filepath, method='avg_edge'):
+    def calibrate_time(self, filepath, method='avg_edge', nproc=1):
         """Calibrate pixel to time conversion.
 
         Args:
@@ -70,7 +72,7 @@ class SpatialEncoder:
                 edge_pos_pix[i] = results['egde_pos']
 
         elif method == 'avg_edge':
-            results = self.process_eco(filepath)
+            results = self.process_eco(filepath, nproc=nproc)
 
             scan_pos_fs = np.empty(len(results))
             edge_pos_pix = np.empty(len(results))
@@ -176,7 +178,7 @@ class SpatialEncoder:
 
         return output
 
-    def process_eco(self, filepath, debug=False):
+    def process_eco(self, filepath, nproc=1, debug=False):
         """Process spatial encoder data from eco scan file.
 
         Args:
@@ -194,11 +196,11 @@ class SpatialEncoder:
 
         scan_pos_fs, bsread_files = self._read_eco_scan(filepath)
 
-        output = []
-        for i, bsread_file in enumerate(bsread_files):
-            step_output = self.process_hdf5(bsread_file, debug=debug)
+        with Pool(processes=nproc) as pool:
+            output = pool.map(partial(self.process_hdf5, debug=debug), bsread_files)
+
+        for i, step_output in enumerate(output):
             step_output['scan_pos_fs'] = scan_pos_fs[i]
-            output.append(step_output)
 
         return output
 
