@@ -34,14 +34,13 @@ class SpatialEncoder:
         self._background = None
         self._fs_per_pix = None
 
-    def calibrate_background(self, filepath):
+    def calibrate_background(self, background_data, is_dark):
         """Calibrate spatial encoder background.
 
         Args:
-            filepath: hdf5 file to be processed with background signal data
+            background_data: array with background signal data
+            is_dark: index of dark shots
         """
-        background_data, _, is_dark = self._read_bsread_file(filepath)
-
         # average over all dark images
         if is_dark is None:
             self._background = background_data.mean(axis=0)
@@ -162,13 +161,14 @@ class SpatialEncoder:
             edge position(s) in pix and corresponding pulse ids
             cross-correlation results and raw data if `debug` is True
         """
+        data, pulse_id, is_dark = self._read_bsread_file(filepath)
+
         if self.events_channel:
-            self.calibrate_background(filepath)
+            self.calibrate_background(data, is_dark)
         else:
             if self._background is None:
                 raise Exception("Background calibration is not found")
 
-        data, pulse_id, is_dark = self._read_bsread_file(filepath)
         output = self.process(data, debug=debug)
 
         if is_dark is not None:
