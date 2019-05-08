@@ -56,7 +56,7 @@ class SpatialEncoder:
                 'avg_wf': single edge position of averaged raw waveform (per scan step)
                 'avg_edge': mean of edge positions for all raw waveforms (per scan step)
         """
-        if self._background is None:
+        if self.events_channel is None and self._background is None:
             raise Exception("Background calibration is not found")
 
         if method == 'avg_wf':
@@ -68,7 +68,7 @@ class SpatialEncoder:
                 data = data.mean(axis=0)
 
                 results = self.process(data)
-                edge_pos_pix[i] = results['egde_pos']
+                edge_pos_pix[i] = results['edge_pos']
 
         elif method == 'avg_edge':
             results = self.process_eco(filepath, nproc=nproc)
@@ -77,7 +77,7 @@ class SpatialEncoder:
             edge_pos_pix = np.empty(len(results))
             for i, data in enumerate(results):
                 scan_pos_fs[i] = data['scan_pos_fs']
-                edge_pos_pix[i] = data['edge_pos'].nanmean()
+                edge_pos_pix[i] = np.nanmean(data['edge_pos'])
 
         # pixel -> fs conversion coefficient
         fit_coeff = np.polyfit(edge_pos_pix, scan_pos_fs, 1)
