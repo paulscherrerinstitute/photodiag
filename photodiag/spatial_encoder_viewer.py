@@ -1,11 +1,11 @@
 import numpy as np
 from IPython.display import display
-from ipywidgets import IntSlider, Layout
-
+from ipywidgets import IntRangeSlider, IntSlider, Layout
 from bokeh.io import output_notebook, push_notebook, show
 from bokeh.layouts import gridplot
 from bokeh.models import ColumnDataSource, Span
 from bokeh.plotting import figure
+
 from photodiag.spatial_encoder import SpatialEncoder
 
 output_notebook()
@@ -130,6 +130,57 @@ class SpatialEncoderViewer(SpatialEncoder):
         slider = IntSlider(
             min=0, max=len(edge_pos)-1, value=0, step=1, description="Shot",
             continuous_update=False, layout=Layout(width='800px'),
+        )
+
+        slider.observe(slider_callback, names='value')
+        display(slider)
+
+    def plot_calibrate_time(self, *args, **kwargs):
+        scan_pos_fs, edge_pos_pix, fit_coeff = self.calibrate_time(*args, **kwargs)
+
+        source_results = ColumnDataSource(
+            data=dict(x=scan_pos_fs, y=edge_pos_pix),
+        )
+
+        source_fit = ColumnDataSource(
+            data=dict(
+                x=[scan_pos_fs[0], scan_pos_fs[-1]],
+                y=np.polyval(fit_coeff, [scan_pos_fs[0], scan_pos_fs[-1]]),
+            )
+        )
+
+        p_time = figure(
+            height=400, width=800, title='Time calibration',
+            x_axis_label='Stage position, fs',
+            y_axis_label='Edge position, pix',
+        )
+        p_time.scatter('x', 'y', source=source_results)
+        p_time.line('x', 'y', line_color='red', source=source_fit)
+
+        layout = gridplot(
+            [p_time],
+            ncols=1, toolbar_options=dict(logo=None),
+        )
+
+        handle = show(layout, notebook_handle=True)
+
+        # Slider
+        def slider_callback(change):
+            left = change['new'][0]
+            right = change['new'][1]
+            fit_coeff = np.polyfit(scan_pos_fs[left:right+1], edge_pos_pix[left:right+1], 1)
+            self.pix_per_fs = fit_coeff[0]
+
+            source_fit.data.update(
+                x=[scan_pos_fs[left], scan_pos_fs[right]],
+                y=np.polyval(fit_coeff, [scan_pos_fs[left], scan_pos_fs[right]]),
+            )
+
+            push_notebook(handle=handle)
+
+        slider = IntRangeSlider(
+            min=0, max=len(scan_pos_fs)-1, value=[0, len(scan_pos_fs)-1], step=1,
+            description="Fit range", continuous_update=False, layout=Layout(width='800px'),
         )
 
         slider.observe(slider_callback, names='value')
