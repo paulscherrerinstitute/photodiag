@@ -32,7 +32,7 @@ class SpatialEncoder:
         self.events_channel = events_channel
         self.dark_shot_event = dark_shot_event
         self._background = None
-        self._fs_per_pix = None
+        self.pix_per_fs = None
 
     def calibrate_background(self, background_data, is_dark):
         """Calibrate spatial encoder background.
@@ -80,8 +80,10 @@ class SpatialEncoder:
                 edge_pos_pix[i] = np.nanmean(data['edge_pos'])
 
         # pixel -> fs conversion coefficient
-        fit_coeff = np.polyfit(edge_pos_pix, scan_pos_fs, 1)
-        self._fs_per_pix = fit_coeff[0]
+        fit_coeff = np.polyfit(scan_pos_fs, edge_pos_pix, 1)
+        self.pix_per_fs = fit_coeff[0]
+
+        return scan_pos_fs, edge_pos_pix, fit_coeff
 
     def process(self, data, debug=False):
         """Process spatial encoder data.
