@@ -19,7 +19,8 @@ class SpatialEncoderViewer(SpatialEncoder):
             filepath: hdf5 file to be processed
         """
         results = self.process_hdf5(filepath, debug=True)
-        _, _, _, images = self._read_bsread_file(filepath, return_images=True)
+
+        images = results['images']
         images_proj = images.mean(axis=1)
 
         edge_pos = results['edge_pos']

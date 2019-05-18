@@ -64,7 +64,7 @@ class SpatialEncoder:
 
             edge_pos_pix = np.empty(len(scan_pos_fs))
             for i, bsread_file in enumerate(bsread_files):
-                data, _, _ = self._read_bsread_file(bsread_file)
+                data, _, _, _ = self._read_bsread_file(bsread_file)
                 data = data.mean(axis=0)
 
                 results = self.process(data)
@@ -163,7 +163,7 @@ class SpatialEncoder:
             edge position(s) in pix and corresponding pulse ids
             cross-correlation results and raw data if `debug` is True
         """
-        data, pulse_id, is_dark = self._read_bsread_file(filepath)
+        data, pulse_id, is_dark, images = self._read_bsread_file(filepath, return_images=debug)
 
         if self.events_channel:
             self.calibrate_background(data, is_dark)
@@ -177,6 +177,7 @@ class SpatialEncoder:
             output['edge_pos'][is_dark] = np.nan
 
         output['pulse_id'] = pulse_id
+        output['images'] = images
 
         return output
 
@@ -260,7 +261,7 @@ class SpatialEncoder:
         if return_images:
             return data, pulse_id, is_dark, images
 
-        return data, pulse_id, is_dark
+        return data, pulse_id, is_dark, None
 
     @staticmethod
     def _read_eco_scan(filepath):
