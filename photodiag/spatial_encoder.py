@@ -9,9 +9,15 @@ import numpy as np
 
 class SpatialEncoder:
     def __init__(
-            self, channel, roi=(200, 300), background_method='div', step_length=50,
-            events_channel=None, dark_shot_event=21, refinement=1,
-        ):
+        self,
+        channel,
+        roi=(200, 300),
+        background_method='div',
+        step_length=50,
+        events_channel=None,
+        dark_shot_event=21,
+        refinement=1,
+    ):
         """Initialize SpatialEncoder object.
 
         Args:
@@ -122,17 +128,19 @@ class SpatialEncoder:
 
         data_length = data.shape[1]
         refined_data = np.apply_along_axis(
-            _interp, 1, data,
-            x=np.arange(0, data_length-1, self.refinement),
+            _interp,
+            axis=1,
+            arr=data,
+            x=np.arange(0, data_length - 1, self.refinement),
             xp=np.arange(data_length),
         )
 
         # prepare a step function and refine it
-        step_waveform = np.ones(shape=(self.step_length, ))
-        step_waveform[:int(self.step_length/2)] = -1
+        step_waveform = np.ones(shape=(self.step_length,))
+        step_waveform[: int(self.step_length / 2)] = -1
 
         step_waveform = np.interp(
-            x=np.arange(0, self.step_length-1, self.refinement),
+            x=np.arange(0, self.step_length - 1, self.refinement),
             xp=np.arange(self.step_length),
             fp=step_waveform,
         )
@@ -143,7 +151,7 @@ class SpatialEncoder:
         xcorr_amplitude = np.amax(xcorr, axis=1)
 
         # correct edge_position for step_length
-        edge_position += np.floor(self.step_length/2)
+        edge_position += np.floor(self.step_length / 2)
 
         output = {'edge_pos': edge_position, 'xcorr_ampl': xcorr_amplitude}
 
@@ -231,20 +239,23 @@ class SpatialEncoder:
                 events_pulse_id = events_channel_group["pulse_id"][:]
 
                 pid, index, event_index = np.intersect1d(
-                    pulse_id, events_pulse_id, return_indices=True,
+                    pulse_id, events_pulse_id, return_indices=True
                 )
 
                 # if both groups have 0 in their pulse_id
                 pid_zero_ind = pid == 0
                 if any(pid_zero_ind):
-                    warnings.warn(f"\n \
+                    warnings.warn(
+                        f"\n \
                     File: {filepath}\n \
-                    Both '{self.channel}' and '{self.events_channel}' have zeroed pulse_id(s).\n")
+                    Both '{self.channel}' and '{self.events_channel}' have zeroed pulse_id(s).\n"
+                    )
                     index = index[~pid_zero_ind]
                     event_index = event_index[~pid_zero_ind]
 
-                is_dark = events_channel_group["data"][event_index, self.dark_shot_event] \
-                    .astype(bool)
+                is_dark = events_channel_group["data"][event_index, self.dark_shot_event].astype(
+                    bool
+                )
 
             else:
                 index = pulse_id != 0

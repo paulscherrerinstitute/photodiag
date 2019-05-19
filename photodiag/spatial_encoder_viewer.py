@@ -1,10 +1,10 @@
 import numpy as np
-from IPython.display import display
-from ipywidgets import IntRangeSlider, IntSlider, Layout
 from bokeh.io import output_notebook, push_notebook, show
 from bokeh.layouts import gridplot
 from bokeh.models import ColumnDataSource, Span
 from bokeh.plotting import figure
+from IPython.display import display
+from ipywidgets import IntRangeSlider, IntSlider, Layout
 
 from photodiag.spatial_encoder import SpatialEncoder
 
@@ -33,35 +33,34 @@ class SpatialEncoderViewer(SpatialEncoder):
                 x=[-0.5],
                 y=[self.roi[0]],
                 dw=[images.shape[2]],
-                dh=[self.roi[1]-self.roi[0]],
+                dh=[self.roi[1] - self.roi[0]],
             )
         )
 
         data_len = orig_data.shape[1]
         source_orig = ColumnDataSource(
             data=dict(
-                x=np.arange(data_len),
-                y=orig_data[0],
-                y_bkg=self._background,
-                y_proj=images_proj[0],
+                x=np.arange(data_len), y=orig_data[0], y_bkg=self._background, y_proj=images_proj[0]
             )
         )
 
         xcorr_len = xcorr_data.shape[1]
         source_xcorr = ColumnDataSource(
             data=dict(
-                x=np.arange(xcorr_len) * self.refinement + np.floor(self.step_length/2),
+                x=np.arange(xcorr_len) * self.refinement + np.floor(self.step_length / 2),
                 y=xcorr_data[0],
             )
         )
 
         p_im = figure(
-            height=200, width=800, title='Camera ROI Image',
-            x_range=(0, images.shape[2]), y_range=self.roi,
+            height=200,
+            width=800,
+            title='Camera ROI Image',
+            x_range=(0, images.shape[2]),
+            y_range=self.roi,
         )
         p_im.image(
-            image='image', x='x', y='y', dw='dw', dh='dh', source=source_im,
-            palette='Viridis256',
+            image='image', x='x', y='y', dw='dw', dh='dh', source=source_im, palette='Viridis256'
         )
 
         p_nobkg = figure(height=200, width=800, title='Projection and background')
@@ -97,8 +96,7 @@ class SpatialEncoderViewer(SpatialEncoder):
         p_xcorr.add_layout(s_xcorr)
 
         layout = gridplot(
-            [p_im, p_nobkg, p_orig, p_xcorr],
-            ncols=1, toolbar_options=dict(logo=None),
+            [p_im, p_nobkg, p_orig, p_xcorr], ncols=1, toolbar_options=dict(logo=None)
         )
 
         handle = show(layout, notebook_handle=True)
@@ -129,8 +127,13 @@ class SpatialEncoderViewer(SpatialEncoder):
             push_notebook(handle=handle)
 
         slider = IntSlider(
-            min=0, max=len(edge_pos)-1, value=0, step=1, description="Shot",
-            continuous_update=False, layout=Layout(width='800px'),
+            min=0,
+            max=len(edge_pos) - 1,
+            value=0,
+            step=1,
+            description="Shot",
+            continuous_update=False,
+            layout=Layout(width='800px'),
         )
 
         slider.observe(slider_callback, names='value')
@@ -139,9 +142,7 @@ class SpatialEncoderViewer(SpatialEncoder):
     def plot_calibrate_time(self, *args, **kwargs):
         scan_pos_fs, edge_pos_pix, fit_coeff = self.calibrate_time(*args, **kwargs)
 
-        source_results = ColumnDataSource(
-            data=dict(x=scan_pos_fs, y=edge_pos_pix),
-        )
+        source_results = ColumnDataSource(data=dict(x=scan_pos_fs, y=edge_pos_pix))
 
         source_fit = ColumnDataSource(
             data=dict(
@@ -151,17 +152,16 @@ class SpatialEncoderViewer(SpatialEncoder):
         )
 
         p_time = figure(
-            height=400, width=800, title='Time calibration',
+            height=400,
+            width=800,
+            title='Time calibration',
             x_axis_label='Stage position, fs',
             y_axis_label='Edge position, pix',
         )
         p_time.scatter('x', 'y', source=source_results)
         p_time.line('x', 'y', line_color='red', source=source_fit)
 
-        layout = gridplot(
-            [p_time],
-            ncols=1, toolbar_options=dict(logo=None),
-        )
+        layout = gridplot([p_time], ncols=1, toolbar_options=dict(logo=None))
 
         handle = show(layout, notebook_handle=True)
 
@@ -169,7 +169,7 @@ class SpatialEncoderViewer(SpatialEncoder):
         def slider_callback(change):
             left = change['new'][0]
             right = change['new'][1]
-            fit_coeff = np.polyfit(scan_pos_fs[left:right+1], edge_pos_pix[left:right+1], 1)
+            fit_coeff = np.polyfit(scan_pos_fs[left : right + 1], edge_pos_pix[left : right + 1], 1)
             self.pix_per_fs = fit_coeff[0]
 
             source_fit.data.update(
@@ -180,8 +180,13 @@ class SpatialEncoderViewer(SpatialEncoder):
             push_notebook(handle=handle)
 
         slider = IntRangeSlider(
-            min=0, max=len(scan_pos_fs)-1, value=[0, len(scan_pos_fs)-1], step=1,
-            description="Fit range", continuous_update=False, layout=Layout(width='800px'),
+            min=0,
+            max=len(scan_pos_fs) - 1,
+            value=[0, len(scan_pos_fs) - 1],
+            step=1,
+            description="Fit range",
+            continuous_update=False,
+            layout=Layout(width='800px'),
         )
 
         slider.observe(slider_callback, names='value')

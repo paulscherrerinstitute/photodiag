@@ -6,6 +6,7 @@ from scipy.optimize import curve_fit
 class Spectrometer:
     """Class describing a single eTOF spectrometer.
     """
+
     def __init__(self, noise_range):
         """ Initialize Spectrometer object.
 
@@ -13,13 +14,16 @@ class Spectrometer:
             noise_range: a range of spectrometer bins that does not contain any signals
         """
         # index of self.calib_data DataFrame is 'energy'
-        self.calib_data = pd.DataFrame({
-            'waveform': np.array([], dtype=float),
-            'calib_t0': np.array([], dtype=float),
-            'calib_tpeak': np.array([], dtype=float),
-            'noise_mean': np.array([], dtype=float),
-            'noise_std': np.array([], dtype=float),
-            'use_in_fit': np.array([], dtype=bool)})
+        self.calib_data = pd.DataFrame(
+            {
+                'waveform': np.array([], dtype=float),
+                'calib_t0': np.array([], dtype=float),
+                'calib_tpeak': np.array([], dtype=float),
+                'noise_mean': np.array([], dtype=float),
+                'noise_std': np.array([], dtype=float),
+                'use_in_fit': np.array([], dtype=bool),
+            }
+        )
 
         self.calib_a = None
         self.calib_b = None
@@ -57,7 +61,8 @@ class Spectrometer:
 
         try:
             calib_tpeak = self._detect_electron_peak(
-                waveform, noise_std, self.electron_peak_noise_thr)
+                waveform, noise_std, self.electron_peak_noise_thr
+            )
         except ValueError:
             calib_tpeak = np.nan
 
@@ -67,7 +72,8 @@ class Spectrometer:
             'calib_tpeak': calib_tpeak,
             'noise_mean': noise_mean,
             'noise_std': noise_std,
-            'use_in_fit': True}
+            'use_in_fit': True,
+        }
 
         self.calib_data.sort_index(inplace=True)
 
@@ -91,8 +97,11 @@ class Spectrometer:
 
         valid = ~(np.isnan(time_delays) | np.isnan(pulse_energies))
         popt, _pcov = curve_fit(
-            fit_func, time_delays[valid], pulse_energies[valid],
-            bounds=([0, -np.inf], [np.inf, np.inf]))
+            fit_func,
+            time_delays[valid],
+            pulse_energies[valid],
+            bounds=([0, -np.inf], [np.inf, np.inf]),
+        )
         self.calib_a, self.calib_b = popt
 
         return popt, time_delays, pulse_energies
@@ -113,17 +122,18 @@ class Spectrometer:
         flight_time = np.arange(1, self.internal_time_bins - self.calib_t0)
         pulse_energy = (self.calib_a / flight_time) ** 2 + self.calib_b
 
-        output_data = input_data[:, self.calib_t0 + 1:]
+        output_data = input_data[:, self.calib_t0 + 1 :]
 
         if jacobian:
-            jacobian_factor_inv = - pulse_energy ** (3 / 2)  # = 1 / jacobian_factor
+            jacobian_factor_inv = -pulse_energy ** (3 / 2)  # = 1 / jacobian_factor
             output_data /= jacobian_factor_inv  # = spectr.data * jacobian_factor
 
         def interpolate_row(data, energy, interp_energy):
             return np.interp(interp_energy, energy, data)
 
         output_data = np.apply_along_axis(
-            interpolate_row, 1, output_data[:, ::-1], pulse_energy[::-1], interp_energy)
+            interpolate_row, 1, output_data[:, ::-1], pulse_energy[::-1], interp_energy
+        )
 
         output_data -= noise_thr * self.calib_data['noise_std'].mean()
 

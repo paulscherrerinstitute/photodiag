@@ -18,6 +18,7 @@ log = logging.getLogger(__name__)
 class PalmSetup:
     """Class describing the photon arrival and length monitor (PALM) setup.
     """
+
     def __init__(self, channels, noise_range, energy_range):
         """Initialize PALM setup object.
 
@@ -35,10 +36,13 @@ class PalmSetup:
         self.etofs = {'0': Spectrometer(noise_range), '1': Spectrometer(noise_range)}
         self.energy_range = energy_range
 
-        self.thz_calib_data = pd.DataFrame({
-            'peak_shift': np.array([], dtype=float),
-            'peak_shift_mean': np.array([], dtype=float),
-            'peak_shift_std': np.array([], dtype=float)})
+        self.thz_calib_data = pd.DataFrame(
+            {
+                'peak_shift': np.array([], dtype=float),
+                'peak_shift_mean': np.array([], dtype=float),
+                'peak_shift_std': np.array([], dtype=float),
+            }
+        )
         self.thz_slope = None
         self.thz_intersect = None
         self.thz_motor_name = None
@@ -71,8 +75,9 @@ class PalmSetup:
 
         for entry in os.scandir(folder_name):
             if entry.is_file() and entry.name.endswith(('.hdf5', '.h5')):
-                energy = self.xfel_energy - self.binding_energy - \
-                         get_energy_from_filename(entry.name)
+                energy = (
+                    self.xfel_energy - self.binding_energy - get_energy_from_filename(entry.name)
+                )
 
                 for etof_key in calibrated_etofs:
                     etof = self.etofs[etof_key]
@@ -108,7 +113,7 @@ class PalmSetup:
             except Exception as e:
                 log.warning(e)
             else:
-                eff_bind_en = self.binding_energy + (self.zero_drift_tube - 1000*energy)
+                eff_bind_en = self.binding_energy + (self.zero_drift_tube - 1000 * energy)
                 self.etofs['0'].add_calibration_point(eff_bind_en, calib_waveforms0)
                 self.etofs['1'].add_calibration_point(eff_bind_en, calib_waveforms1)
 
@@ -141,8 +146,9 @@ class PalmSetup:
             self.etofs = pickle.load(f)
             log.info("Load etof calibration from a file: %s", filepath)
 
-    def process(self, waveforms, method='xcorr', jacobian=False, noise_thr=0, debug=False,
-                peak='max'):
+    def process(
+        self, waveforms, method='xcorr', jacobian=False, noise_thr=0, debug=False, peak='max'
+    ):
         """Main function to analyse PALM data that pipelines separate stages of data processing.
 
         Args:
@@ -160,7 +166,8 @@ class PalmSetup:
         for etof_key, data in waveforms.items():
             etof = self.etofs[etof_key]
             prep_data[etof_key] = etof.convert(
-                data, self.energy_range, jacobian=jacobian, noise_thr=noise_thr)
+                data, self.energy_range, jacobian=jacobian, noise_thr=noise_thr
+            )
 
         if method == 'xcorr':
             results = self._cross_corr_analysis(prep_data, debug=debug, peak=peak)
@@ -199,7 +206,8 @@ class PalmSetup:
                 self.thz_calib_data.loc[scan_readback] = {
                     'peak_shift': peak_shift,
                     'peak_shift_mean': peak_shift.mean(),
-                    'peak_shift_std': peak_shift.std()}
+                    'peak_shift_std': peak_shift.std(),
+                }
 
         def fit_func(shift, a, b):
             return a * shift + b
@@ -283,7 +291,7 @@ class PalmSetup:
         corr_res_uncut = corr_results.copy()
         corr_results = self._truncate_highest_peak(corr_results, 0)
 
-        lags = self.energy_range - self.energy_range[int(self.energy_range.size/2)]
+        lags = self.energy_range - self.energy_range[int(self.energy_range.size / 2)]
 
         if peak == 'com':
             delays, _ = self._peak_params(lags, corr_results)
@@ -335,7 +343,7 @@ class PalmSetup:
         denom = np.sum(y, axis=1)
         denom[denom == 0] = 1  # TODO: fixit
         peak_mean = np.sum(x * y, axis=1) / denom
-        peak_var = np.sum((x - peak_mean[:, np.newaxis])**2 * y, axis=1) / denom
+        peak_var = np.sum((x - peak_mean[:, np.newaxis]) ** 2 * y, axis=1) / denom
 
         return peak_mean, peak_var
 
@@ -350,6 +358,7 @@ class PalmSetup:
         Returns:
             ordinates of a truncated waveform
         """
+
         def test_fun(y_1d):
             y_above_thr = (y_1d > thr).astype(int)
             y_above_thr = np.pad(y_above_thr, (1,), 'constant')
@@ -365,8 +374,8 @@ class PalmSetup:
                 ind_max = np.argmax(y_1d)
                 ind_max_height = np.argmax((ind_out > ind_max) & (ind_max > ind_in))
 
-                y_1d[:ind_in[ind_max_height]] = 0
-                y_1d[ind_out[ind_max_height]:] = 0
+                y_1d[: ind_in[ind_max_height]] = 0
+                y_1d[ind_out[ind_max_height] :] = 0
 
             return y_1d
 
@@ -388,6 +397,7 @@ class PalmSetup:
         Returns:
             ordinates of a truncated waveform
         """
+
         def test_fun(y_1d):
             y_above_thr = (y_1d > thr).astype(int)
             y_above_thr = np.pad(y_above_thr, (1,), 'constant')
@@ -402,8 +412,8 @@ class PalmSetup:
             else:
                 ind_max_length = np.argmax(ind_out - ind_in)
 
-                y_1d[:ind_in[ind_max_length]] = 0
-                y_1d[ind_out[ind_max_length]:] = 0
+                y_1d[: ind_in[ind_max_length]] = 0
+                y_1d[ind_out[ind_max_length] :] = 0
 
             return y_1d
 
@@ -537,11 +547,11 @@ def richardson_lucy_deconv(streaked_signal, reference_signal, iterations=200, no
     weighted_signal = streaked_signal.copy() + noise
     weighted_signal = weight * weighted_signal.clip(min=0)
 
-    scale = real(ifft(conjugate(otf)*fft(weight)))
+    scale = real(ifft(conjugate(otf) * fft(weight)))
 
     for _ in range(iterations):
-        relative_psf = weighted_signal / (real(ifft(otf*fft(time_profile))) + noise)
-        time_profile *= real(ifft(conjugate(otf)*fft(relative_psf))) / scale
+        relative_psf = weighted_signal / (real(ifft(otf * fft(time_profile))) + noise)
+        time_profile *= real(ifft(conjugate(otf) * fft(relative_psf))) / scale
         time_profile.clip(min=0)
 
     return time_profile
