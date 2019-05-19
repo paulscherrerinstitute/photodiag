@@ -3,9 +3,28 @@ from functools import partial
 import numpy as np
 from bokeh.io import curdoc
 from bokeh.layouts import column, row
-from bokeh.models import BasicTicker, BoxZoomTool, Button, ColumnDataSource, \
-    CustomJS, DataRange1d, Grid, Legend, Line, LinearAxis, Panel, PanTool, \
-    Plot, ResetTool, Slider, Spacer, Span, Title, Toggle, WheelZoomTool
+from bokeh.models import (
+    BasicTicker,
+    BoxZoomTool,
+    Button,
+    ColumnDataSource,
+    CustomJS,
+    DataRange1d,
+    Grid,
+    Legend,
+    Line,
+    LinearAxis,
+    Panel,
+    PanTool,
+    Plot,
+    ResetTool,
+    Slider,
+    Spacer,
+    Span,
+    Title,
+    Toggle,
+    WheelZoomTool,
+)
 from tornado import gen
 
 import receiver
@@ -36,10 +55,10 @@ def create(palm):
     waveform_plot.add_tools(PanTool(), BoxZoomTool(), WheelZoomTool(), ResetTool())
 
     # ---- axes
+    waveform_plot.add_layout(LinearAxis(axis_label='Photon energy, eV'), place='below')
     waveform_plot.add_layout(
-        LinearAxis(axis_label='Photon energy, eV'), place='below')
-    waveform_plot.add_layout(
-        LinearAxis(axis_label='Intensity', major_label_orientation='vertical'), place='left')
+        LinearAxis(axis_label='Intensity', major_label_orientation='vertical'), place='left'
+    )
 
     # ---- grid lines
     waveform_plot.add_layout(Grid(dimension=0, ticker=BasicTicker()))
@@ -48,17 +67,17 @@ def create(palm):
     # ---- line glyphs
     waveform_source = ColumnDataSource(dict(x_str=[], y_str=[], x_ref=[], y_ref=[]))
     waveform_ref_line = waveform_plot.add_glyph(
-        waveform_source, Line(x='x_ref', y='y_ref', line_color='blue'))
+        waveform_source, Line(x='x_ref', y='y_ref', line_color='blue')
+    )
     waveform_str_line = waveform_plot.add_glyph(
-        waveform_source, Line(x='x_str', y='y_str', line_color='red'))
+        waveform_source, Line(x='x_str', y='y_str', line_color='red')
+    )
 
     # ---- legend
-    waveform_plot.add_layout(Legend(items=[
-        ("reference", [waveform_ref_line]),
-        ("streaked", [waveform_str_line])
-    ]))
+    waveform_plot.add_layout(
+        Legend(items=[("reference", [waveform_ref_line]), ("streaked", [waveform_str_line])])
+    )
     waveform_plot.legend.click_policy = "hide"
-
 
     # Cross-correlation plot
     xcorr_plot = Plot(
@@ -75,11 +94,10 @@ def create(palm):
     xcorr_plot.add_tools(PanTool(), BoxZoomTool(), WheelZoomTool(), ResetTool())
 
     # ---- axes
+    xcorr_plot.add_layout(LinearAxis(axis_label='Energy shift, eV'), place='below')
     xcorr_plot.add_layout(
-        LinearAxis(axis_label='Energy shift, eV'), place='below')
-    xcorr_plot.add_layout(
-        LinearAxis(axis_label='Cross-correlation', major_label_orientation='vertical'),
-        place='left')
+        LinearAxis(axis_label='Cross-correlation', major_label_orientation='vertical'), place='left'
+    )
 
     # ---- grid lines
     xcorr_plot.add_layout(Grid(dimension=0, ticker=BasicTicker()))
@@ -92,7 +110,6 @@ def create(palm):
     # ---- vertical span
     xcorr_center_span = Span(location=0, dimension='height')
     xcorr_plot.add_layout(xcorr_center_span)
-
 
     # Delays plot
     pulse_delay_plot = Plot(
@@ -109,11 +126,11 @@ def create(palm):
     pulse_delay_plot.add_tools(PanTool(), BoxZoomTool(), WheelZoomTool(), ResetTool())
 
     # ---- axes
-    pulse_delay_plot.add_layout(
-        LinearAxis(axis_label='Pulse number'), place='below')
+    pulse_delay_plot.add_layout(LinearAxis(axis_label='Pulse number'), place='below')
     pulse_delay_plot.add_layout(
         LinearAxis(axis_label='Pulse delay (uncalib), eV', major_label_orientation='vertical'),
-        place='left')
+        place='left',
+    )
 
     # ---- grid lines
     pulse_delay_plot.add_layout(Grid(dimension=0, ticker=BasicTicker()))
@@ -121,9 +138,7 @@ def create(palm):
 
     # ---- line glyphs
     pulse_delay_source = ColumnDataSource(dict(x=[], y=[]))
-    pulse_delay_plot.add_glyph(
-        pulse_delay_source, Line(x='x', y='y', line_color='steelblue'))
-
+    pulse_delay_plot.add_glyph(pulse_delay_source, Line(x='x', y='y', line_color='steelblue'))
 
     # Pulse lengths plot
     pulse_length_plot = Plot(
@@ -140,11 +155,11 @@ def create(palm):
     pulse_length_plot.add_tools(PanTool(), BoxZoomTool(), WheelZoomTool(), ResetTool())
 
     # ---- axes
-    pulse_length_plot.add_layout(
-        LinearAxis(axis_label='Pulse number'), place='below')
+    pulse_length_plot.add_layout(LinearAxis(axis_label='Pulse number'), place='below')
     pulse_length_plot.add_layout(
         LinearAxis(axis_label='Pulse length (uncalib), eV', major_label_orientation='vertical'),
-        place='left')
+        place='left',
+    )
 
     # ---- grid lines
     pulse_length_plot.add_layout(Grid(dimension=0, ticker=BasicTicker()))
@@ -153,7 +168,6 @@ def create(palm):
     # ---- line glyphs
     pulse_length_source = ColumnDataSource(dict(x=[], y=[]))
     pulse_length_plot.add_glyph(pulse_length_source, Line(x='x', y='y', line_color='steelblue'))
-
 
     # Image buffer slider
     def buffer_slider_callback(_attr, _old, new):
@@ -164,12 +178,12 @@ def create(palm):
     buffer_slider_source.on_change('data', buffer_slider_callback)
 
     buffer_slider = Slider(
-        start=0, end=1, value=0, step=1, title="Buffered Image", callback_policy='mouseup')
+        start=0, end=1, value=0, step=1, title="Buffered Image", callback_policy='mouseup'
+    )
 
     buffer_slider.callback = CustomJS(
-        args=dict(source=buffer_slider_source),
-        code="""source.data = {value: [cb_obj.value]}""")
-
+        args=dict(source=buffer_slider_source), code="""source.data = {value: [cb_obj.value]}"""
+    )
 
     # Connect toggle button
     def connect_toggle_callback(state):
@@ -187,7 +201,6 @@ def create(palm):
     connect_toggle = Toggle(label="Connect", button_type='default')
     connect_toggle.on_click(connect_toggle_callback)
 
-
     # Intensity stream reset button
     def reset_button_callback():
         nonlocal stream_t
@@ -195,7 +208,6 @@ def create(palm):
 
     reset_button = Button(label="Reset", button_type='default')
     reset_button.on_click(reset_button_callback)
-
 
     # Stream update coroutine
     @gen.coroutine
@@ -209,8 +221,11 @@ def create(palm):
             prep_data, lags, corr_res_uncut, _ = debug_data
 
             waveform_source.data.update(
-                x_str=palm.energy_range, y_str=prep_data['1'][0, :],
-                x_ref=palm.energy_range, y_ref=prep_data['0'][0, :])
+                x_str=palm.energy_range,
+                y_str=prep_data['1'][0, :],
+                x_ref=palm.energy_range,
+                y_ref=prep_data['0'][0, :],
+            )
 
             xcorr_source.data.update(lags=lags, xcorr=corr_res_uncut[0, :])
             xcorr_center_span.location = delay[0]
@@ -219,7 +234,6 @@ def create(palm):
             pulse_length_source.stream({'x': [stream_t], 'y': [length]}, rollover=120)
 
             stream_t += 1
-
 
     # Periodic callback to fetch data from receiver
     @gen.coroutine
@@ -250,12 +264,14 @@ def create(palm):
 
     doc.add_periodic_callback(internal_periodic_callback, 1000)
 
-
     # assemble
     tab_layout = column(
         row(
-            column(waveform_plot, xcorr_plot), Spacer(width=30),
-            column(buffer_slider, connect_toggle, reset_button)),
-        row(pulse_delay_plot, Spacer(width=10), pulse_length_plot))
+            column(waveform_plot, xcorr_plot),
+            Spacer(width=30),
+            column(buffer_slider, connect_toggle, reset_button),
+        ),
+        row(pulse_delay_plot, Spacer(width=10), pulse_length_plot),
+    )
 
     return Panel(child=tab_layout, title="Stream")
