@@ -22,15 +22,28 @@ class SpatialEncoderViewer(SpatialEncoder):
         results = self.process_hdf5(filepath, debug=True)
 
         images = results['images']
-        images_proj = images.mean(axis=1)
-
         edge_pos = results['edge_pos']
         xcorr_data = results['xcorr']
         orig_data = results['raw_input']
+        is_dark = results['is_dark']
+
+        images_proj = images.mean(axis=1)
+        image_bkg = images[is_dark].mean(axis=0)
 
         source_im = ColumnDataSource(
             data=dict(
                 image=[images[0][::image_downscale, ::image_downscale]],
+                x=[-0.5],
+                y=[self.roi[0]],
+                dw=[images.shape[2]],
+                dh=[self.roi[1] - self.roi[0]],
+            )
+        )
+
+        image_nobkg = images[0] - image_bkg
+        source_im_nobkg = ColumnDataSource(
+            data=dict(
+                image=[image_nobkg[::image_downscale, ::image_downscale]],
                 x=[-0.5],
                 y=[self.roi[0]],
                 dw=[images.shape[2]],
@@ -64,6 +77,24 @@ class SpatialEncoderViewer(SpatialEncoder):
             image='image', x='x', y='y', dw='dw', dh='dh', source=source_im, palette='Viridis256'
         )
 
+        p_im_nobkg = figure(
+            height=200,
+            width=800,
+            title='No Background Image',
+            x_range=(0, images.shape[2]),
+            y_range=self.roi,
+        )
+        p_im_nobkg.image(
+            image='image',
+            x='x',
+            y='y',
+            dw='dw',
+            dh='dh',
+            source=source_im_nobkg,
+            palette='Viridis256',
+        )
+        p_im_nobkg.x_range = p_im.x_range
+
         p_nobkg = figure(height=200, width=800, title='Projection and background')
         p_nobkg.line('x', 'y_bkg', source=source_orig, line_color='black')
         p_nobkg.line('x', 'y_proj', source=source_orig)
@@ -87,6 +118,9 @@ class SpatialEncoderViewer(SpatialEncoder):
         s_im = Span(**span_args)
         p_im.add_layout(s_im)
 
+        s_im_nobkg = Span(**span_args)
+        p_im_nobkg.add_layout(s_im_nobkg)
+
         s_nobkg = Span(**span_args)
         p_nobkg.add_layout(s_nobkg)
 
@@ -97,7 +131,7 @@ class SpatialEncoderViewer(SpatialEncoder):
         p_xcorr.add_layout(s_xcorr)
 
         layout = gridplot(
-            [p_im, p_nobkg, p_orig, p_xcorr], ncols=1, toolbar_options=dict(logo=None)
+            [p_im, p_im_nobkg, p_nobkg, p_orig, p_xcorr], ncols=1, toolbar_options=dict(logo=None)
         )
 
         handle = show(layout, notebook_handle=True)
@@ -106,21 +140,25 @@ class SpatialEncoderViewer(SpatialEncoder):
         def slider_callback(change):
             new = change['new']
             source_im.data.update(image=[images[new][::image_downscale, ::image_downscale]])
-
+            image_nobkg = images[new] - image_bkg
+            source_im_nobkg.data.update(image=[image_nobkg[::image_downscale, ::image_downscale]])
             source_orig.data.update(y=orig_data[new], y_proj=images_proj[new])
             source_xcorr.data.update(y=xcorr_data[new])
 
             if np.isnan(edge_pos[new]):
                 s_im.visible = False
+                s_im_nobkg.visible = False
                 s_nobkg.visible = False
                 s_orig.visible = False
                 s_xcorr.visible = False
             else:
                 s_im.visible = True
+                s_im_nobkg.visible = True
                 s_nobkg.visible = True
                 s_orig.visible = True
                 s_xcorr.visible = True
                 s_im.location = edge_pos[new]
+                s_im_nobkg.location = edge_pos[new]
                 s_nobkg.location = edge_pos[new]
                 s_orig.location = edge_pos[new]
                 s_xcorr.location = edge_pos[new]

@@ -185,6 +185,7 @@ class SpatialEncoder:
             output['edge_pos'][is_dark] = np.nan
 
         output['pulse_id'] = pulse_id
+        output['is_dark'] = is_dark
         output['images'] = images
 
         return output
