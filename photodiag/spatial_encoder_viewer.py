@@ -12,11 +12,12 @@ output_notebook()
 
 
 class SpatialEncoderViewer(SpatialEncoder):
-    def plot_hdf5(self, filepath):
+    def plot_hdf5(self, filepath, image_downscale=1):
         """Experimental viewer for hdf5 files in a jupyter notebook.
 
         Args:
             filepath: hdf5 file to be processed
+            image_downscale: an image resampling factor
         """
         results = self.process_hdf5(filepath, debug=True)
 
@@ -29,7 +30,7 @@ class SpatialEncoderViewer(SpatialEncoder):
 
         source_im = ColumnDataSource(
             data=dict(
-                image=[images[0]],
+                image=[images[0][::image_downscale, ::image_downscale]],
                 x=[-0.5],
                 y=[self.roi[0]],
                 dw=[images.shape[2]],
@@ -104,7 +105,7 @@ class SpatialEncoderViewer(SpatialEncoder):
         # Slider
         def slider_callback(change):
             new = change['new']
-            source_im.data.update(image=[images[new]])
+            source_im.data.update(image=[images[new][::image_downscale, ::image_downscale]])
 
             source_orig.data.update(y=orig_data[new], y_proj=images_proj[new])
             source_xcorr.data.update(y=xcorr_data[new])
