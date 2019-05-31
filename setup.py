@@ -2,7 +2,7 @@ from setuptools import setup
 
 setup(
     name="photodiag",
-    version="0.3.0",
+    version="0.3.1",
     author="Ivan Usov",
     author_email="ivan.usov@psi.ch",
     description="Photon diagnostics tools at SwissFel",
