@@ -1,3 +1,5 @@
+import weakref
+
 import numpy as np
 from bokeh.io import output_notebook, push_notebook, show
 from bokeh.layouts import gridplot
@@ -10,6 +12,7 @@ from photodiag.spatial_encoder import SpatialEncoder
 
 output_notebook()
 
+hold_image_ref = []
 
 class SpatialEncoderViewer(SpatialEncoder):
     def plot_hdf5(self, filepath, image_downscale=1):
@@ -19,6 +22,7 @@ class SpatialEncoderViewer(SpatialEncoder):
             filepath: hdf5 file to be processed
             image_downscale: an image resampling factor
         """
+        global hold_image_ref
         results = self.process_hdf5(filepath, debug=True)
 
         images = results['images']
@@ -26,6 +30,12 @@ class SpatialEncoderViewer(SpatialEncoder):
         xcorr_data = results['xcorr']
         orig_data = results['raw_input']
         is_dark = results['is_dark']
+
+        # avoid locking reference to `images` inside the slider_callback, see
+        # https://github.com/jupyter-widgets/ipywidgets/issues/1345
+        # https://github.com/jupyter-widgets/ipywidgets/issues/2304
+        hold_image_ref = images[0]
+        images_weak = weakref.ref(images)
 
         images_proj = images.mean(axis=1)
         image_bkg = images[is_dark].mean(axis=0)
@@ -143,7 +153,7 @@ class SpatialEncoderViewer(SpatialEncoder):
         # Slider
         def slider_callback(change):
             new = change['new']
-            image = images[new].copy()
+            image = images_weak()[new].copy()
 
             source_im.data.update(image=[image[::image_downscale, ::image_downscale]])
             image_nobkg = image - image_bkg
