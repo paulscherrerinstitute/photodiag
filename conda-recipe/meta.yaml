@@ -25,7 +25,7 @@ requirements:
     - numpy>=1.15.0
 
 about:
-  home: https://git.psi.ch/usov_i/photodiag
+  home: https://github.com/ivan-usov/photodiag
   summary: {{ data['description'] }}
   license: GNU GPLv3
   license_file: LICENSE
