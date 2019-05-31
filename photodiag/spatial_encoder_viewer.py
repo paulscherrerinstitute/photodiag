@@ -5,7 +5,6 @@ from bokeh.io import output_notebook, push_notebook, show
 from bokeh.layouts import gridplot
 from bokeh.models import ColumnDataSource, Span
 from bokeh.plotting import figure
-from IPython.display import display
 from ipywidgets import IntRangeSlider, IntSlider, Layout
 
 from photodiag.spatial_encoder import SpatialEncoder
@@ -192,7 +191,7 @@ class SpatialEncoderViewer(SpatialEncoder):
         )
 
         slider.observe(slider_callback, names='value')
-        display(slider)
+        return slider
 
     def plot_calibrate_time(self, *args, **kwargs):
         scan_pos_fs, edge_pos_pix, fit_coeff = self.calibrate_time(*args, **kwargs)
@@ -245,4 +244,4 @@ class SpatialEncoderViewer(SpatialEncoder):
         )
 
         slider.observe(slider_callback, names='value')
-        display(slider)
+        return slider
