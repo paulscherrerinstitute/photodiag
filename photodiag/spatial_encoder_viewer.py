@@ -30,23 +30,27 @@ class SpatialEncoderViewer(SpatialEncoder):
         images_proj = images.mean(axis=1)
         image_bkg = images[is_dark].mean(axis=0)
 
+        # avoid locking reference to `images` in bokeh objects, see
+        # https://github.com/bokeh/bokeh/issues/8626
+        image = images[0].copy()
+
         source_im = ColumnDataSource(
             data=dict(
-                image=[images[0][::image_downscale, ::image_downscale]],
+                image=[image[::image_downscale, ::image_downscale]],
                 x=[-0.5],
                 y=[self.roi[0]],
-                dw=[images.shape[2]],
+                dw=[image.shape[1]],
                 dh=[self.roi[1] - self.roi[0]],
             )
         )
 
-        image_nobkg = images[0] - image_bkg
+        image_nobkg = image - image_bkg
         source_im_nobkg = ColumnDataSource(
             data=dict(
                 image=[image_nobkg[::image_downscale, ::image_downscale]],
                 x=[-0.5],
                 y=[self.roi[0]],
-                dw=[images.shape[2]],
+                dw=[image.shape[1]],
                 dh=[self.roi[1] - self.roi[0]],
             )
         )
@@ -70,7 +74,7 @@ class SpatialEncoderViewer(SpatialEncoder):
             height=200,
             width=800,
             title='Camera ROI Image',
-            x_range=(0, images.shape[2]),
+            x_range=(0, image.shape[1]),
             y_range=self.roi,
         )
         p_im.image(
@@ -81,7 +85,7 @@ class SpatialEncoderViewer(SpatialEncoder):
             height=200,
             width=800,
             title='No Background Image',
-            x_range=(0, images.shape[2]),
+            x_range=(0, image.shape[1]),
             y_range=self.roi,
         )
         p_im_nobkg.image(
@@ -139,8 +143,10 @@ class SpatialEncoderViewer(SpatialEncoder):
         # Slider
         def slider_callback(change):
             new = change['new']
-            source_im.data.update(image=[images[new][::image_downscale, ::image_downscale]])
-            image_nobkg = images[new] - image_bkg
+            image = images[new].copy()
+
+            source_im.data.update(image=[image[::image_downscale, ::image_downscale]])
+            image_nobkg = image - image_bkg
             source_im_nobkg.data.update(image=[image_nobkg[::image_downscale, ::image_downscale]])
             source_orig.data.update(y=orig_data[new], y_proj=images_proj[new])
             source_xcorr.data.update(y=xcorr_data[new])
