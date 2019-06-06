@@ -18,6 +18,7 @@ class SpatialEncoder:
         dark_shot_event=21,
         dark_shot_filter=None,
         refinement=1,
+        edge_type='falling',
     ):
         """Initialize SpatialEncoder object.
 
@@ -31,6 +32,7 @@ class SpatialEncoder:
             events_channel: data channel of events
             dark_shot_filter: a function to return True for dark shots based on pulse_id argument
             refinement: quantisation size for linear interpolation of data and a step waveform
+            edge_type: {'falling', 'rising'} a type of edge to search for
         """
         if events_channel and dark_shot_filter:
             raise Exception("Either 'events_channel' and/or 'dark_shot_filter' should be None")
@@ -45,6 +47,7 @@ class SpatialEncoder:
         self.dark_shot_filter = dark_shot_filter
         self._background = None
         self.pix_per_fs = None
+        self.edge_type = edge_type
 
     def calibrate_background(self, background_data, is_dark):
         """Calibrate spatial encoder background.
@@ -147,7 +150,12 @@ class SpatialEncoder:
 
         # prepare a step function and refine it
         step_waveform = np.ones(shape=(self.step_length,))
-        step_waveform[: int(self.step_length / 2)] = -1
+        if self.edge_type == 'rising':
+            step_waveform[: int(self.step_length / 2)] = -1
+        elif self.edge_type == 'falling':
+            step_waveform[int(self.step_length / 2) :] = -1
+        else:
+            raise Exception("Unknown edge type '{}'".format(self.edge_type))
 
         step_waveform = np.interp(
             x=np.arange(0, self.step_length - 1, self.refinement),
