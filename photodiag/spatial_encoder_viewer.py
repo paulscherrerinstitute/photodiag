@@ -30,6 +30,17 @@ class SpatialEncoderViewer(SpatialEncoder):
         orig_data = results['raw_input']
         is_dark = results['is_dark']
 
+        n_im, size_y, size_x = images.shape
+        if self.roi[0] is None:
+            _roi_start = 0
+        else:
+            _roi_start = self.roi[0]
+
+        if self.roi[1] is None:
+            _roi_end = _roi_start + size_y
+        else:
+            _roi_end = self.roi[1]
+
         # avoid locking reference to `images` inside the slider_callback, see
         # https://github.com/jupyter-widgets/ipywidgets/issues/1345
         # https://github.com/jupyter-widgets/ipywidgets/issues/2304
@@ -47,9 +58,9 @@ class SpatialEncoderViewer(SpatialEncoder):
             data=dict(
                 image=[image[::image_downscale, ::image_downscale]],
                 x=[-0.5],
-                y=[self.roi[0]],
-                dw=[image.shape[1]],
-                dh=[self.roi[1] - self.roi[0]],
+                y=[_roi_start],
+                dw=[size_x],
+                dh=[size_y],
             )
         )
 
@@ -58,9 +69,9 @@ class SpatialEncoderViewer(SpatialEncoder):
             data=dict(
                 image=[image_nobkg[::image_downscale, ::image_downscale]],
                 x=[-0.5],
-                y=[self.roi[0]],
-                dw=[image.shape[1]],
-                dh=[self.roi[1] - self.roi[0]],
+                y=[_roi_start],
+                dw=[size_x],
+                dh=[size_y],
             )
         )
 
@@ -83,8 +94,8 @@ class SpatialEncoderViewer(SpatialEncoder):
             height=200,
             width=800,
             title='Camera ROI Image',
-            x_range=(0, image.shape[1]),
-            y_range=self.roi,
+            x_range=(0, size_x),
+            y_range=(_roi_start, _roi_end),
         )
         p_im.image(
             image='image', x='x', y='y', dw='dw', dh='dh', source=source_im, palette='Viridis256'
@@ -94,8 +105,8 @@ class SpatialEncoderViewer(SpatialEncoder):
             height=200,
             width=800,
             title='No Background Image',
-            x_range=(0, image.shape[1]),
-            y_range=self.roi,
+            x_range=(0, size_x),
+            y_range=(_roi_start, _roi_end),
         )
         p_im_nobkg.image(
             image='image',
@@ -182,7 +193,7 @@ class SpatialEncoderViewer(SpatialEncoder):
 
         slider = IntSlider(
             min=0,
-            max=len(edge_pos) - 1,
+            max=n_im - 1,
             value=0,
             step=1,
             description="Shot",

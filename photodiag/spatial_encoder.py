@@ -11,7 +11,7 @@ class SpatialEncoder:
     def __init__(
         self,
         channel,
-        roi=(200, 300),
+        roi=(None, None),
         background_method='div',
         step_length=50,
         events_channel=None,
