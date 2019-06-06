@@ -16,6 +16,7 @@ class SpatialEncoder:
         step_length=50,
         events_channel=None,
         dark_shot_event=21,
+        dark_shot_filter=None,
         refinement=1,
     ):
         """Initialize SpatialEncoder object.
@@ -28,8 +29,12 @@ class SpatialEncoder:
                 'sub': data = data - background
             step_length: length of a step waveform in pix
             events_channel: data channel of events
+            dark_shot_filter: a function to return True for dark shots based on pulse_id argument
             refinement: quantisation size for linear interpolation of data and a step waveform
         """
+        if events_channel and dark_shot_filter:
+            raise Exception("Either 'events_channel' and/or 'dark_shot_filter' should be None")
+
         self.channel = channel
         self.roi = roi
         self.background_method = background_method
@@ -37,6 +42,7 @@ class SpatialEncoder:
         self.refinement = refinement
         self.events_channel = events_channel
         self.dark_shot_event = dark_shot_event
+        self.dark_shot_filter = dark_shot_filter
         self._background = None
         self.pix_per_fs = None
 
@@ -62,7 +68,11 @@ class SpatialEncoder:
                 'avg_wf': single edge position of averaged raw waveform (per scan step)
                 'avg_edge': mean of edge positions for all raw waveforms (per scan step)
         """
-        if self.events_channel is None and self._background is None:
+        if (
+            self.events_channel is None
+            and self.dark_shot_filter is None
+            and self._background is None
+        ):
             raise Exception("Background calibration is not found")
 
         if method == 'avg_wf':
@@ -173,7 +183,7 @@ class SpatialEncoder:
         """
         data, pulse_id, is_dark, images = self._read_bsread_file(filepath, return_images=debug)
 
-        if self.events_channel:
+        if self.events_channel or self.dark_shot_filter:
             self.calibrate_background(data, is_dark)
         else:
             if self._background is None:
@@ -200,7 +210,7 @@ class SpatialEncoder:
             edge position(s) in pix, corresponding pulse ids and scan readback values
             cross-correlation results and raw data if `debug` is True
         """
-        if self.events_channel:
+        if self.events_channel or self.dark_shot_filter:
             pass
         else:
             if self._background is None:
@@ -257,6 +267,10 @@ class SpatialEncoder:
                 is_dark = events_channel_group["data"][event_index, self.dark_shot_event].astype(
                     bool
                 )
+
+            elif self.dark_shot_filter:
+                index = pulse_id != 0
+                is_dark = np.logical_and(index, self.dark_shot_filter(pulse_id))
 
             else:
                 index = pulse_id != 0
