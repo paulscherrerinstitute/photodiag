@@ -198,6 +198,11 @@ class SpatialEncoderViewer(SpatialEncoder):
         return slider
 
     def plot_calibrate_time(self, *args, **kwargs):
+        """Experimental viewer for time calibration in a jupyter notebook.
+
+        Args:
+            accepts the same arguments as `SpatialEncoder.calibrate_time` function
+        """
         scan_pos_fs, edge_pos_pix, fit_coeff = self.calibrate_time(*args, **kwargs)
 
         source_results = ColumnDataSource(data=dict(x=scan_pos_fs, y=edge_pos_pix))

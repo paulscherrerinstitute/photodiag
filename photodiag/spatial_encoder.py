@@ -33,6 +33,7 @@ class SpatialEncoder:
                 'sub': data = data - background
             step_length: length of a step waveform in pix
             events_channel: data channel of events
+            dark_shot_event: event number for dark shots
             dark_shot_filter: a function to return True for dark shots based on pulse_id argument
             refinement: quantisation size for linear interpolation of data and a step waveform
             edge_type: {'falling', 'rising'} a type of edge to search for
@@ -82,18 +83,17 @@ class SpatialEncoder:
             raise ValueError(f"A reasonable step length should be >= 4")
         self.__step_length = value
 
-    def calibrate_background(self, background_data, is_dark):
-        """Calibrate spatial encoder background.
+    def calibrate_background(self, data, is_dark=None):
+        """Calibrate spatial encoder background by averaging over all dark images.
 
         Args:
-            background_data: array with background signal data
+            data: array with camera images
             is_dark: index of dark shots
         """
-        # average over all dark images
-        if is_dark is None:
-            self._background = background_data.mean(axis=0)
-        else:
-            self._background = background_data[is_dark].mean(axis=0)
+        if is_dark is not None:
+            data = data[is_dark]
+
+        self._background = data.mean(axis=0)
 
     def calibrate_time(self, filepath, method='avg_edge', nproc=1):
         """Calibrate pixel to time conversion.
@@ -103,6 +103,7 @@ class SpatialEncoder:
             method: {avg_wf, avg_edge}
                 'avg_wf': single edge position of averaged raw waveform (per scan step)
                 'avg_edge': mean of edge positions for all raw waveforms (per scan step)
+            nproc: number of worker processes to use
         """
         if (
             self.events_channel is None
@@ -153,8 +154,8 @@ class SpatialEncoder:
         if self._background is None:
             raise Exception("Background calibration is not found")
 
-        # transform vector to array for consistency
         if data.ndim == 1:
+            # transform vector to array for consistency
             data = data[np.newaxis, :]
         elif data.ndim > 2:
             raise Exception('Input data should be either 1- or 2-dimentional array')
@@ -242,6 +243,7 @@ class SpatialEncoder:
 
         Args:
             filepath: json eco scan file to be processed
+            nproc: number of worker processes to use
             debug: return debug data
         Returns:
             edge position(s) in pix, corresponding pulse ids and scan readback values
@@ -268,6 +270,7 @@ class SpatialEncoder:
 
         Args:
             filepath: path to a bsread hdf5 file to read data from
+            return_images: whether to return original camera images
         Returns:
             data, pulse_id, is_dark
         """
