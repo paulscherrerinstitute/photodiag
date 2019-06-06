@@ -6,6 +6,9 @@ from multiprocessing import Pool
 import h5py
 import numpy as np
 
+background_methods = ['div', 'sub']
+edge_types = ['falling', 'rising']
+
 
 class SpatialEncoder:
     def __init__(
@@ -48,6 +51,36 @@ class SpatialEncoder:
         self._background = None
         self.pix_per_fs = None
         self.edge_type = edge_type
+
+    @property
+    def background_method(self):
+        return self.__background_method
+
+    @background_method.setter
+    def background_method(self, value):
+        if value not in background_methods:
+            raise ValueError(f"Unknown background removal method '{value}'")
+        self.__background_method = value
+
+    @property
+    def edge_type(self):
+        return self.__edge_type
+
+    @edge_type.setter
+    def edge_type(self, value):
+        if value not in edge_types:
+            raise ValueError(f"Unknown edge type '{value}'")
+        self.__edge_type = value
+
+    @property
+    def step_length(self):
+        return self.__step_length
+
+    @step_length.setter
+    def step_length(self, value):
+        if value < 4:
+            raise ValueError(f"A reasonable step length should be >= 4")
+        self.__step_length = value
 
     def calibrate_background(self, background_data, is_dark):
         """Calibrate spatial encoder background.
@@ -132,8 +165,6 @@ class SpatialEncoder:
         elif self.background_method == 'div':
             data /= self._background
             data -= 1
-        else:
-            raise Exception("Unknown background removal method '{}'".format(self.background_method))
 
         # refine data
         def _interp(fp, xp, x):  # utility function to be used with apply_along_axis
@@ -154,8 +185,6 @@ class SpatialEncoder:
             step_waveform[: int(self.step_length / 2)] = -1
         elif self.edge_type == 'falling':
             step_waveform[int(self.step_length / 2) :] = -1
-        else:
-            raise Exception("Unknown edge type '{}'".format(self.edge_type))
 
         step_waveform = np.interp(
             x=np.arange(0, self.step_length - 1, self.refinement),
