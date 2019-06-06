@@ -132,6 +132,7 @@ class SpatialEncoderViewer(SpatialEncoder):
         p_xcorr.line('x', 'y', source=source_xcorr)
         p_xcorr.x_range = p_im.x_range
 
+        # Vertical spans
         span_args = dict(dimension='height', line_color='red')
         if np.isnan(edge_pos[0]):
             span_args['location'] = 0
@@ -154,6 +155,9 @@ class SpatialEncoderViewer(SpatialEncoder):
         s_xcorr = Span(**span_args)
         p_xcorr.add_layout(s_xcorr)
 
+        spans = [s_im, s_im_nobkg, s_nobkg, s_orig, s_xcorr]
+
+        # Final layout
         layout = gridplot(
             [p_im, p_im_nobkg, p_nobkg, p_orig, p_xcorr], ncols=1, toolbar_options=dict(logo=None)
         )
@@ -171,23 +175,12 @@ class SpatialEncoderViewer(SpatialEncoder):
             source_orig.data.update(y=orig_data[new], y_proj=images_proj[new])
             source_xcorr.data.update(y=xcorr_data[new])
 
-            if np.isnan(edge_pos[new]):
-                s_im.visible = False
-                s_im_nobkg.visible = False
-                s_nobkg.visible = False
-                s_orig.visible = False
-                s_xcorr.visible = False
-            else:
-                s_im.visible = True
-                s_im_nobkg.visible = True
-                s_nobkg.visible = True
-                s_orig.visible = True
-                s_xcorr.visible = True
-                s_im.location = edge_pos[new]
-                s_im_nobkg.location = edge_pos[new]
-                s_nobkg.location = edge_pos[new]
-                s_orig.location = edge_pos[new]
-                s_xcorr.location = edge_pos[new]
+            for span in spans:
+                if np.isnan(edge_pos[new]):
+                    span.visible = False
+                else:
+                    span.visible = True
+                    span.location = edge_pos[new]
 
             push_notebook(handle=handle)
 
