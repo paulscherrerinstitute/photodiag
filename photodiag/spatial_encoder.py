@@ -91,7 +91,10 @@ class SpatialEncoder:
             is_dark: index of dark shots
         """
         if is_dark is not None:
-            data = data[is_dark]
+            if np.any(is_dark):
+                data = data[is_dark]
+            else:
+                raise Exception("None of pulse ids correspond to dark shots")
 
         self._background = data.mean(axis=0)
 
@@ -310,7 +313,7 @@ class SpatialEncoder:
 
             elif self.dark_shot_filter:
                 index = pulse_id != 0
-                is_dark = np.logical_and(index, self.dark_shot_filter(pulse_id))
+                is_dark = self.dark_shot_filter(pulse_id)[index]
 
             else:
                 index = pulse_id != 0
