@@ -79,7 +79,7 @@ def create(palm):
         path_periodic_update()
 
     path_textinput = TextInput(
-        title="THz calibration path:", value=os.path.join(os.path.expanduser('~')), width=525
+        title="THz calibration path:", value=os.path.join(os.path.expanduser('~')), width=510
     )
     path_textinput.on_change('value', path_textinput_callback)
 
@@ -132,7 +132,7 @@ def create(palm):
             palm.thz_slope
         )
 
-    calibrate_button = Button(label="Calibrate THz", button_type='default')
+    calibrate_button = Button(label="Calibrate THz", button_type='default', width=250)
     calibrate_button.on_click(calibrate_button_callback)
 
     # THz fit maximal value text input
@@ -182,7 +182,7 @@ def create(palm):
         palm.save_thz_calib(path=path_textinput.value)
         update_load_dropdown_menu()
 
-    save_button = Button(label="Save", button_type='default', width=135)
+    save_button = Button(label="Save", button_type='default', width=250)
     save_button.on_click(save_button_callback)
 
     # Load calibration button
@@ -206,7 +206,7 @@ def create(palm):
     doc.add_next_tick_callback(update_load_dropdown_menu)
     doc.add_periodic_callback(update_load_dropdown_menu, 5000)
 
-    load_dropdown = Dropdown(label="Load", menu=[], width=135)
+    load_dropdown = Dropdown(label="Load", menu=[], width=250)
     load_dropdown.on_change('value', load_dropdown_callback)
 
     # Calibration constants
@@ -229,7 +229,7 @@ def create(palm):
                 calibrate_button,
                 fit_max_textinput,
                 fit_min_textinput,
-                row(save_button, Spacer(width=10), load_dropdown),
+                row(save_button, load_dropdown),
                 calib_const_div,
             ),
         )

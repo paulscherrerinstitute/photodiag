@@ -198,7 +198,7 @@ def create(palm):
             connect_toggle.label = 'Connect'
             connect_toggle.button_type = 'default'
 
-    connect_toggle = Toggle(label="Connect", button_type='default')
+    connect_toggle = Toggle(label="Connect", button_type='default', width=250)
     connect_toggle.on_click(connect_toggle_callback)
 
     # Intensity stream reset button
@@ -206,7 +206,7 @@ def create(palm):
         nonlocal stream_t
         stream_t = 1  # keep the latest point in order to prevent full axis reset
 
-    reset_button = Button(label="Reset", button_type='default')
+    reset_button = Button(label="Reset", button_type='default', width=250)
     reset_button.on_click(reset_button_callback)
 
     # Stream update coroutine
@@ -269,7 +269,7 @@ def create(palm):
         row(
             column(waveform_plot, xcorr_plot),
             Spacer(width=30),
-            column(buffer_slider, connect_toggle, reset_button),
+            column(buffer_slider, row(connect_toggle, reset_button)),
         ),
         row(pulse_delay_plot, Spacer(width=10), pulse_length_plot),
     )

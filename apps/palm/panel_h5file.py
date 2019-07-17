@@ -190,7 +190,7 @@ def create(palm):
         path_periodic_update()
 
     path_textinput = TextInput(
-        title="Folder Path:", value=os.path.join(os.path.expanduser('~')), width=525
+        title="Folder Path:", value=os.path.join(os.path.expanduser('~')), width=510
     )
     path_textinput.on_change('value', path_textinput_callback)
 
@@ -253,7 +253,7 @@ def create(palm):
     def pulse_slider_callback(_attr, _old, new):
         h5_update_fun(pulse=new)
 
-    pulse_slider = Slider(start=0, end=99999, value=0, step=1, title="Pulse ID", width=500)
+    pulse_slider = Slider(start=0, end=99999, value=0, step=1, title="Pulse ID")
     pulse_slider.on_change('value', pulse_slider_callback)
 
     # Energy maximal range value text input
@@ -314,11 +314,11 @@ def create(palm):
 
     # Save location
     save_textinput = TextInput(
-        title="Save Folder Path:", value=os.path.join(os.path.expanduser('~')), width=525
+        title="Save Folder Path:", value=os.path.join(os.path.expanduser('~'))
     )
 
     # Autosave checkbox
-    autosave_checkbox = CheckboxButtonGroup(labels=["Auto Save"], active=[], width=100)
+    autosave_checkbox = CheckboxButtonGroup(labels=["Auto Save"], active=[], width=250)
 
     # Save button
     def save_button_callback():
@@ -328,7 +328,7 @@ def create(palm):
             df = pd.DataFrame({'pulse_id': tags, 'pulse_delay': delays, 'pulse_length': lengths})
             df.to_csv(os.path.join(save_textinput.value, save_filename), index=False)
 
-    save_button = Button(label="Save Results", button_type='default')
+    save_button = Button(label="Save Results", button_type='default', width=250)
     save_button.on_click(save_button_callback)
 
     # assemble
