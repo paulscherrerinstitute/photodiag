@@ -25,7 +25,6 @@ from bokeh.models import (
     Toggle,
     WheelZoomTool,
 )
-from tornado import gen
 
 import receiver
 
@@ -210,8 +209,7 @@ def create(palm):
     reset_button.on_click(reset_button_callback)
 
     # Stream update coroutine
-    @gen.coroutine
-    def update(message):
+    async def update(message):
         nonlocal stream_t
         if connected and receiver.state == 'receiving':
             y_ref = message[receiver.reference].value[np.newaxis, :]
@@ -236,8 +234,7 @@ def create(palm):
             stream_t += 1
 
     # Periodic callback to fetch data from receiver
-    @gen.coroutine
-    def internal_periodic_callback():
+    async def internal_periodic_callback():
         nonlocal current_message
         if waveform_plot.inner_width is None:
             # wait for the initialization to finish, thus skip this periodic callback
