@@ -253,7 +253,15 @@ def create(palm):
     def pulse_slider_callback(_attr, _old, new):
         h5_update_fun(pulse=new)
 
-    pulse_slider = Slider(start=0, end=99999, value=0, step=1, title="Pulse ID")
+    pulse_slider = Slider(
+        start=0,
+        end=99999,
+        value=0,
+        step=1,
+        title="Pulse ID",
+        callback_policy='throttle',
+        callback_throttle=500,
+    )
     pulse_slider.on_change('value', pulse_slider_callback)
 
     # Energy maximal range value text input

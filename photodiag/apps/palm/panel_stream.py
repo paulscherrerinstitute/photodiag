@@ -170,19 +170,19 @@ def create(palm):
 
     # Image buffer slider
     def buffer_slider_callback(_attr, _old, new):
-        message = receiver.data_buffer[round(new['value'][0])]
+        message = receiver.data_buffer[new]
         doc.add_next_tick_callback(partial(update, message=message))
 
-    buffer_slider_source = ColumnDataSource(dict(value=[]))
-    buffer_slider_source.on_change('data', buffer_slider_callback)
-
     buffer_slider = Slider(
-        start=0, end=1, value=0, step=1, title="Buffered Image", callback_policy='mouseup'
+        start=0,
+        end=59,
+        value=0,
+        step=1,
+        title="Buffered Image",
+        callback_policy='throttle',
+        callback_throttle=500,
     )
-
-    buffer_slider.callback = CustomJS(
-        args=dict(source=buffer_slider_source), code="""source.data = {value: [cb_obj.value]}"""
-    )
+    buffer_slider.on_change('value', buffer_slider_callback)
 
     # Connect toggle button
     def connect_toggle_callback(state):
