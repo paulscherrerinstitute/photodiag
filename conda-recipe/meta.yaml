@@ -9,7 +9,7 @@ source:
 
 build:
   entry_points:
-    - photodiag = photodiag.photodiag:main
+    - photodiag = photodiag.cli:main
 
 requirements:
   build:
