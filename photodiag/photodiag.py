@@ -13,7 +13,7 @@ def main():
     import sys
     import subprocess
 
-    apps_path = os.path.join(os.environ['CONDA_PREFIX'], 'photodiag-apps')
+    apps_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'apps')
 
     # TODO: generalize photodiag parsing after python/3.7 release
     # due to an issue with 'argparse' (https://bugs.python.org/issue14191),
