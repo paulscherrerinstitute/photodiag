@@ -6,6 +6,9 @@ from multiprocessing import Pool
 import h5py
 import numpy as np
 
+from .utils import find_edge
+
+
 background_methods = ['div', 'sub']
 edge_types = ['falling', 'rising']
 
@@ -170,44 +173,9 @@ class SpatialEncoder:
             data /= self._background
             data -= 1
 
-        # refine data
-        def _interp(fp, xp, x):  # utility function to be used with apply_along_axis
-            return np.interp(x, xp, fp)
-
-        data_length = data.shape[1]
-        refined_data = np.apply_along_axis(
-            _interp,
-            axis=1,
-            arr=data,
-            x=np.arange(0, data_length - 1, self.refinement),
-            xp=np.arange(data_length),
-        )
-
-        # prepare a step function and refine it
-        step_waveform = np.ones(shape=(self.step_length,))
-        if self.edge_type == 'rising':
-            step_waveform[: int(self.step_length / 2)] = -1
-        elif self.edge_type == 'falling':
-            step_waveform[int(self.step_length / 2) :] = -1
-
-        step_waveform = np.interp(
-            x=np.arange(0, self.step_length - 1, self.refinement),
-            xp=np.arange(self.step_length),
-            fp=step_waveform,
-        )
-
-        # find edges
-        xcorr = np.apply_along_axis(np.correlate, 1, refined_data, v=step_waveform, mode='valid')
-        edge_position = np.argmax(xcorr, axis=1).astype(float) * self.refinement
-        xcorr_amplitude = np.amax(xcorr, axis=1)
-
-        # correct edge_position for step_length
-        edge_position += np.floor(self.step_length / 2)
-
-        output = {'edge_pos': edge_position, 'xcorr_ampl': xcorr_amplitude}
+        output = find_edge(data, self.step_length, self.edge_type, self.refinement)
 
         if debug:
-            output['xcorr'] = xcorr
             output['raw_input'] = data
 
         return output
