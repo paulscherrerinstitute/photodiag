@@ -1,7 +1,7 @@
 import numpy as np
 
 
-def find_edge(data, step_length, edge_type, refinement):
+def find_edge(data, step_length=50, edge_type='falling', refinement=1):
     # refine data
     def _interp(fp, xp, x):  # utility function to be used with apply_along_axis
         return np.interp(x, xp, fp)
