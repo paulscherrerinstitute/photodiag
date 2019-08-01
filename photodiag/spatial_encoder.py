@@ -1,4 +1,3 @@
-import json
 import warnings
 from functools import partial
 from multiprocessing import Pool
@@ -6,8 +5,7 @@ from multiprocessing import Pool
 import h5py
 import numpy as np
 
-from .utils import find_edge
-
+from .utils import find_edge, read_eco_scan
 
 background_methods = ['div', 'sub']
 edge_types = ['falling', 'rising']
@@ -119,7 +117,7 @@ class SpatialEncoder:
             raise Exception("Background calibration is not found")
 
         if method == 'avg_wf':
-            scan_pos_fs, bsread_files = self._read_eco_scan(filepath)
+            scan_pos_fs, bsread_files = read_eco_scan(filepath)
 
             edge_pos_pix = np.empty(len(scan_pos_fs))
             for i, bsread_file in enumerate(bsread_files):
@@ -226,7 +224,7 @@ class SpatialEncoder:
             if self._background is None:
                 raise Exception("Background calibration is not found")
 
-        scan_pos_fs, bsread_files = self._read_eco_scan(filepath)
+        scan_pos_fs, bsread_files = read_eco_scan(filepath)
 
         with Pool(processes=nproc) as pool:
             output = pool.map(partial(self.process_hdf5, debug=debug), bsread_files)
@@ -299,25 +297,3 @@ class SpatialEncoder:
             return data, pulse_id, is_dark, images
 
         return data, pulse_id, is_dark, None
-
-    @staticmethod
-    def _read_eco_scan(filepath):
-        """Extract `scan_readbacks` and corresponding bsread `scan_files` from an eco scan.
-
-        Args:
-            filepath: path to a json eco scan file to read data from
-        Returns:
-            scan_pos_fs, bsread_files
-        """
-        with open(filepath) as eco_file:
-            eco_scan = json.load(eco_file)
-
-        # flatten scan_readbacks array and convert values to femtoseconds
-        scan_pos_fs = np.ravel(eco_scan['scan_readbacks']) * 1e15
-
-        scan_files = eco_scan['scan_files']
-        # bsread file is 'normally' a first file on a list, but maybe the following should be
-        # implemented in a more robust way
-        bsread_files = [scan_file[0] for scan_file in scan_files]
-
-        return scan_pos_fs, bsread_files
