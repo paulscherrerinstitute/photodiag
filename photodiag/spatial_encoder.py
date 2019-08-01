@@ -32,7 +32,7 @@ class SpatialEncoder:
             channel: data channel of spatial encoder
             roi: region of interest for spatial encoder image projection along y-axis
             background_method: {'div', 'sub'} background removal method
-                'div': data = data / background - 1
+                'div': data = log10(data / background)
                 'sub': data = data - background
             step_length: length of a step waveform in pix
             events_channel: data channel of events
@@ -171,7 +171,7 @@ class SpatialEncoder:
             data -= self._background
         elif self.background_method == 'div':
             data /= self._background
-            data -= 1
+            data = np.log10(data)
 
         output = find_edge(data, self.step_length, self.edge_type, self.refinement)
 
