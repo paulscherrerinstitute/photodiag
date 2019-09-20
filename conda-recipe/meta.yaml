@@ -16,7 +16,7 @@ requirements:
     - python
     - setuptools
   run:
-    - python>=3.5
+    - python>=3.6
     - bokeh==1.2.0
     - scipy>=1.1.0
     - pandas>=0.23.1
