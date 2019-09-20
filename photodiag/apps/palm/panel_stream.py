@@ -8,7 +8,6 @@ from bokeh.models import (
     BoxZoomTool,
     Button,
     ColumnDataSource,
-    CustomJS,
     DataRange1d,
     Grid,
     Legend,
@@ -244,6 +243,10 @@ def create(palm):
             if receiver.state == 'polling':
                 connect_toggle.label = 'Polling'
                 connect_toggle.button_type = 'warning'
+
+            elif receiver.state == 'stopped':
+                connect_toggle.label = 'Not available'
+                connect_toggle.button_type = 'danger'
 
             elif receiver.state == 'receiving':
                 connect_toggle.label = 'Receiving'

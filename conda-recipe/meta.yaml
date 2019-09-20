@@ -21,7 +21,6 @@ requirements:
     - scipy>=1.1.0
     - pandas>=0.23.1
     - h5py>=2.8.0
-    - bsread>=1.4.0
     - numpy>=1.15.0
 
 about:

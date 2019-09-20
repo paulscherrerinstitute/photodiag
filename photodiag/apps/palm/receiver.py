@@ -1,7 +1,8 @@
 import argparse
+import logging
 from collections import deque
 
-from bsread import source
+logger = logging.getLogger(__name__)
 
 parser = argparse.ArgumentParser()
 parser.add_argument('beamline')
@@ -28,11 +29,18 @@ state = 'polling'
 def stream_receive():
     global state
     try:
+        from bsread import source
+    except ImportError:
+        state = 'stopped'
+        logger.info('bsread is not available')
+        return
+
+    try:
         with source(channels=[reference, streaked]) as stream:
             while True:
                 message = stream.receive()
                 data_buffer.append(message.data.data)
                 state = 'receiving'
 
-    except Exception as e:
-        print(e)
+    except Exception:
+        logger.exception('can not read from stream')
