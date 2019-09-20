@@ -62,7 +62,7 @@ def main():
 
     handler = DirectoryHandler(filename=app_path, argv=args.args)
     server = Server(
-        {'/': Application(handler)},
+        {f'/{args.app}': Application(handler)},
         port=args.port,
         allow_websocket_origin=args.allow_websocket_origin,
     )
