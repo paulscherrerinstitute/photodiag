@@ -24,6 +24,7 @@ from bokeh.models import (
     Slider,
     Spacer,
     Span,
+    Spinner,
     TextInput,
     Title,
     WheelZoomTool,
@@ -185,8 +186,8 @@ def create(palm):
     pulse_length_plot.add_layout(pulse_length_plot_span)
 
     # Folder path text input
-    def path_textinput_callback(_attr, _old, new):
-        save_textinput.value = new
+    def path_textinput_callback(_attr, _old_value, new_value):
+        save_textinput.value = new_value
         path_periodic_update()
 
     path_textinput = TextInput(
@@ -216,13 +217,13 @@ def create(palm):
     # this placeholder function should be reassigned in 'saved_runs_dropdown_callback'
     h5_update_fun = lambda pulse: None
 
-    def saved_runs_dropdown_callback(_attr, _old, new):
-        if new != "Saved Runs":
+    def saved_runs_dropdown_callback(_attr, _old_value, new_value):
+        if new_value != "Saved Runs":
             nonlocal h5_update_fun, current_results
-            saved_runs_dropdown.label = new
-            filepath = os.path.join(path_textinput.value, new)
+            saved_runs_dropdown.label = new_value
+            filepath = os.path.join(path_textinput.value, new_value)
             tags, delays, lengths, debug_data = palm.process_hdf5_file(filepath, debug=True)
-            current_results = (new, tags, delays, lengths)
+            current_results = (new_value, tags, delays, lengths)
 
             if autosave_checkbox.active:
                 save_button_callback()
@@ -250,8 +251,8 @@ def create(palm):
     doc.add_periodic_callback(path_periodic_update, 5000)
 
     # Pulse number slider
-    def pulse_slider_callback(_attr, _old, new):
-        h5_update_fun(pulse=new)
+    def pulse_slider_callback(_attr, _old_value, new_value):
+        h5_update_fun(pulse=new_value)
 
     pulse_slider = Slider(
         start=0,
@@ -265,60 +266,43 @@ def create(palm):
     pulse_slider.on_change('value', pulse_slider_callback)
 
     # Energy maximal range value text input
-    def energy_max_textinput_callback(_attr, old, new):
+    def energy_max_spinner_callback(_attr, old_value, new_value):
         nonlocal energy_max
-        try:
-            new_value = float(new)
-            if new_value > energy_min:
-                energy_max = new_value
-                palm.energy_range = np.linspace(energy_min, energy_max, energy_npoints)
-                saved_runs_dropdown_callback('', '', saved_runs_dropdown.label)
-            else:
-                energy_max_textinput.value = old
+        if new_value > energy_min:
+            energy_max = new_value
+            palm.energy_range = np.linspace(energy_min, energy_max, energy_npoints)
+            saved_runs_dropdown_callback('', '', saved_runs_dropdown.label)
+        else:
+            energy_max_spinner.value = old_value
 
-        except ValueError:
-            energy_max_textinput.value = old
-
-    energy_max_textinput = TextInput(title='Maximal Energy, eV:', value=str(energy_max))
-    energy_max_textinput.on_change('value', energy_max_textinput_callback)
+    energy_max_spinner = Spinner(title='Maximal Energy, eV:', value=energy_max, step=0.1)
+    energy_max_spinner.on_change('value', energy_max_spinner_callback)
 
     # Energy minimal range value text input
-    def energy_min_textinput_callback(_attr, old, new):
+    def energy_min_spinner_callback(_attr, old_value, new_value):
         nonlocal energy_min
-        try:
-            new_value = float(new)
-            if new_value < energy_max:
-                energy_min = new_value
-                palm.energy_range = np.linspace(energy_min, energy_max, energy_npoints)
-                saved_runs_dropdown_callback('', '', saved_runs_dropdown.label)
-            else:
-                energy_min_textinput.value = old
+        if new_value < energy_max:
+            energy_min = new_value
+            palm.energy_range = np.linspace(energy_min, energy_max, energy_npoints)
+            saved_runs_dropdown_callback('', '', saved_runs_dropdown.label)
+        else:
+            energy_min_spinner.value = old_value
 
-        except ValueError:
-            energy_min_textinput.value = old
-
-    energy_min_textinput = TextInput(title='Minimal Energy, eV:', value=str(energy_min))
-    energy_min_textinput.on_change('value', energy_min_textinput_callback)
+    energy_min_spinner = Spinner(title='Minimal Energy, eV:', value=energy_min, step=0.1)
+    energy_min_spinner.on_change('value', energy_min_spinner_callback)
 
     # Energy number of interpolation points text input
-    def energy_npoints_textinput_callback(_attr, old, new):
+    def energy_npoints_spinner_callback(_attr, old_value, new_value):
         nonlocal energy_npoints
-        try:
-            new_value = int(new)
-            if new_value > 1:
-                energy_npoints = new_value
-                palm.energy_range = np.linspace(energy_min, energy_max, energy_npoints)
-                saved_runs_dropdown_callback('', '', saved_runs_dropdown.label)
-            else:
-                energy_npoints_textinput.value = old
+        if new_value > 1:
+            energy_npoints = new_value
+            palm.energy_range = np.linspace(energy_min, energy_max, energy_npoints)
+            saved_runs_dropdown_callback('', '', saved_runs_dropdown.label)
+        else:
+            energy_npoints_spinner.value = old_value
 
-        except ValueError:
-            energy_npoints_textinput.value = old
-
-    energy_npoints_textinput = TextInput(
-        title='Number of interpolation points:', value=str(energy_npoints)
-    )
-    energy_npoints_textinput.on_change('value', energy_npoints_textinput_callback)
+    energy_npoints_spinner = Spinner(title='Number of interpolation points:', value=energy_npoints)
+    energy_npoints_spinner.on_change('value', energy_npoints_spinner_callback)
 
     # Save location
     save_textinput = TextInput(
@@ -349,9 +333,9 @@ def create(palm):
                 saved_runs_dropdown,
                 pulse_slider,
                 Spacer(height=30),
-                energy_min_textinput,
-                energy_max_textinput,
-                energy_npoints_textinput,
+                energy_min_spinner,
+                energy_max_spinner,
+                energy_npoints_spinner,
                 Spacer(height=30),
                 save_textinput,
                 autosave_checkbox,

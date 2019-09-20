@@ -27,6 +27,7 @@ from bokeh.models import (
     ResetTool,
     Spacer,
     Span,
+    Spinner,
     TableColumn,
     TextInput,
     Title,
@@ -149,8 +150,10 @@ def create(palm):
     fit_plot.legend.click_policy = "hide"
 
     # Calibration results datatables
-    def datatable_ref_source_callback(_attr, _old, new):
-        for en, ps, use in zip(new['energy'], new['peak_pos_ref'], new['use_in_fit']):
+    def datatable_ref_source_callback(_attr, _old_value, new_value):
+        for en, ps, use in zip(
+            new_value['energy'], new_value['peak_pos_ref'], new_value['use_in_fit']
+        ):
             palm.etofs['0'].calib_data.loc[en, 'calib_tpeak'] = ps if ps != 'NaN' else np.nan
             palm.etofs['0'].calib_data.loc[en, 'use_in_fit'] = use
 
@@ -177,8 +180,10 @@ def create(palm):
         width=250,
     )
 
-    def datatable_str_source_callback(_attr, _old, new):
-        for en, ps, use in zip(new['energy'], new['peak_pos_str'], new['use_in_fit']):
+    def datatable_str_source_callback(_attr, _old_value, new_value):
+        for en, ps, use in zip(
+            new_value['energy'], new_value['peak_pos_str'], new_value['use_in_fit']
+        ):
             palm.etofs['1'].calib_data.loc[en, 'calib_tpeak'] = ps if ps != 'NaN' else np.nan
             palm.etofs['1'].calib_data.loc[en, 'use_in_fit'] = use
 
@@ -206,7 +211,7 @@ def create(palm):
     )
 
     # eTOF calibration folder path text input
-    def path_textinput_callback(_attr, _old, _new):
+    def path_textinput_callback(_attr, _old_value, _new_value):
         path_periodic_update()
         update_load_dropdown_menu()
 
@@ -216,8 +221,8 @@ def create(palm):
     path_textinput.on_change('value', path_textinput_callback)
 
     # eTOF calibration eco scans dropdown
-    def scans_dropdown_callback(_attr, _old, new):
-        scans_dropdown.label = new
+    def scans_dropdown_callback(_attr, _old_value, new_value):
+        scans_dropdown.label = new_value
 
     scans_dropdown = Dropdown(label="ECO scans", button_type='default', menu=[])
     scans_dropdown.on_change('value', scans_dropdown_callback)
@@ -309,36 +314,26 @@ def create(palm):
     calibrate_button.on_click(calibrate_button_callback)
 
     # Photon peak noise threshold value text input
-    def phot_peak_noise_thr_textinput_callback(_attr, old, new):
-        try:
-            new_value = float(new)
-            if new_value > 0:
-                for etof in palm.etofs.values():
-                    etof.photon_peak_noise_thr = new_value
-            else:
-                phot_peak_noise_thr_textinput.value = old
+    def phot_peak_noise_thr_spinner_callback(_attr, old_value, new_value):
+        if new_value > 0:
+            for etof in palm.etofs.values():
+                etof.photon_peak_noise_thr = new_value
+        else:
+            phot_peak_noise_thr_spinner.value = old_value
 
-        except ValueError:
-            phot_peak_noise_thr_textinput.value = old
-
-    phot_peak_noise_thr_textinput = TextInput(title='Photon peak noise threshold:', value=str(1))
-    phot_peak_noise_thr_textinput.on_change('value', phot_peak_noise_thr_textinput_callback)
+    phot_peak_noise_thr_spinner = Spinner(title='Photon peak noise threshold:', value=1, step=0.1)
+    phot_peak_noise_thr_spinner.on_change('value', phot_peak_noise_thr_spinner_callback)
 
     # Electron peak noise threshold value text input
-    def el_peak_noise_thr_textinput_callback(_attr, old, new):
-        try:
-            new_value = float(new)
-            if new_value > 0:
-                for etof in palm.etofs.values():
-                    etof.electron_peak_noise_thr = new_value
-            else:
-                el_peak_noise_thr_textinput.value = old
+    def el_peak_noise_thr_spinner_callback(_attr, old_value, new_value):
+        if new_value > 0:
+            for etof in palm.etofs.values():
+                etof.electron_peak_noise_thr = new_value
+        else:
+            el_peak_noise_thr_spinner.value = old_value
 
-        except ValueError:
-            el_peak_noise_thr_textinput.value = old
-
-    el_peak_noise_thr_textinput = TextInput(title='Electron peak noise threshold:', value=str(10))
-    el_peak_noise_thr_textinput.on_change('value', el_peak_noise_thr_textinput_callback)
+    el_peak_noise_thr_spinner = Spinner(title='Electron peak noise threshold:', value=10, step=0.1)
+    el_peak_noise_thr_spinner.on_change('value', el_peak_noise_thr_spinner_callback)
 
     # Save calibration button
     def save_button_callback():
@@ -349,9 +344,9 @@ def create(palm):
     save_button.on_click(save_button_callback)
 
     # Load calibration button
-    def load_dropdown_callback(_attr, _old, new):
-        if new:
-            palm.load_etof_calib(os.path.join(path_textinput.value, new))
+    def load_dropdown_callback(_attr, _old_value, new_value):
+        if new_value:
+            palm.load_etof_calib(os.path.join(path_textinput.value, new_value))
 
             datatable_ref_source.data.update(
                 energy=palm.etofs['0'].calib_data.index.tolist(),
@@ -413,8 +408,8 @@ def create(palm):
                 path_textinput,
                 scans_dropdown,
                 calibrate_button,
-                phot_peak_noise_thr_textinput,
-                el_peak_noise_thr_textinput,
+                phot_peak_noise_thr_spinner,
+                el_peak_noise_thr_spinner,
                 row(save_button, load_dropdown),
                 row(datatable_ref, datatable_str),
                 calib_const_div,

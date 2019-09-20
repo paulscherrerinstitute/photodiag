@@ -20,6 +20,7 @@ from bokeh.models import (
     Plot,
     ResetTool,
     Spacer,
+    Spinner,
     TextInput,
     Title,
     WheelZoomTool,
@@ -74,7 +75,7 @@ def create(palm):
     scan_plot.add_glyph(fit_line_source, Line(x='x', y='y', line_color='purple'))
 
     # THz calibration folder path text input
-    def path_textinput_callback(_attr, _old, _new):
+    def path_textinput_callback(_attr, _old_value, _new_value):
         update_load_dropdown_menu()
         path_periodic_update()
 
@@ -84,8 +85,8 @@ def create(palm):
     path_textinput.on_change('value', path_textinput_callback)
 
     # THz calibration eco scans dropdown
-    def scans_dropdown_callback(_attr, _old, new):
-        scans_dropdown.label = new
+    def scans_dropdown_callback(_attr, _old_value, new_value):
+        scans_dropdown.label = new_value
 
     scans_dropdown = Dropdown(label="ECO scans", button_type='default', menu=[])
     scans_dropdown.on_change('value', scans_dropdown_callback)
@@ -104,8 +105,8 @@ def create(palm):
     # Calibrate button
     def calibrate_button_callback():
         palm.calibrate_thz(path=os.path.join(path_textinput.value, scans_dropdown.value))
-        fit_max_textinput.value = str(np.ceil(palm.thz_calib_data.index.values.max()))
-        fit_min_textinput.value = str(np.floor(palm.thz_calib_data.index.values.min()))
+        fit_max_spinner.value = np.ceil(palm.thz_calib_data.index.values.max())
+        fit_min_spinner.value = np.floor(palm.thz_calib_data.index.values.min())
         update_calibration_plot()
 
     def update_calibration_plot():
@@ -136,46 +137,36 @@ def create(palm):
     calibrate_button.on_click(calibrate_button_callback)
 
     # THz fit maximal value text input
-    def fit_max_textinput_callback(_attr, old, new):
+    def fit_max_spinner_callback(_attr, old_value, new_value):
         nonlocal fit_max
-        try:
-            new_value = float(new)
-            if new_value > fit_min:
-                fit_max = new_value
-                palm.calibrate_thz(
-                    path=os.path.join(path_textinput.value, scans_dropdown.value),
-                    fit_range=(fit_min, fit_max),
-                )
-                update_calibration_plot()
-            else:
-                fit_max_textinput.value = old
+        if new_value > fit_min:
+            fit_max = new_value
+            palm.calibrate_thz(
+                path=os.path.join(path_textinput.value, scans_dropdown.value),
+                fit_range=(fit_min, fit_max),
+            )
+            update_calibration_plot()
+        else:
+            fit_max_spinner.value = old_value
 
-        except ValueError:
-            fit_max_textinput.value = old
-
-    fit_max_textinput = TextInput(title='Maximal fit value:', value=str(fit_max))
-    fit_max_textinput.on_change('value', fit_max_textinput_callback)
+    fit_max_spinner = Spinner(title='Maximal fit value:', value=fit_max, step=0.1)
+    fit_max_spinner.on_change('value', fit_max_spinner_callback)
 
     # THz fit maximal value text input
-    def fit_min_textinput_callback(_attr, old, new):
+    def fit_min_spinner_callback(_attr, old_value, new_value):
         nonlocal fit_min
-        try:
-            new_value = float(new)
-            if new_value < fit_max:
-                fit_min = new_value
-                palm.calibrate_thz(
-                    path=os.path.join(path_textinput.value, scans_dropdown.value),
-                    fit_range=(fit_min, fit_max),
-                )
-                update_calibration_plot()
-            else:
-                fit_min_textinput.value = old
+        if new_value < fit_max:
+            fit_min = new_value
+            palm.calibrate_thz(
+                path=os.path.join(path_textinput.value, scans_dropdown.value),
+                fit_range=(fit_min, fit_max),
+            )
+            update_calibration_plot()
+        else:
+            fit_min_spinner.value = old_value
 
-        except ValueError:
-            fit_min_textinput.value = old
-
-    fit_min_textinput = TextInput(title='Minimal fit value:', value=str(fit_min))
-    fit_min_textinput.on_change('value', fit_min_textinput_callback)
+    fit_min_spinner = Spinner(title='Minimal fit value:', value=fit_min, step=0.1)
+    fit_min_spinner.on_change('value', fit_min_spinner_callback)
 
     # Save calibration button
     def save_button_callback():
@@ -186,8 +177,8 @@ def create(palm):
     save_button.on_click(save_button_callback)
 
     # Load calibration button
-    def load_dropdown_callback(_attr, _old, new):
-        palm.load_thz_calib(os.path.join(path_textinput.value, new))
+    def load_dropdown_callback(_attr, _old_value, new_value):
+        palm.load_thz_calib(os.path.join(path_textinput.value, new_value))
         update_calibration_plot()
 
     def update_load_dropdown_menu():
@@ -227,8 +218,8 @@ def create(palm):
                 path_textinput,
                 scans_dropdown,
                 calibrate_button,
-                fit_max_textinput,
-                fit_min_textinput,
+                fit_max_spinner,
+                fit_min_spinner,
                 row(save_button, load_dropdown),
                 calib_const_div,
             ),
