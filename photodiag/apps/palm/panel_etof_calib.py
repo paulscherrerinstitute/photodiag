@@ -300,15 +300,13 @@ def create(palm):
         update_plot(calib_res['0'], fit_ref_circle_source, fit_ref_line_source)
         update_plot(calib_res['1'], fit_str_circle_source, fit_str_line_source)
 
-        calib_const_div.text = """
-        a_str = {:.2f}<br>
-        b_str = {:.2f}<br>
+        calib_const_div.text = f"""
+        a_str = {etof_str.calib_a:.2f}<br>
+        b_str = {etof_str.calib_b:.2f}<br>
         <br>
-        a_ref = {:.2f}<br>
-        b_ref = {:.2f}
-        """.format(
-            etof_str.calib_a, etof_str.calib_b, etof_ref.calib_a, etof_ref.calib_b
-        )
+        a_ref = {etof_ref.calib_a:.2f}<br>
+        b_ref = {etof_ref.calib_b:.2f}
+        """
 
     calibrate_button = Button(label="Calibrate eTOF", button_type='default', width=250)
     calibrate_button.on_click(calibrate_button_callback)
@@ -388,15 +386,13 @@ def create(palm):
 
     # Calibration constants
     calib_const_div = Div(
-        text="""
-        a_str = {}<br>
-        b_str = {}<br>
+        text=f"""
+        a_str = {0}<br>
+        b_str = {0}<br>
         <br>
-        a_ref = {}<br>
-        b_ref = {}
-        """.format(
-            0, 0, 0, 0
-        )
+        a_ref = {0}<br>
+        b_ref = {0}
+        """
     )
 
     # assemble
