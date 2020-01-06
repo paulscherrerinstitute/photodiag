@@ -43,7 +43,7 @@ def create(palm):
         y_range=DataRange1d(),
         plot_height=PLOT_CANVAS_HEIGHT,
         plot_width=PLOT_CANVAS_WIDTH,
-        toolbar_location='right',
+        toolbar_location="right",
     )
 
     # ---- tools
@@ -51,9 +51,9 @@ def create(palm):
     scan_plot.add_tools(PanTool(), BoxZoomTool(), WheelZoomTool(), ResetTool())
 
     # ---- axes
-    scan_plot.add_layout(LinearAxis(axis_label='Stage delay motor'), place='below')
+    scan_plot.add_layout(LinearAxis(axis_label="Stage delay motor"), place="below")
     scan_plot.add_layout(
-        LinearAxis(axis_label='Energy shift, eV', major_label_orientation='vertical'), place='left'
+        LinearAxis(axis_label="Energy shift, eV", major_label_orientation="vertical"), place="left"
     )
 
     # ---- grid lines
@@ -62,17 +62,17 @@ def create(palm):
 
     # ---- circle cluster glyphs
     scan_circle_source = ColumnDataSource(dict(x=[], y=[]))
-    scan_plot.add_glyph(scan_circle_source, Circle(x='x', y='y', line_alpha=0, fill_alpha=0.5))
+    scan_plot.add_glyph(scan_circle_source, Circle(x="x", y="y", line_alpha=0, fill_alpha=0.5))
 
     # ---- circle glyphs
     scan_avg_circle_source = ColumnDataSource(dict(x=[], y=[]))
     scan_plot.add_glyph(
-        scan_avg_circle_source, Circle(x='x', y='y', line_color='purple', fill_color='purple')
+        scan_avg_circle_source, Circle(x="x", y="y", line_color="purple", fill_color="purple")
     )
 
     # ---- line glyphs
     fit_line_source = ColumnDataSource(dict(x=[], y=[]))
-    scan_plot.add_glyph(fit_line_source, Line(x='x', y='y', line_color='purple'))
+    scan_plot.add_glyph(fit_line_source, Line(x="x", y="y", line_color="purple"))
 
     # THz calibration folder path text input
     def path_textinput_callback(_attr, _old_value, _new_value):
@@ -80,23 +80,23 @@ def create(palm):
         path_periodic_update()
 
     path_textinput = TextInput(
-        title="THz calibration path:", value=os.path.join(os.path.expanduser('~')), width=510
+        title="THz calibration path:", value=os.path.join(os.path.expanduser("~")), width=510
     )
-    path_textinput.on_change('value', path_textinput_callback)
+    path_textinput.on_change("value", path_textinput_callback)
 
     # THz calibration eco scans dropdown
     def scans_dropdown_callback(_attr, _old_value, new_value):
         scans_dropdown.label = new_value
 
-    scans_dropdown = Dropdown(label="ECO scans", button_type='default', menu=[])
-    scans_dropdown.on_change('value', scans_dropdown_callback)
+    scans_dropdown = Dropdown(label="ECO scans", button_type="default", menu=[])
+    scans_dropdown.on_change("value", scans_dropdown_callback)
 
     # ---- eco scans periodic update
     def path_periodic_update():
         new_menu = []
         if os.path.isdir(path_textinput.value):
             for entry in os.scandir(path_textinput.value):
-                if entry.is_file() and entry.name.endswith('.json'):
+                if entry.is_file() and entry.name.endswith(".json"):
                     new_menu.append((entry.name, entry.name))
         scans_dropdown.menu = sorted(new_menu, reverse=True)
 
@@ -110,17 +110,17 @@ def create(palm):
         update_calibration_plot()
 
     def update_calibration_plot():
-        scan_plot.xaxis.axis_label = f'{palm.thz_motor_name}, {palm.thz_motor_unit}'
+        scan_plot.xaxis.axis_label = f"{palm.thz_motor_name}, {palm.thz_motor_unit}"
 
         scan_circle_source.data.update(
             x=np.repeat(
-                palm.thz_calib_data.index, palm.thz_calib_data['peak_shift'].apply(len)
+                palm.thz_calib_data.index, palm.thz_calib_data["peak_shift"].apply(len)
             ).tolist(),
-            y=np.concatenate(palm.thz_calib_data['peak_shift'].values).tolist(),
+            y=np.concatenate(palm.thz_calib_data["peak_shift"].values).tolist(),
         )
 
         scan_avg_circle_source.data.update(
-            x=palm.thz_calib_data.index.tolist(), y=palm.thz_calib_data['peak_shift_mean'].tolist()
+            x=palm.thz_calib_data.index.tolist(), y=palm.thz_calib_data["peak_shift_mean"].tolist()
         )
 
         x = np.linspace(fit_min, fit_max, 100)
@@ -131,7 +131,7 @@ def create(palm):
         thz_slope = {palm.thz_slope}
         """
 
-    calibrate_button = Button(label="Calibrate THz", button_type='default', width=250)
+    calibrate_button = Button(label="Calibrate THz", button_type="default", width=250)
     calibrate_button.on_click(calibrate_button_callback)
 
     # THz fit maximal value text input
@@ -147,8 +147,8 @@ def create(palm):
         else:
             fit_max_spinner.value = old_value
 
-    fit_max_spinner = Spinner(title='Maximal fit value:', value=fit_max, step=0.1)
-    fit_max_spinner.on_change('value', fit_max_spinner_callback)
+    fit_max_spinner = Spinner(title="Maximal fit value:", value=fit_max, step=0.1)
+    fit_max_spinner.on_change("value", fit_max_spinner_callback)
 
     # THz fit maximal value text input
     def fit_min_spinner_callback(_attr, old_value, new_value):
@@ -163,15 +163,15 @@ def create(palm):
         else:
             fit_min_spinner.value = old_value
 
-    fit_min_spinner = Spinner(title='Minimal fit value:', value=fit_min, step=0.1)
-    fit_min_spinner.on_change('value', fit_min_spinner_callback)
+    fit_min_spinner = Spinner(title="Minimal fit value:", value=fit_min, step=0.1)
+    fit_min_spinner.on_change("value", fit_min_spinner_callback)
 
     # Save calibration button
     def save_button_callback():
         palm.save_thz_calib(path=path_textinput.value)
         update_load_dropdown_menu()
 
-    save_button = Button(label="Save", button_type='default', width=250)
+    save_button = Button(label="Save", button_type="default", width=250)
     save_button.on_click(save_button_callback)
 
     # Load calibration button
@@ -181,22 +181,22 @@ def create(palm):
 
     def update_load_dropdown_menu():
         new_menu = []
-        calib_file_ext = '.palm_thz'
+        calib_file_ext = ".palm_thz"
         if os.path.isdir(path_textinput.value):
             for entry in os.scandir(path_textinput.value):
                 if entry.is_file() and entry.name.endswith((calib_file_ext)):
                     new_menu.append((entry.name[: -len(calib_file_ext)], entry.name))
-            load_dropdown.button_type = 'default'
+            load_dropdown.button_type = "default"
             load_dropdown.menu = sorted(new_menu, reverse=True)
         else:
-            load_dropdown.button_type = 'danger'
+            load_dropdown.button_type = "danger"
             load_dropdown.menu = new_menu
 
     doc.add_next_tick_callback(update_load_dropdown_menu)
     doc.add_periodic_callback(update_load_dropdown_menu, 5000)
 
     load_dropdown = Dropdown(label="Load", menu=[], width=250)
-    load_dropdown.on_change('value', load_dropdown_callback)
+    load_dropdown.on_change("value", load_dropdown_callback)
 
     # Calibration constants
     calib_const_div = Div(

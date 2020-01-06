@@ -50,7 +50,7 @@ def create(palm):
         y_range=DataRange1d(),
         plot_height=PLOT_CANVAS_HEIGHT,
         plot_width=PLOT_CANVAS_WIDTH,
-        toolbar_location='right',
+        toolbar_location="right",
     )
 
     # ---- tools
@@ -58,9 +58,9 @@ def create(palm):
     waveform_plot.add_tools(PanTool(), BoxZoomTool(), WheelZoomTool(), ResetTool())
 
     # ---- axes
-    waveform_plot.add_layout(LinearAxis(axis_label='Photon energy, eV'), place='below')
+    waveform_plot.add_layout(LinearAxis(axis_label="Photon energy, eV"), place="below")
     waveform_plot.add_layout(
-        LinearAxis(axis_label='Intensity', major_label_orientation='vertical'), place='left'
+        LinearAxis(axis_label="Intensity", major_label_orientation="vertical"), place="left"
     )
 
     # ---- grid lines
@@ -70,10 +70,10 @@ def create(palm):
     # ---- line glyphs
     waveform_source = ColumnDataSource(dict(x_str=[], y_str=[], x_ref=[], y_ref=[]))
     waveform_ref_line = waveform_plot.add_glyph(
-        waveform_source, Line(x='x_ref', y='y_ref', line_color='blue')
+        waveform_source, Line(x="x_ref", y="y_ref", line_color="blue")
     )
     waveform_str_line = waveform_plot.add_glyph(
-        waveform_source, Line(x='x_str', y='y_str', line_color='red')
+        waveform_source, Line(x="x_str", y="y_str", line_color="red")
     )
 
     # ---- legend
@@ -89,7 +89,7 @@ def create(palm):
         y_range=DataRange1d(),
         plot_height=PLOT_CANVAS_HEIGHT,
         plot_width=PLOT_CANVAS_WIDTH,
-        toolbar_location='right',
+        toolbar_location="right",
     )
 
     # ---- tools
@@ -97,9 +97,9 @@ def create(palm):
     xcorr_plot.add_tools(PanTool(), BoxZoomTool(), WheelZoomTool(), ResetTool())
 
     # ---- axes
-    xcorr_plot.add_layout(LinearAxis(axis_label='Energy shift, eV'), place='below')
+    xcorr_plot.add_layout(LinearAxis(axis_label="Energy shift, eV"), place="below")
     xcorr_plot.add_layout(
-        LinearAxis(axis_label='Cross-correlation', major_label_orientation='vertical'), place='left'
+        LinearAxis(axis_label="Cross-correlation", major_label_orientation="vertical"), place="left"
     )
 
     # ---- grid lines
@@ -109,12 +109,12 @@ def create(palm):
     # ---- line glyphs
     xcorr_source = ColumnDataSource(dict(lags=[], xcorr1=[], xcorr2=[]))
     xcorr_plot.add_glyph(
-        xcorr_source, Line(x='lags', y='xcorr1', line_color='purple', line_dash='dashed')
+        xcorr_source, Line(x="lags", y="xcorr1", line_color="purple", line_dash="dashed")
     )
-    xcorr_plot.add_glyph(xcorr_source, Line(x='lags', y='xcorr2', line_color='purple'))
+    xcorr_plot.add_glyph(xcorr_source, Line(x="lags", y="xcorr2", line_color="purple"))
 
     # ---- vertical span
-    xcorr_center_span = Span(location=0, dimension='height')
+    xcorr_center_span = Span(location=0, dimension="height")
     xcorr_plot.add_layout(xcorr_center_span)
 
     # Delays plot
@@ -124,7 +124,7 @@ def create(palm):
         y_range=DataRange1d(),
         plot_height=PLOT_CANVAS_HEIGHT,
         plot_width=PLOT_CANVAS_WIDTH,
-        toolbar_location='right',
+        toolbar_location="right",
     )
 
     # ---- tools
@@ -132,10 +132,10 @@ def create(palm):
     pulse_delay_plot.add_tools(PanTool(), BoxZoomTool(), WheelZoomTool(), ResetTool())
 
     # ---- axes
-    pulse_delay_plot.add_layout(LinearAxis(axis_label='Pulse number'), place='below')
+    pulse_delay_plot.add_layout(LinearAxis(axis_label="Pulse number"), place="below")
     pulse_delay_plot.add_layout(
-        LinearAxis(axis_label='Pulse delay (uncalib), eV', major_label_orientation='vertical'),
-        place='left',
+        LinearAxis(axis_label="Pulse delay (uncalib), eV", major_label_orientation="vertical"),
+        place="left",
     )
 
     # ---- grid lines
@@ -145,11 +145,11 @@ def create(palm):
     # ---- line glyphs
     pulse_delay_source = ColumnDataSource(dict(pulse=[], delay=[]))
     pulse_delay_plot.add_glyph(
-        pulse_delay_source, Line(x='pulse', y='delay', line_color='steelblue')
+        pulse_delay_source, Line(x="pulse", y="delay", line_color="steelblue")
     )
 
     # ---- vertical span
-    pulse_delay_plot_span = Span(location=0, dimension='height')
+    pulse_delay_plot_span = Span(location=0, dimension="height")
     pulse_delay_plot.add_layout(pulse_delay_plot_span)
 
     # Pulse lengths plot
@@ -159,7 +159,7 @@ def create(palm):
         y_range=DataRange1d(),
         plot_height=PLOT_CANVAS_HEIGHT,
         plot_width=PLOT_CANVAS_WIDTH,
-        toolbar_location='right',
+        toolbar_location="right",
     )
 
     # ---- tools
@@ -167,10 +167,10 @@ def create(palm):
     pulse_length_plot.add_tools(PanTool(), BoxZoomTool(), WheelZoomTool(), ResetTool())
 
     # ---- axes
-    pulse_length_plot.add_layout(LinearAxis(axis_label='Pulse number'), place='below')
+    pulse_length_plot.add_layout(LinearAxis(axis_label="Pulse number"), place="below")
     pulse_length_plot.add_layout(
-        LinearAxis(axis_label='Pulse length (uncalib), eV', major_label_orientation='vertical'),
-        place='left',
+        LinearAxis(axis_label="Pulse length (uncalib), eV", major_label_orientation="vertical"),
+        place="left",
     )
 
     # ---- grid lines
@@ -179,10 +179,10 @@ def create(palm):
 
     # ---- line glyphs
     pulse_length_source = ColumnDataSource(dict(x=[], y=[]))
-    pulse_length_plot.add_glyph(pulse_length_source, Line(x='x', y='y', line_color='steelblue'))
+    pulse_length_plot.add_glyph(pulse_length_source, Line(x="x", y="y", line_color="steelblue"))
 
     # ---- vertical span
-    pulse_length_plot_span = Span(location=0, dimension='height')
+    pulse_length_plot_span = Span(location=0, dimension="height")
     pulse_length_plot.add_layout(pulse_length_plot_span)
 
     # Folder path text input
@@ -191,9 +191,9 @@ def create(palm):
         path_periodic_update()
 
     path_textinput = TextInput(
-        title="Folder Path:", value=os.path.join(os.path.expanduser('~')), width=510
+        title="Folder Path:", value=os.path.join(os.path.expanduser("~")), width=510
     )
-    path_textinput.on_change('value', path_textinput_callback)
+    path_textinput.on_change("value", path_textinput_callback)
 
     # Saved runs dropdown menu
     def h5_update(pulse, delays, debug_data):
@@ -201,9 +201,9 @@ def create(palm):
 
         waveform_source.data.update(
             x_str=palm.energy_range,
-            y_str=prep_data['1'][pulse, :],
+            y_str=prep_data["1"][pulse, :],
             x_ref=palm.energy_range,
-            y_ref=prep_data['0'][pulse, :],
+            y_ref=prep_data["0"][pulse, :],
         )
 
         xcorr_source.data.update(
@@ -236,15 +236,15 @@ def create(palm):
             pulse_slider.value = 0
             h5_update_fun(0)
 
-    saved_runs_dropdown = Dropdown(label="Saved Runs", button_type='primary', menu=[])
-    saved_runs_dropdown.on_change('value', saved_runs_dropdown_callback)
+    saved_runs_dropdown = Dropdown(label="Saved Runs", button_type="primary", menu=[])
+    saved_runs_dropdown.on_change("value", saved_runs_dropdown_callback)
 
     # ---- saved run periodic update
     def path_periodic_update():
         new_menu = []
         if os.path.isdir(path_textinput.value):
             for entry in os.scandir(path_textinput.value):
-                if entry.is_file() and entry.name.endswith(('.hdf5', '.h5')):
+                if entry.is_file() and entry.name.endswith((".hdf5", ".h5")):
                     new_menu.append((entry.name, entry.name))
         saved_runs_dropdown.menu = sorted(new_menu, reverse=True)
 
@@ -260,10 +260,10 @@ def create(palm):
         value=0,
         step=1,
         title="Pulse ID",
-        callback_policy='throttle',
+        callback_policy="throttle",
         callback_throttle=500,
     )
-    pulse_slider.on_change('value', pulse_slider_callback)
+    pulse_slider.on_change("value", pulse_slider_callback)
 
     # Energy maximal range value text input
     def energy_max_spinner_callback(_attr, old_value, new_value):
@@ -271,12 +271,12 @@ def create(palm):
         if new_value > energy_min:
             energy_max = new_value
             palm.energy_range = np.linspace(energy_min, energy_max, energy_npoints)
-            saved_runs_dropdown_callback('', '', saved_runs_dropdown.label)
+            saved_runs_dropdown_callback("", "", saved_runs_dropdown.label)
         else:
             energy_max_spinner.value = old_value
 
-    energy_max_spinner = Spinner(title='Maximal Energy, eV:', value=energy_max, step=0.1)
-    energy_max_spinner.on_change('value', energy_max_spinner_callback)
+    energy_max_spinner = Spinner(title="Maximal Energy, eV:", value=energy_max, step=0.1)
+    energy_max_spinner.on_change("value", energy_max_spinner_callback)
 
     # Energy minimal range value text input
     def energy_min_spinner_callback(_attr, old_value, new_value):
@@ -284,12 +284,12 @@ def create(palm):
         if new_value < energy_max:
             energy_min = new_value
             palm.energy_range = np.linspace(energy_min, energy_max, energy_npoints)
-            saved_runs_dropdown_callback('', '', saved_runs_dropdown.label)
+            saved_runs_dropdown_callback("", "", saved_runs_dropdown.label)
         else:
             energy_min_spinner.value = old_value
 
-    energy_min_spinner = Spinner(title='Minimal Energy, eV:', value=energy_min, step=0.1)
-    energy_min_spinner.on_change('value', energy_min_spinner_callback)
+    energy_min_spinner = Spinner(title="Minimal Energy, eV:", value=energy_min, step=0.1)
+    energy_min_spinner.on_change("value", energy_min_spinner_callback)
 
     # Energy number of interpolation points text input
     def energy_npoints_spinner_callback(_attr, old_value, new_value):
@@ -297,16 +297,16 @@ def create(palm):
         if new_value > 1:
             energy_npoints = new_value
             palm.energy_range = np.linspace(energy_min, energy_max, energy_npoints)
-            saved_runs_dropdown_callback('', '', saved_runs_dropdown.label)
+            saved_runs_dropdown_callback("", "", saved_runs_dropdown.label)
         else:
             energy_npoints_spinner.value = old_value
 
-    energy_npoints_spinner = Spinner(title='Number of interpolation points:', value=energy_npoints)
-    energy_npoints_spinner.on_change('value', energy_npoints_spinner_callback)
+    energy_npoints_spinner = Spinner(title="Number of interpolation points:", value=energy_npoints)
+    energy_npoints_spinner.on_change("value", energy_npoints_spinner_callback)
 
     # Save location
     save_textinput = TextInput(
-        title="Save Folder Path:", value=os.path.join(os.path.expanduser('~'))
+        title="Save Folder Path:", value=os.path.join(os.path.expanduser("~"))
     )
 
     # Autosave checkbox
@@ -316,11 +316,11 @@ def create(palm):
     def save_button_callback():
         if current_results[0]:
             filename, tags, delays, lengths = current_results
-            save_filename = os.path.splitext(filename)[0] + '.csv'
-            df = pd.DataFrame({'pulse_id': tags, 'pulse_delay': delays, 'pulse_length': lengths})
+            save_filename = os.path.splitext(filename)[0] + ".csv"
+            df = pd.DataFrame({"pulse_id": tags, "pulse_delay": delays, "pulse_length": lengths})
             df.to_csv(os.path.join(save_textinput.value, save_filename), index=False)
 
-    save_button = Button(label="Save Results", button_type='default', width=250)
+    save_button = Button(label="Save Results", button_type="default", width=250)
     save_button.on_click(save_button_callback)
 
     # assemble

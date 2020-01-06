@@ -15,7 +15,7 @@ doc.title = "PALM"
 
 # Create a palm setup object
 palm = photodiag.PalmSetup(
-    channels={'0': receiver.reference, '1': receiver.streaked},
+    channels={"0": receiver.reference, "1": receiver.streaked},
     noise_range=[0, 250],
     energy_range=np.linspace(4850, 5150, 301),
 )

@@ -5,16 +5,16 @@ from collections import deque
 logger = logging.getLogger(__name__)
 
 parser = argparse.ArgumentParser()
-parser.add_argument('beamline')
+parser.add_argument("beamline")
 args = parser.parse_args()
 
-if args.beamline == 'alvra':
-    reference = 'SAROP11-PALMK118:CH1_BUFFER'
-    streaked = 'SAROP11-PALMK118:CH2_BUFFER'
+if args.beamline == "alvra":
+    reference = "SAROP11-PALMK118:CH1_BUFFER"
+    streaked = "SAROP11-PALMK118:CH2_BUFFER"
 
-elif args.beamline == 'bernina':
-    reference = 'SAROP21-PALMK134:CH1_BUFFER'
-    streaked = 'SAROP21-PALMK134:CH2_BUFFER'
+elif args.beamline == "bernina":
+    reference = "SAROP21-PALMK134:CH1_BUFFER"
+    streaked = "SAROP21-PALMK134:CH2_BUFFER"
 
 else:
     raise RuntimeError(f"{args.beamline} - unknown beamline")
@@ -23,7 +23,7 @@ else:
 BUFFER_SIZE = 100
 data_buffer = deque(maxlen=BUFFER_SIZE)
 
-state = 'polling'
+state = "polling"
 
 
 def stream_receive():
@@ -31,8 +31,8 @@ def stream_receive():
     try:
         from bsread import source
     except ImportError:
-        state = 'stopped'
-        logger.info('bsread is not available')
+        state = "stopped"
+        logger.info("bsread is not available")
         return
 
     try:
@@ -40,7 +40,7 @@ def stream_receive():
             while True:
                 message = stream.receive()
                 data_buffer.append(message.data.data)
-                state = 'receiving'
+                state = "receiving"
 
     except Exception:
-        logger.exception('can not read from stream')
+        logger.exception("can not read from stream")
