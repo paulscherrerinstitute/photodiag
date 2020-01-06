@@ -7,8 +7,8 @@ import numpy as np
 
 from .utils import find_edge, read_eco_scan
 
-background_methods = ['div', 'sub']
-edge_types = ['falling', 'rising']
+background_methods = ["div", "sub"]
+edge_types = ["falling", "rising"]
 
 
 class SpatialEncoder:
@@ -16,13 +16,13 @@ class SpatialEncoder:
         self,
         channel,
         roi=(None, None),
-        background_method='div',
+        background_method="div",
         step_length=50,
         events_channel=None,
         dark_shot_event=21,
         dark_shot_filter=None,
         refinement=1,
-        edge_type='falling',
+        edge_type="falling",
     ):
         """Initialize SpatialEncoder object.
 
@@ -99,7 +99,7 @@ class SpatialEncoder:
 
         self._background = data.mean(axis=0)
 
-    def calibrate_time(self, filepath, method='avg_edge', nproc=1):
+    def calibrate_time(self, filepath, method="avg_edge", nproc=1):
         """Calibrate pixel to time conversion.
 
         Args:
@@ -116,7 +116,7 @@ class SpatialEncoder:
         ):
             raise Exception("Background calibration is not found")
 
-        if method == 'avg_wf':
+        if method == "avg_wf":
             scan_pos_fs, bsread_files = read_eco_scan(filepath)
 
             edge_pos_pix = np.empty(len(scan_pos_fs))
@@ -125,16 +125,16 @@ class SpatialEncoder:
                 data = data.mean(axis=0)
 
                 results = self.process(data)
-                edge_pos_pix[i] = results['edge_pos']
+                edge_pos_pix[i] = results["edge_pos"]
 
-        elif method == 'avg_edge':
+        elif method == "avg_edge":
             results = self.process_eco(filepath, nproc=nproc)
 
             scan_pos_fs = np.empty(len(results))
             edge_pos_pix = np.empty(len(results))
             for i, data in enumerate(results):
-                scan_pos_fs[i] = data['scan_pos_fs']
-                edge_pos_pix[i] = np.nanmean(data['edge_pos'])
+                scan_pos_fs[i] = data["scan_pos_fs"]
+                edge_pos_pix[i] = np.nanmean(data["edge_pos"])
 
         # pixel -> fs conversion coefficient
         fit_coeff = np.polyfit(scan_pos_fs, edge_pos_pix, 1)
@@ -162,19 +162,19 @@ class SpatialEncoder:
             # transform vector to array for consistency
             data = data[np.newaxis, :]
         elif data.ndim > 2:
-            raise Exception('Input data should be either 1- or 2-dimentional array')
+            raise Exception("Input data should be either 1- or 2-dimentional array")
 
         # remove background
-        if self.background_method == 'sub':
+        if self.background_method == "sub":
             data -= self._background
-        elif self.background_method == 'div':
+        elif self.background_method == "div":
             data /= self._background
             data = np.log10(data)
 
         output = find_edge(data, self.step_length, self.edge_type, self.refinement)
 
         if debug:
-            output['raw_input'] = data
+            output["raw_input"] = data
 
         return output
 
@@ -199,11 +199,11 @@ class SpatialEncoder:
         output = self.process(data, debug=debug)
 
         if is_dark is not None:
-            output['edge_pos'][is_dark] = np.nan
+            output["edge_pos"][is_dark] = np.nan
 
-        output['pulse_id'] = pulse_id
-        output['is_dark'] = is_dark
-        output['images'] = images
+        output["pulse_id"] = pulse_id
+        output["is_dark"] = is_dark
+        output["images"] = images
 
         return output
 
@@ -230,7 +230,7 @@ class SpatialEncoder:
             output = pool.map(partial(self.process_hdf5, debug=debug), bsread_files)
 
         for i, step_output in enumerate(output):
-            step_output['scan_pos_fs'] = scan_pos_fs[i]
+            step_output["scan_pos_fs"] = scan_pos_fs[i]
 
         return output
 
@@ -243,7 +243,7 @@ class SpatialEncoder:
         Returns:
             data, pulse_id, is_dark
         """
-        with h5py.File(filepath, 'r') as h5f:
+        with h5py.File(filepath, "r") as h5f:
             if "/data" in h5f:
                 # sf_databuffer_writer format
                 path_prefix = "/data/{}"

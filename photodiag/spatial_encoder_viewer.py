@@ -13,6 +13,7 @@ output_notebook()
 
 hold_image_ref = []
 
+
 class SpatialEncoderViewer(SpatialEncoder):
     def plot_hdf5(self, filepath, image_downscale=1):
         """Experimental viewer for hdf5 files in a jupyter notebook.
@@ -24,11 +25,11 @@ class SpatialEncoderViewer(SpatialEncoder):
         global hold_image_ref
         results = self.process_hdf5(filepath, debug=True)
 
-        images = results['images']
-        edge_pos = results['edge_pos']
-        xcorr_data = results['xcorr']
-        orig_data = results['raw_input']
-        is_dark = results['is_dark']
+        images = results["images"]
+        edge_pos = results["edge_pos"]
+        xcorr_data = results["xcorr"]
+        orig_data = results["raw_input"]
+        is_dark = results["is_dark"]
 
         n_im, size_y, size_x = images.shape
         if self.roi[0] is None:
@@ -93,52 +94,52 @@ class SpatialEncoderViewer(SpatialEncoder):
         p_im = figure(
             height=200,
             width=800,
-            title='Camera ROI Image',
+            title="Camera ROI Image",
             x_range=(0, size_x),
             y_range=(_roi_start, _roi_end),
         )
         p_im.image(
-            image='image', x='x', y='y', dw='dw', dh='dh', source=source_im, palette='Viridis256'
+            image="image", x="x", y="y", dw="dw", dh="dh", source=source_im, palette="Viridis256"
         )
 
         p_im_nobkg = figure(
             height=200,
             width=800,
-            title='No Background Image',
+            title="No Background Image",
             x_range=(0, size_x),
             y_range=(_roi_start, _roi_end),
         )
         p_im_nobkg.image(
-            image='image',
-            x='x',
-            y='y',
-            dw='dw',
-            dh='dh',
+            image="image",
+            x="x",
+            y="y",
+            dw="dw",
+            dh="dh",
             source=source_im_nobkg,
-            palette='Viridis256',
+            palette="Viridis256",
         )
         p_im_nobkg.x_range = p_im.x_range
 
-        p_nobkg = figure(height=200, width=800, title='Projection and background')
-        p_nobkg.line('x', 'y_bkg', source=source_orig, line_color='black')
-        p_nobkg.line('x', 'y_proj', source=source_orig)
+        p_nobkg = figure(height=200, width=800, title="Projection and background")
+        p_nobkg.line("x", "y_bkg", source=source_orig, line_color="black")
+        p_nobkg.line("x", "y_proj", source=source_orig)
         p_nobkg.x_range = p_im.x_range
 
-        p_orig = figure(height=200, width=800, title='Background removed')
-        p_orig.line('x', 'y', source=source_orig)
+        p_orig = figure(height=200, width=800, title="Background removed")
+        p_orig.line("x", "y", source=source_orig)
         p_orig.x_range = p_im.x_range
 
-        p_xcorr = figure(height=200, width=800, title='Xcorr')
-        p_xcorr.line('x', 'y', source=source_xcorr)
+        p_xcorr = figure(height=200, width=800, title="Xcorr")
+        p_xcorr.line("x", "y", source=source_xcorr)
         p_xcorr.x_range = p_im.x_range
 
         # Vertical spans
-        span_args = dict(dimension='height', line_color='red')
+        span_args = dict(dimension="height", line_color="red")
         if np.isnan(edge_pos[0]):
-            span_args['location'] = 0
-            span_args['visible'] = False
+            span_args["location"] = 0
+            span_args["visible"] = False
         else:
-            span_args['location'] = edge_pos[0]
+            span_args["location"] = edge_pos[0]
 
         s_im = Span(**span_args)
         p_im.add_layout(s_im)
@@ -166,7 +167,7 @@ class SpatialEncoderViewer(SpatialEncoder):
 
         # Slider
         def slider_callback(change):
-            new = change['new']
+            new = change["new"]
             image = images_weak()[new].copy()
 
             source_im.data.update(image=[image[::image_downscale, ::image_downscale]])
@@ -191,10 +192,10 @@ class SpatialEncoderViewer(SpatialEncoder):
             step=1,
             description="Shot",
             continuous_update=False,
-            layout=Layout(width='800px'),
+            layout=Layout(width="800px"),
         )
 
-        slider.observe(slider_callback, names='value')
+        slider.observe(slider_callback, names="value")
         return slider
 
     def plot_calibrate_time(self, *args, **kwargs):
@@ -217,12 +218,12 @@ class SpatialEncoderViewer(SpatialEncoder):
         p_time = figure(
             height=400,
             width=800,
-            title='Time calibration',
-            x_axis_label='Stage position, fs',
-            y_axis_label='Edge position, pix',
+            title="Time calibration",
+            x_axis_label="Stage position, fs",
+            y_axis_label="Edge position, pix",
         )
-        p_time.scatter('x', 'y', source=source_results)
-        p_time.line('x', 'y', line_color='red', source=source_fit)
+        p_time.scatter("x", "y", source=source_results)
+        p_time.line("x", "y", line_color="red", source=source_fit)
 
         layout = gridplot([p_time], ncols=1, toolbar_options=dict(logo=None))
 
@@ -230,8 +231,8 @@ class SpatialEncoderViewer(SpatialEncoder):
 
         # Slider
         def slider_callback(change):
-            left = change['new'][0]
-            right = change['new'][1]
+            left = change["new"][0]
+            right = change["new"][1]
             fit_coeff = np.polyfit(scan_pos_fs[left : right + 1], edge_pos_pix[left : right + 1], 1)
             self.pix_per_fs = fit_coeff[0]
 
@@ -249,8 +250,8 @@ class SpatialEncoderViewer(SpatialEncoder):
             step=1,
             description="Fit range",
             continuous_update=False,
-            layout=Layout(width='800px'),
+            layout=Layout(width="800px"),
         )
 
-        slider.observe(slider_callback, names='value')
+        slider.observe(slider_callback, names="value")
         return slider

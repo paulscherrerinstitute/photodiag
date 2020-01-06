@@ -7,7 +7,7 @@ from bokeh.application.application import Application
 from bokeh.application.handlers import DirectoryHandler
 from bokeh.server.server import Server
 
-logging.basicConfig(format='%(asctime)s %(message)s', level=logging.INFO)
+logging.basicConfig(format="%(asctime)s %(message)s", level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
@@ -18,38 +18,33 @@ def main():
     applications bundled with the photodiag package.
     """
     # Discover photodiag apps
-    apps_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'apps')
+    apps_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "apps")
     available_apps = []
     for module_info in pkgutil.iter_modules([apps_path]):
         if module_info.ispkg:
             available_apps.append(module_info.name)
 
     parser = argparse.ArgumentParser(
-        prog='photodiag', formatter_class=argparse.ArgumentDefaultsHelpFormatter
+        prog="photodiag", formatter_class=argparse.ArgumentDefaultsHelpFormatter
+    )
+
+    parser.add_argument("app", type=str, choices=available_apps, help="photodiag application")
+
+    parser.add_argument(
+        "--port", type=int, default=5006, help="the port to listen on for HTTP requests"
     )
 
     parser.add_argument(
-        'app',
+        "--allow-websocket-origin",
+        metavar="HOST[:PORT]",
         type=str,
-        choices=available_apps,
-        help="photodiag application",
-    )
-
-    parser.add_argument(
-        '--port', type=int, default=5006, help="the port to listen on for HTTP requests"
-    )
-
-    parser.add_argument(
-        '--allow-websocket-origin',
-        metavar='HOST[:PORT]',
-        type=str,
-        action='append',
+        action="append",
         default=None,
         help="hostname that can connect to the server websocket",
     )
 
     parser.add_argument(
-        '--args',
+        "--args",
         nargs=argparse.REMAINDER,
         default=[],
         help="command line arguments for the photodiag application",
@@ -62,7 +57,7 @@ def main():
 
     handler = DirectoryHandler(filename=app_path, argv=args.args)
     server = Server(
-        {f'/{args.app}': Application(handler)},
+        {f"/{args.app}": Application(handler)},
         port=args.port,
         allow_websocket_origin=args.allow_websocket_origin,
     )

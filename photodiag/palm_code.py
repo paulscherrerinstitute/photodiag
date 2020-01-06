@@ -33,14 +33,14 @@ class PalmSetup:
                 spectrometer waveforms from 'time of flight' into 'energy' domain
         """
         self.channels = channels
-        self.etofs = {'0': Spectrometer(noise_range), '1': Spectrometer(noise_range)}
+        self.etofs = {"0": Spectrometer(noise_range), "1": Spectrometer(noise_range)}
         self.energy_range = energy_range
 
         self.thz_calib_data = pd.DataFrame(
             {
-                'peak_shift': np.array([], dtype=float),
-                'peak_shift_mean': np.array([], dtype=float),
-                'peak_shift_std': np.array([], dtype=float),
+                "peak_shift": np.array([], dtype=float),
+                "peak_shift_mean": np.array([], dtype=float),
+                "peak_shift_std": np.array([], dtype=float),
             }
         )
         self.thz_slope = None
@@ -74,7 +74,7 @@ class PalmSetup:
                 etof.calib_data.drop(etof.calib_data.index[:], inplace=True)
 
         for entry in os.scandir(folder_name):
-            if entry.is_file() and entry.name.endswith(('.hdf5', '.h5')):
+            if entry.is_file() and entry.name.endswith((".hdf5", ".h5")):
                 energy = (
                     self.xfel_energy - self.binding_energy - get_energy_from_filename(entry.name)
                 )
@@ -99,8 +99,8 @@ class PalmSetup:
             data = json.load(eco_scan)
 
         # Flatten scan_files list
-        scan_files = [item for sublist in data['scan_files'] for item in sublist]
-        scan_values = data['scan_values']
+        scan_files = [item for sublist in data["scan_files"] for item in sublist]
+        scan_values = data["scan_values"]
 
         for etof in self.etofs.values():
             etof.calib_data.drop(etof.calib_data.index[:], inplace=True)
@@ -108,14 +108,14 @@ class PalmSetup:
         for scan_file, scan_value in zip(scan_files, scan_values):
             energy = scan_value[0]
             try:
-                _, calib_waveforms0 = get_tags_and_data(scan_file, self.channels['0'])
-                _, calib_waveforms1 = get_tags_and_data(scan_file, self.channels['1'])
+                _, calib_waveforms0 = get_tags_and_data(scan_file, self.channels["0"])
+                _, calib_waveforms1 = get_tags_and_data(scan_file, self.channels["1"])
             except Exception as e:
                 log.warning(e)
             else:
                 eff_bind_en = self.binding_energy + (self.zero_drift_tube - 1000 * energy)
-                self.etofs['0'].add_calibration_point(eff_bind_en, calib_waveforms0)
-                self.etofs['1'].add_calibration_point(eff_bind_en, calib_waveforms1)
+                self.etofs["0"].add_calibration_point(eff_bind_en, calib_waveforms0)
+                self.etofs["1"].add_calibration_point(eff_bind_en, calib_waveforms1)
 
         calib_results = {}
         for etof_key in self.etofs:
@@ -127,27 +127,27 @@ class PalmSetup:
         """ Save eTOF calibration to a file.
         """
         if not file:
-            file = str(datetime.datetime.now().isoformat(sep='_', timespec='seconds'))
+            file = str(datetime.datetime.now().isoformat(sep="_", timespec="seconds"))
 
-        if not file.endswith('.palm_etof'):
-            file += '.palm_etof'
+        if not file.endswith(".palm_etof"):
+            file += ".palm_etof"
 
         if not os.path.exists(path):
             os.makedirs(path)
 
-        with open(os.path.join(path, file), 'wb') as f:
+        with open(os.path.join(path, file), "wb") as f:
             pickle.dump(self.etofs, f)
             log.info("Save etof calibration to a file: %s", os.path.join(path, file))
 
     def load_etof_calib(self, filepath):
         """Load eTOF calibration from a file.
         """
-        with open(filepath, 'rb') as f:
+        with open(filepath, "rb") as f:
             self.etofs = pickle.load(f)
             log.info("Load etof calibration from a file: %s", filepath)
 
     def process(
-        self, waveforms, method='xcorr', jacobian=False, noise_thr=0, debug=False, peak='max'
+        self, waveforms, method="xcorr", jacobian=False, noise_thr=0, debug=False, peak="max"
     ):
         """Main function to analyse PALM data that pipelines separate stages of data processing.
 
@@ -169,10 +169,10 @@ class PalmSetup:
                 data, self.energy_range, jacobian=jacobian, noise_thr=noise_thr
             )
 
-        if method == 'xcorr':
+        if method == "xcorr":
             results = self._cross_corr_analysis(prep_data, debug=debug, peak=peak)
 
-        elif method == 'deconv':
+        elif method == "deconv":
             results = self._deconvolution_analysis(prep_data, debug=debug)
 
         else:
@@ -187,14 +187,14 @@ class PalmSetup:
             data = json.load(eco_scan)
 
         # Flatten lists
-        scan_files = [item for sublist in data['scan_files'] for item in sublist]
-        scan_readbacks = [item for sublist in data['scan_readbacks'] for item in sublist]
+        scan_files = [item for sublist in data["scan_files"] for item in sublist]
+        scan_readbacks = [item for sublist in data["scan_readbacks"] for item in sublist]
 
         # Convert to fs
         scan_readbacks = [1e15 * item for item in scan_readbacks]
-        self.thz_motor_unit = 'fs'
+        self.thz_motor_unit = "fs"
 
-        self.thz_motor_name = data['scan_parameters']['Id'][0]
+        self.thz_motor_name = data["scan_parameters"]["Id"][0]
 
         self.thz_calib_data.drop(self.thz_calib_data.index[:], inplace=True)
         for scan_file, scan_readback in zip(scan_files, scan_readbacks):
@@ -204,16 +204,16 @@ class PalmSetup:
                 log.warning(e)
             else:
                 self.thz_calib_data.loc[scan_readback] = {
-                    'peak_shift': peak_shift,
-                    'peak_shift_mean': peak_shift.mean(),
-                    'peak_shift_std': peak_shift.std(),
+                    "peak_shift": peak_shift,
+                    "peak_shift_mean": peak_shift.mean(),
+                    "peak_shift_std": peak_shift.std(),
                 }
 
         def fit_func(shift, a, b):
             return a * shift + b
 
         x_fit = self.thz_calib_data.index.values
-        y_fit = self.thz_calib_data['peak_shift_mean'].values
+        y_fit = self.thz_calib_data["peak_shift_mean"].values
 
         in_range = np.logical_and(fit_range[0] <= x_fit, x_fit <= fit_range[1])
         popt, _pcov = curve_fit(fit_func, x_fit[in_range], y_fit[in_range])
@@ -224,15 +224,15 @@ class PalmSetup:
         """ Save THz pulse calibration to a file.
         """
         if not file:
-            file = str(datetime.datetime.now().isoformat(sep='_', timespec='seconds'))
+            file = str(datetime.datetime.now().isoformat(sep="_", timespec="seconds"))
 
-        if not file.endswith('.palm_thz'):
-            file += '.palm_thz'
+        if not file.endswith(".palm_thz"):
+            file += ".palm_thz"
 
         if not os.path.exists(path):
             os.makedirs(path)
 
-        with open(os.path.join(path, file), 'wb') as f:
+        with open(os.path.join(path, file), "wb") as f:
             pickle.dump(self.thz_calib_data, f)
             pickle.dump(self.thz_slope, f)
             pickle.dump(self.thz_intersect, f)
@@ -242,7 +242,7 @@ class PalmSetup:
     def load_thz_calib(self, filepath):
         """Load THz pulse calibration from a file.
         """
-        with open(filepath, 'rb') as f:
+        with open(filepath, "rb") as f:
             self.thz_calib_data = pickle.load(f)
             self.thz_slope = pickle.load(f)
             self.thz_intersect = pickle.load(f)
@@ -268,7 +268,7 @@ class PalmSetup:
         results = self.process(data_raw, debug=debug)
         return (tags, *results)
 
-    def _cross_corr_analysis(self, input_data, debug=False, peak='max'):
+    def _cross_corr_analysis(self, input_data, debug=False, peak="max"):
         """Perform analysis to determine arrival times via cross correlation.
 
         Usually, this data can be used to initally identify pulses that are falling within linear
@@ -281,21 +281,21 @@ class PalmSetup:
         Returns:
             pulse arrival delays via cross-correlation method
         """
-        data_str = input_data['1']
-        data_ref = input_data['0']
+        data_str = input_data["1"]
+        data_ref = input_data["0"]
 
         corr_results = np.empty_like(data_ref)
         for i, (x, y) in enumerate(zip(data_ref, data_str)):
-            corr_results[i, :] = np.correlate(x, y, mode='same')
+            corr_results[i, :] = np.correlate(x, y, mode="same")
 
         corr_res_uncut = corr_results.copy()
         corr_results = self._truncate_highest_peak(corr_results, 0)
 
         lags = self.energy_range - self.energy_range[int(self.energy_range.size / 2)]
 
-        if peak == 'com':
+        if peak == "com":
             delays, _ = self._peak_params(lags, corr_results)
-        elif peak == 'max':
+        elif peak == "max":
             delays = lags[np.argmax(corr_results, axis=1)]
 
         pulse_lengths = self._peak_center_of_mass(input_data, lags)
@@ -315,8 +315,8 @@ class PalmSetup:
         Returns:
             result(s) of deconvolution
         """
-        data_str = input_data['1']
-        data_ref = input_data['0']
+        data_str = input_data["1"]
+        data_ref = input_data["0"]
 
         deconv_result = np.empty_like(data_str)
         for i, (x, y) in enumerate(zip(data_ref, data_str)):
@@ -361,7 +361,7 @@ class PalmSetup:
 
         def test_fun(y_1d):
             y_above_thr = (y_1d > thr).astype(int)
-            y_above_thr = np.pad(y_above_thr, (1,), 'constant')
+            y_above_thr = np.pad(y_above_thr, (1,), "constant")
             inout = np.diff(y_above_thr)
 
             ind_in = np.argwhere(inout == 1).flatten()
@@ -400,7 +400,7 @@ class PalmSetup:
 
         def test_fun(y_1d):
             y_above_thr = (y_1d > thr).astype(int)
-            y_above_thr = np.pad(y_above_thr, (1,), 'constant')
+            y_above_thr = np.pad(y_above_thr, (1,), "constant")
             inout = np.diff(y_above_thr)
 
             ind_in = np.argwhere(inout == 1).flatten()
@@ -434,8 +434,8 @@ class PalmSetup:
         Returns:
             pulse lenghts
         """
-        data_str = input_data['1'].copy()
-        data_ref = input_data['0'].copy()
+        data_str = input_data["1"].copy()
+        data_ref = input_data["0"].copy()
 
         # thr1 = np.mean(self.spectrometers['1'].noise_std)
         # thr3 = np.mean(self.spectrometers['0'].noise_std)
@@ -463,7 +463,7 @@ def get_energy_from_filename(filename):
     Returns:
         energy in eV as a floating point number
     """
-    energy = float(re.findall(r'\d+', filename)[0])
+    energy = float(re.findall(r"\d+", filename)[0])
 
     return energy
 
@@ -480,38 +480,38 @@ def get_tags_and_data(filepath, etof_path):
     """
     # TODO: for the E1130 pylint issue, see
     # https://github.com/PyCQA/pylint/issues/2436
-    with h5py.File(filepath, 'r') as h5f:
+    with h5py.File(filepath, "r") as h5f:
         try:
-            tags = h5f['/pulseId'][:]
-            data = -h5f[f'/{etof_path}'][:]  # pylint: disable=E1130
+            tags = h5f["/pulseId"][:]
+            data = -h5f[f"/{etof_path}"][:]  # pylint: disable=E1130
             return tags, data
         except (KeyError, AttributeError):
             pass
 
         try:
-            tags = h5f['/scan 1/SLAAR21-LMOT-M552:MOT.VAL'][:]
-            data = -h5f[f'/scan 1/{etof_path} averager'][:]  # pylint: disable=E1130
+            tags = h5f["/scan 1/SLAAR21-LMOT-M552:MOT.VAL"][:]
+            data = -h5f[f"/scan 1/{etof_path} averager"][:]  # pylint: disable=E1130
             return tags, data
         except (KeyError, AttributeError):
             pass
 
         try:
-            tags = h5f[f'/data/{etof_path}/pulse_id'][:]
-            data = -h5f[f'/data/{etof_path}/data'][:]  # pylint: disable=E1130
+            tags = h5f[f"/data/{etof_path}/pulse_id"][:]
+            data = -h5f[f"/data/{etof_path}/data"][:]  # pylint: disable=E1130
             return tags, data
         except (KeyError, AttributeError):
             pass
 
         try:
-            tags = h5f['/pulse_id'][:]
-            data = -h5f[f'/{etof_path}/data'][:]  # pylint: disable=E1130
+            tags = h5f["/pulse_id"][:]
+            data = -h5f[f"/{etof_path}/data"][:]  # pylint: disable=E1130
             return tags, data
         except (KeyError, AttributeError):
             pass
 
         try:
             tags = []
-            data = -h5f[f'/{etof_path}'][:]  # pylint: disable=E1130
+            data = -h5f[f"/{etof_path}"][:]  # pylint: disable=E1130
             return tags, data
         except (KeyError, AttributeError):
             pass

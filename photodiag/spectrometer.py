@@ -16,12 +16,12 @@ class Spectrometer:
         # index of self.calib_data DataFrame is 'energy'
         self.calib_data = pd.DataFrame(
             {
-                'waveform': np.array([], dtype=float),
-                'calib_t0': np.array([], dtype=float),
-                'calib_tpeak': np.array([], dtype=float),
-                'noise_mean': np.array([], dtype=float),
-                'noise_std': np.array([], dtype=float),
-                'use_in_fit': np.array([], dtype=bool),
+                "waveform": np.array([], dtype=float),
+                "calib_t0": np.array([], dtype=float),
+                "calib_tpeak": np.array([], dtype=float),
+                "noise_mean": np.array([], dtype=float),
+                "noise_std": np.array([], dtype=float),
+                "use_in_fit": np.array([], dtype=bool),
             }
         )
 
@@ -43,7 +43,7 @@ class Spectrometer:
         """
         if self.internal_time_bins:
             if self.internal_time_bins != calib_waveforms.shape[1]:
-                raise AssertionError('eTOF number of bins is inconsistent.')
+                raise AssertionError("eTOF number of bins is inconsistent.")
         else:
             self.internal_time_bins = calib_waveforms.shape[1]
 
@@ -67,12 +67,12 @@ class Spectrometer:
             calib_tpeak = np.nan
 
         self.calib_data.loc[energy] = {
-            'waveform': waveform,
-            'calib_t0': calib_t0,
-            'calib_tpeak': calib_tpeak,
-            'noise_mean': noise_mean,
-            'noise_std': noise_std,
-            'use_in_fit': True,
+            "waveform": waveform,
+            "calib_t0": calib_t0,
+            "calib_tpeak": calib_tpeak,
+            "noise_mean": noise_mean,
+            "noise_std": noise_std,
+            "use_in_fit": True,
         }
 
         self.calib_data.sort_index(inplace=True)
@@ -83,10 +83,10 @@ class Spectrometer:
         Returns:
             calibration constants and a goodness of fit
         """
-        calib_data = self.calib_data[self.calib_data['use_in_fit']]
+        calib_data = self.calib_data[self.calib_data["use_in_fit"]]
 
-        self.calib_t0 = np.round(calib_data['calib_t0'].median()).astype(int)
-        time_delays_df = calib_data['calib_tpeak'] - self.calib_t0
+        self.calib_t0 = np.round(calib_data["calib_t0"].median()).astype(int)
+        time_delays_df = calib_data["calib_tpeak"] - self.calib_t0
 
         # convert to numpy arrays
         time_delays = time_delays_df.values
@@ -135,7 +135,7 @@ class Spectrometer:
             interpolate_row, 1, output_data[:, ::-1], pulse_energy[::-1], interp_energy
         )
 
-        output_data -= noise_thr * self.calib_data['noise_std'].mean()
+        output_data -= noise_thr * self.calib_data["noise_std"].mean()
 
         return output_data
 
@@ -161,12 +161,12 @@ class Spectrometer:
         # TODO: the code could be improved once the following issue is resolved,
         # https://github.com/numpy/numpy/issues/2269
         if not above_thr.any():
-            raise ValueError('No photon peak values above the noise threshold in the waveform')
+            raise ValueError("No photon peak values above the noise threshold in the waveform")
 
         ind_l = np.argmax(above_thr)
 
         if not above_thr[ind_l:].any():
-            raise ValueError('No photon peak values below the noise threshold along the peak')
+            raise ValueError("No photon peak values below the noise threshold along the peak")
 
         ind_r = ind_l + np.argmin(above_thr[ind_l:])
 
@@ -196,12 +196,12 @@ class Spectrometer:
         # TODO: the code could be improved once the following issue is resolved,
         # https://github.com/numpy/numpy/issues/2269
         if not above_thr.any():
-            raise ValueError('No electron peak values above the noise threshold in the waveform')
+            raise ValueError("No electron peak values above the noise threshold in the waveform")
 
         ind_l = np.argmax(above_thr)
 
         if not above_thr[ind_l:].any():
-            raise ValueError('No electron peak values below the noise threshold along the peak')
+            raise ValueError("No electron peak values below the noise threshold along the peak")
 
         ind_r = ind_l + np.argmin(above_thr[ind_l:])
         ind_l = len(above_thr) - ind_l - 1
