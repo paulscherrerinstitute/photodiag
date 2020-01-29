@@ -258,3 +258,5 @@ class SpectralEncoder:
             data = images.mean(axis=1)
 
         return data, signal_pulse_id, is_dark
+
+# implement fringe filtering in the Fourier domain
