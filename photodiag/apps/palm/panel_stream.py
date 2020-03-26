@@ -175,13 +175,11 @@ def create(palm):
     buffer_slider = Slider(
         start=0,
         end=59,
-        value=0,
+        value_throttled=0,
         step=1,
         title="Buffered Image",
-        callback_policy="throttle",
-        callback_throttle=500,
     )
-    buffer_slider.on_change("value", buffer_slider_callback)
+    buffer_slider.on_change("value_throttled", buffer_slider_callback)
 
     # Connect toggle button
     def connect_toggle_callback(state):

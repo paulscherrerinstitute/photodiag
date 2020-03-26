@@ -257,13 +257,11 @@ def create(palm):
     pulse_slider = Slider(
         start=0,
         end=99999,
-        value=0,
+        value_throttled=0,
         step=1,
         title="Pulse ID",
-        callback_policy="throttle",
-        callback_throttle=500,
     )
-    pulse_slider.on_change("value", pulse_slider_callback)
+    pulse_slider.on_change("value_throttled", pulse_slider_callback)
 
     # Energy maximal range value text input
     def energy_max_spinner_callback(_attr, old_value, new_value):
