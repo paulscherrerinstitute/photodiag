@@ -85,11 +85,11 @@ def create(palm):
     path_textinput.on_change("value", path_textinput_callback)
 
     # THz calibration eco scans dropdown
-    def scans_dropdown_callback(_attr, _old_value, new_value):
-        scans_dropdown.label = new_value
+    def scans_dropdown_callback(event):
+        scans_dropdown.label = event.item
 
     scans_dropdown = Dropdown(label="ECO scans", button_type="default", menu=[])
-    scans_dropdown.on_change("value", scans_dropdown_callback)
+    scans_dropdown.on_click(scans_dropdown_callback)
 
     # ---- eco scans periodic update
     def path_periodic_update():
@@ -104,7 +104,7 @@ def create(palm):
 
     # Calibrate button
     def calibrate_button_callback():
-        palm.calibrate_thz(path=os.path.join(path_textinput.value, scans_dropdown.value))
+        palm.calibrate_thz(path=os.path.join(path_textinput.value, scans_dropdown.label))
         fit_max_spinner.value = np.ceil(palm.thz_calib_data.index.values.max())
         fit_min_spinner.value = np.floor(palm.thz_calib_data.index.values.min())
         update_calibration_plot()
@@ -140,7 +140,7 @@ def create(palm):
         if new_value > fit_min:
             fit_max = new_value
             palm.calibrate_thz(
-                path=os.path.join(path_textinput.value, scans_dropdown.value),
+                path=os.path.join(path_textinput.value, scans_dropdown.label),
                 fit_range=(fit_min, fit_max),
             )
             update_calibration_plot()
@@ -156,7 +156,7 @@ def create(palm):
         if new_value < fit_max:
             fit_min = new_value
             palm.calibrate_thz(
-                path=os.path.join(path_textinput.value, scans_dropdown.value),
+                path=os.path.join(path_textinput.value, scans_dropdown.label),
                 fit_range=(fit_min, fit_max),
             )
             update_calibration_plot()
@@ -175,7 +175,8 @@ def create(palm):
     save_button.on_click(save_button_callback)
 
     # Load calibration button
-    def load_dropdown_callback(_attr, _old_value, new_value):
+    def load_dropdown_callback(event):
+        new_value = event.item
         palm.load_thz_calib(os.path.join(path_textinput.value, new_value))
         update_calibration_plot()
 
@@ -196,7 +197,7 @@ def create(palm):
     doc.add_periodic_callback(update_load_dropdown_menu, 5000)
 
     load_dropdown = Dropdown(label="Load", menu=[], width=250)
-    load_dropdown.on_change("value", load_dropdown_callback)
+    load_dropdown.on_click(load_dropdown_callback)
 
     # Calibration constants
     calib_const_div = Div(

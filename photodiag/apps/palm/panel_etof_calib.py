@@ -221,11 +221,11 @@ def create(palm):
     path_textinput.on_change("value", path_textinput_callback)
 
     # eTOF calibration eco scans dropdown
-    def scans_dropdown_callback(_attr, _old_value, new_value):
-        scans_dropdown.label = new_value
+    def scans_dropdown_callback(event):
+        scans_dropdown.label = event.item
 
     scans_dropdown = Dropdown(label="ECO scans", button_type="default", menu=[])
-    scans_dropdown.on_change("value", scans_dropdown_callback)
+    scans_dropdown.on_click(scans_dropdown_callback)
 
     # ---- etof scans periodic update
     def path_periodic_update():
@@ -342,7 +342,8 @@ def create(palm):
     save_button.on_click(save_button_callback)
 
     # Load calibration button
-    def load_dropdown_callback(_attr, _old_value, new_value):
+    def load_dropdown_callback(event):
+        new_value = event.item
         if new_value:
             palm.load_etof_calib(os.path.join(path_textinput.value, new_value))
 
@@ -379,7 +380,7 @@ def create(palm):
     doc.add_periodic_callback(update_load_dropdown_menu, 5000)
 
     load_dropdown = Dropdown(label="Load", menu=[], width=250)
-    load_dropdown.on_change("value", load_dropdown_callback)
+    load_dropdown.on_click(load_dropdown_callback)
 
     # eTOF fitting equation
     fit_eq_div = Div(text="""Fitting equation:<br><br><img src="/palm/static/5euwuy.gif">""")

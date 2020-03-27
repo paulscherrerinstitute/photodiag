@@ -217,7 +217,8 @@ def create(palm):
     # this placeholder function should be reassigned in 'saved_runs_dropdown_callback'
     h5_update_fun = lambda pulse: None
 
-    def saved_runs_dropdown_callback(_attr, _old_value, new_value):
+    def update_saved_runs(saved_run):
+        new_value = saved_run
         if new_value != "Saved Runs":
             nonlocal h5_update_fun, current_results
             saved_runs_dropdown.label = new_value
@@ -236,8 +237,11 @@ def create(palm):
             pulse_slider.value = 0
             h5_update_fun(0)
 
+    def saved_runs_dropdown_callback(event):
+        update_saved_runs(event.item)
+
     saved_runs_dropdown = Dropdown(label="Saved Runs", button_type="primary", menu=[])
-    saved_runs_dropdown.on_change("value", saved_runs_dropdown_callback)
+    saved_runs_dropdown.on_click(saved_runs_dropdown_callback)
 
     # ---- saved run periodic update
     def path_periodic_update():
@@ -269,7 +273,7 @@ def create(palm):
         if new_value > energy_min:
             energy_max = new_value
             palm.energy_range = np.linspace(energy_min, energy_max, energy_npoints)
-            saved_runs_dropdown_callback("", "", saved_runs_dropdown.label)
+            update_saved_runs(saved_runs_dropdown.label)
         else:
             energy_max_spinner.value = old_value
 
@@ -282,7 +286,7 @@ def create(palm):
         if new_value < energy_max:
             energy_min = new_value
             palm.energy_range = np.linspace(energy_min, energy_max, energy_npoints)
-            saved_runs_dropdown_callback("", "", saved_runs_dropdown.label)
+            update_saved_runs(saved_runs_dropdown.label)
         else:
             energy_min_spinner.value = old_value
 
@@ -295,7 +299,7 @@ def create(palm):
         if new_value > 1:
             energy_npoints = new_value
             palm.energy_range = np.linspace(energy_min, energy_max, energy_npoints)
-            saved_runs_dropdown_callback("", "", saved_runs_dropdown.label)
+            update_saved_runs(saved_runs_dropdown.label)
         else:
             energy_npoints_spinner.value = old_value
 
