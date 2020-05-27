@@ -1,5 +1,9 @@
+import base64
+import io
+import json
 import os
 
+import h5py
 import numpy as np
 from bokeh.io import curdoc
 from bokeh.layouts import column, row
@@ -14,6 +18,7 @@ from bokeh.models import (
     DataTable,
     Div,
     Dropdown,
+    FileInput,
     Grid,
     HoverTool,
     IntEditor,
@@ -29,6 +34,7 @@ from bokeh.models import (
     Span,
     Spinner,
     TableColumn,
+    Tabs,
     TextInput,
     Title,
     WheelZoomTool,
@@ -238,6 +244,31 @@ def create(palm):
 
     doc.add_periodic_callback(path_periodic_update, 5000)
 
+    path_tab = Panel(child=column(path_textinput, scans_dropdown,), title="Path")
+
+    upload_div = Div(text="Upload ECO scan (top) and all hdf5 files (bottom):")
+
+    # ECO scan upload FileInput
+    def eco_fileinput_callback(_attr, _old, new):
+        with io.BytesIO(base64.b64decode(new)) as eco_scan:
+            data = json.load(eco_scan)
+            print(data)
+
+    eco_fileinput = FileInput(accept=".json", disabled=True)
+    eco_fileinput.on_change("value", eco_fileinput_callback)
+
+    # HDF5 upload FileInput
+    def hdf5_fileinput_callback(_attr, _old, new):
+        for base64_str in new:
+            with io.BytesIO(base64.b64decode(base64_str)) as hdf5_file:
+                with h5py.File(hdf5_file, "r") as h5f:
+                    print(h5f.keys())
+
+    hdf5_fileinput = FileInput(accept=".hdf5,.h5", multiple=True, disabled=True)
+    hdf5_fileinput.on_change("value", hdf5_fileinput_callback)
+
+    upload_tab = Panel(child=column(upload_div, eco_fileinput, hdf5_fileinput), title="Upload")
+
     # Calibrate button
     def calibrate_button_callback():
         try:
@@ -402,8 +433,7 @@ def create(palm):
             column(waveform_plot, fit_plot),
             Spacer(width=30),
             column(
-                path_textinput,
-                scans_dropdown,
+                Tabs(tabs=[path_tab, upload_tab]),
                 calibrate_button,
                 phot_peak_noise_thr_spinner,
                 el_peak_noise_thr_spinner,
