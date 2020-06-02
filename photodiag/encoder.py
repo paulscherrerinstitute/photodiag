@@ -1,11 +1,9 @@
-import warnings
 from functools import partial
 from multiprocessing import Pool
 
-import h5py
 import numpy as np
 
-from .utils import find_edge, read_eco_scan
+from .utils import find_edge, read_bsread_file, read_eco_scan
 
 edge_types = ["falling", "rising"]
 
@@ -96,7 +94,13 @@ class Encoder:
 
             edge_pos_pix = np.empty(len(scan_pos_fs))
             for i, bsread_file in enumerate(bsread_files):
-                data, _, _ = self._read_bsread_file(bsread_file)
+                data, _, _ = read_bsread_file(
+                    bsread_file,
+                    self.signal_channel,
+                    self.events_channel,
+                    self.dark_shot_event,
+                    self.dark_shot_filter,
+                )
                 data = data.mean(axis=0)
 
                 results = self.process(data)
@@ -160,7 +164,13 @@ class Encoder:
             edge position(s) in pix and corresponding pulse ids
             cross-correlation results and raw data if `debug` is True
         """
-        data, pulse_id, is_dark = self._read_bsread_file(filepath)
+        data, pulse_id, is_dark = read_bsread_file(
+            filepath,
+            self.signal_channel,
+            self.events_channel,
+            self.dark_shot_event,
+            self.dark_shot_filter,
+        )
 
         output = self.process(data, debug=debug)
 
@@ -198,63 +208,3 @@ class Encoder:
             step_output["scan_pos_fs"] = scan_pos_fs[i]
 
         return output
-
-    def _read_bsread_file(self, filepath):
-        """Read encoder data from bsread hdf5 file.
-
-        Args:
-            filepath: path to a bsread hdf5 file to read data from
-        Returns:
-            data, pulse_id, is_dark
-        """
-        with h5py.File(filepath, "r") as h5f:
-            if "/data" in h5f:
-                # sf_databuffer_writer format
-                path_prefix = "/data/{}"
-            else:
-                # bsread format
-                path_prefix = "/{}"
-
-            signal_channel_group = h5f[path_prefix.format(self.signal_channel)]
-            signal_pulse_id = signal_channel_group["pulse_id"][:]
-
-            if self.events_channel:
-                events_channel_group = h5f[path_prefix.format(self.events_channel)]
-                events_pulse_id = events_channel_group["pulse_id"][:]
-
-                pid, index, event_index = np.intersect1d(
-                    signal_pulse_id, events_pulse_id, return_indices=True
-                )
-
-                # if both groups have 0 in their pulse_id
-                pid_zero_ind = pid == 0
-                if any(pid_zero_ind):
-                    warnings.warn(
-                        f"\n \
-                    File: {filepath}\n \
-                    Both '{self.signal_channel}' and '{self.events_channel}' have zeroed pulse_id(s).\n"
-                    )
-                    index = index[~pid_zero_ind]
-                    event_index = event_index[~pid_zero_ind]
-
-                is_dark = events_channel_group["data"][event_index, self.dark_shot_event].astype(
-                    bool
-                )
-
-            elif self.dark_shot_filter:
-                index = signal_pulse_id != 0
-                is_dark = self.dark_shot_filter(signal_pulse_id)[index]
-
-            else:
-                index = signal_pulse_id != 0
-                is_dark = None
-
-            signal_pulse_id = signal_pulse_id[index]
-
-            # data is stored as uint16 in hdf5, so has to be casted to float for further analysis,
-            images = signal_channel_group["data"][index].astype(float)
-
-            # averaging every image over y-axis gives the final raw waveforms
-            data = images.mean(axis=1)
-
-        return data, signal_pulse_id, is_dark

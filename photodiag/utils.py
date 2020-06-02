@@ -1,5 +1,7 @@
 import json
+import warnings
 
+import h5py
 import numpy as np
 from scipy import signal
 
@@ -74,3 +76,57 @@ def savgol_filter(data, period, window, steps):
 
 def _interpolate_row(data, energy, interp_energy):
     return np.interp(interp_energy, energy, data)
+
+
+def read_bsread_file(filepath, signal_channel, events_channel, dark_shot_event, dark_shot_filter):
+    """Read encoder data from bsread hdf5 file.
+    """
+    with h5py.File(filepath, "r") as h5f:
+        if "/data" in h5f:
+            # sf_databuffer_writer format
+            path_prefix = "/data/{}"
+        else:
+            # bsread format
+            path_prefix = "/{}"
+
+        signal_channel_group = h5f[path_prefix.format(signal_channel)]
+        signal_pulse_id = signal_channel_group["pulse_id"][:]
+
+        if events_channel:
+            events_channel_group = h5f[path_prefix.format(events_channel)]
+            events_pulse_id = events_channel_group["pulse_id"][:]
+
+            pid, index, event_index = np.intersect1d(
+                signal_pulse_id, events_pulse_id, return_indices=True
+            )
+
+            # if both groups have 0 in their pulse_id
+            pid_zero_ind = pid == 0
+            if any(pid_zero_ind):
+                warnings.warn(
+                    f"\n \
+                File: {filepath}\n \
+                Both '{signal_channel}' and '{events_channel}' have zeroed pulse_id(s).\n"
+                )
+                index = index[~pid_zero_ind]
+                event_index = event_index[~pid_zero_ind]
+
+            is_dark = events_channel_group["data"][event_index, dark_shot_event].astype(bool)
+
+        elif dark_shot_filter:
+            index = signal_pulse_id != 0
+            is_dark = dark_shot_filter(signal_pulse_id)[index]
+
+        else:
+            index = signal_pulse_id != 0
+            is_dark = None
+
+        signal_pulse_id = signal_pulse_id[index]
+
+        # data is stored as uint16 in hdf5, so has to be casted to float for further analysis,
+        images = signal_channel_group["data"][index].astype(float)
+
+        # averaging every image over y-axis gives the final raw waveforms
+        data = images.mean(axis=1)
+
+    return data, signal_pulse_id, is_dark
