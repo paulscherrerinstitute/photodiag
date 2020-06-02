@@ -8,7 +8,7 @@ from .utils import find_edge, read_bsread_file, read_eco_scan
 edge_types = ["falling", "rising"]
 
 
-class Encoder:
+class FileAdapter:
     def __init__(
         self,
         signal_channel,
@@ -22,7 +22,7 @@ class Encoder:
         refinement=1,
         edge_type="falling",
     ):
-        """Initialize Encoder object.
+        """Initialize FileAdapter object.
 
         Args:
             signal_channel: signal data channel of encoder
@@ -69,7 +69,7 @@ class Encoder:
     @step_length.setter
     def step_length(self, value):
         if value < 4:
-            raise ValueError(f"A reasonable step length should be >= 4")
+            raise ValueError("A reasonable step length should be >= 4")
         self.__step_length = value
 
     def calibrate_time(self, filepath, method="avg_edge", nproc=1):
