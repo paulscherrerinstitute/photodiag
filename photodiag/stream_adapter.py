@@ -1,20 +1,27 @@
 import json
+from collections import deque
 
 import numpy as np
 
-from .utils import find_edge
+from .utils import find_edge, savgol_filter
 
 edge_types = ["falling", "rising"]
 
+bkg_deque = deque(maxlen=5)
+ref_deque = deque(maxlen=5)
+ref_correction_deque = deque(maxlen=5)
+
+I0_deque = deque(maxlen=500)
+Xcor_deque = deque(maxlen=500)
+Xcor_deque_ref = deque(maxlen=500)
+
+savgol_period = 71
+savgol_window = (368.45, 660.70)
+savgol_steps = 2038
+
 
 class StreamAdapter:
-    def __init__(
-        self,
-        json_config,
-        step_length=50,
-        refinement=1,
-        edge_type="falling",
-    ):
+    def __init__(self, json_config, step_length=50, refinement=1, edge_type="falling"):
         """Initialize StreamAdapter object.
 
         Args:
@@ -52,34 +59,53 @@ class StreamAdapter:
             raise ValueError("A reasonable step length should be >= 4")
         self.__step_length = value
 
-    def update_background(self, data):
-        pass
-
-    def process(self, data):
-        """Process encoder data.
+    def process(self, message, preproc_filter=True):
+        """Process stream message.
 
         Edge detection is performed by finding a maximum of cross-convolution between a step
         profile and input data waveforms.
 
         Args:
-            data: data to be processed
-        Returns:
-            edge position(s) in pix
-            cross-correlation results
+            message: stream message to be processed
         """
-        if self._background is None:
-            raise Exception("Background calibration is not found")
+        events = message.data.data[self.config["events"]].value
 
-        if data.ndim == 1:
-            # transform vector to array for consistency
-            data = data[np.newaxis, :]
-        elif data.ndim > 2:
-            raise Exception("Input data should be either 1- or 2-dimentional array")
+        if not events[self.config["laser"]]:
+            # No laser, so skip updates to either background or signal
+            return
 
-        # remove background
-        data /= self._background
-        np.log10(data, out=data)
+        is_delayed = events[self.config["delayed"]].astype(bool)
+        signal = message.data.data[self.config["ROI_signal"]].value
+        ref = message.data.data[self.config["ROI_background"]].value
 
-        output = find_edge(data, self.step_length, self.edge_type, self.refinement)
+        if not is_delayed:
+            I0_deque.append(message.data.data[self.config["I0"]].value)
 
-        return output
+        if preproc_filter:
+            signal = savgol_filter(signal, savgol_period, savgol_window, savgol_steps)
+            ref = savgol_filter(ref, savgol_period, savgol_window, savgol_steps)
+
+        if is_delayed:  # update background (signal roi is a background)
+            # TODO: can the ref be used as a background too?
+            bkg_deque.append(signal)
+
+        else:  # extract edge
+            if bkg_deque:  # remove background
+                signal_wo_bkg = signal / (sum(bkg_deque) / len(bkg_deque))
+                res = find_edge(signal_wo_bkg, self.step_length, self.edge_type)
+                Xcor_deque.append(np.max(res["xcorr"][0]))
+
+        ref_deque.append(ref)
+        avg_ref = sum(ref_deque) / len(ref_deque)
+
+        if is_delayed:  # update background
+            signal_wo_ref = signal / avg_ref
+            ref_correction_deque.append(signal_wo_ref)
+
+        else:  # extract edge
+            if ref_correction_deque:
+                avg_ref /= (sum(ref_correction_deque) / len(ref_correction_deque))
+
+            signal_wo_ref = signal / avg_ref
+            res_ref = find_edge(signal_wo_ref, self.step_length, self.edge_type)
+            Xcor_deque_ref.append(np.max(res_ref["xcorr"][0]))
