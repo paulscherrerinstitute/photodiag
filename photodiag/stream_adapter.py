@@ -3,7 +3,7 @@ from collections import deque
 
 import numpy as np
 
-from .utils import find_edge, savgol_filter_1d
+from .utils import find_edge_1d, savgol_filter_1d
 
 edge_types = ["falling", "rising"]
 
@@ -92,7 +92,7 @@ class StreamAdapter:
         else:  # extract edge
             if bkg_deque:  # remove background
                 signal_wo_bkg = signal / (sum(bkg_deque) / len(bkg_deque))
-                res = find_edge(signal_wo_bkg, self.step_length, self.edge_type)
+                res = find_edge_1d(signal_wo_bkg, self.step_length, self.edge_type)
                 Xcor_deque.append(np.max(res["xcorr"][0]))
 
         ref_deque.append(ref)
@@ -107,5 +107,5 @@ class StreamAdapter:
                 avg_ref /= (sum(ref_correction_deque) / len(ref_correction_deque))
 
             signal_wo_ref = signal / avg_ref
-            res_ref = find_edge(signal_wo_ref, self.step_length, self.edge_type)
+            res_ref = find_edge_1d(signal_wo_ref, self.step_length, self.edge_type)
             Xcor_deque_ref.append(np.max(res_ref["xcorr"][0]))

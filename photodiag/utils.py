@@ -28,6 +28,25 @@ def read_eco_scan(filepath):
     return scan_pos_fs, bsread_files
 
 
+def find_edge_1d(data, step_length=50, edge_type="falling"):
+    # prepare a step function
+    step_waveform = np.ones(shape=(step_length,))
+    if edge_type == "rising":
+        step_waveform[: int(step_length / 2)] = -1
+    elif edge_type == "falling":
+        step_waveform[int(step_length / 2) :] = -1
+
+    # find edges
+    xcorr = np.correlate(data, v=step_waveform, mode="valid")
+    edge_position = np.argmax(xcorr).astype(float)
+    xcorr_amplitude = np.amax(xcorr)
+
+    # correct edge_position for step_length
+    edge_position += np.floor(step_length / 2)
+
+    return {"edge_pos": edge_position, "xcorr": xcorr, "xcorr_ampl": xcorr_amplitude}
+
+
 def find_edge(data, step_length=50, edge_type="falling", refinement=1):
     # refine data
     data_length = data.shape[1]
