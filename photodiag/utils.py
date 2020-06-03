@@ -35,8 +35,8 @@ def find_edge(data, step_length=50, edge_type="falling", refinement=1):
         _interpolate_row,
         axis=1,
         arr=data,
-        interp_energy=np.arange(0, data_length - 1, refinement),
-        energy=np.arange(data_length),
+        x_known=np.arange(data_length),
+        x_interp=np.arange(0, data_length - 1, refinement),
     )
 
     # prepare a step function and refine it
@@ -65,17 +65,18 @@ def savgol_filter(data, period, window, steps):
     C = 2.99792458
     lambda_nm = np.linspace(*window, steps)
     freq = C / lambda_nm
-    interp_freq = np.linspace(C / window[1], C / window[0], steps)
+    freq_interp = np.linspace(C / window[1], C / window[0], steps)
 
-    tmp = np.apply_along_axis(_interpolate_row, 0, data[::-1], freq[::-1], interp_freq)[::-1]
+    tmp = np.apply_along_axis(_interpolate_row, 0, data[::-1], freq[::-1], freq_interp)[::-1]
     tmp2 = signal.savgol_filter(tmp, period, 1)
-    data_out = np.apply_along_axis(_interpolate_row, 0, tmp2[::-1], interp_freq, freq[::-1])[::-1]
+    data_out = np.apply_along_axis(_interpolate_row, 0, tmp2[::-1], freq_interp, freq[::-1])[::-1]
 
     return data_out
 
 
-def _interpolate_row(data, energy, interp_energy):
-    return np.interp(interp_energy, energy, data)
+def _interpolate_row(y_known, x_known, x_interp):
+    y_interp = np.interp(x_interp, x_known, y_known)
+    return y_interp
 
 
 def read_bsread_file(filepath, signal_channel, events_channel, dark_shot_event, dark_shot_filter):
