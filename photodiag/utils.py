@@ -61,6 +61,19 @@ def find_edge(data, step_length=50, edge_type="falling", refinement=1):
     return {"edge_pos": edge_position, "xcorr": xcorr, "xcorr_ampl": xcorr_amplitude}
 
 
+def savgol_filter_1d(data, period, window, steps):
+    C = 2.99792458
+    lambda_nm = np.linspace(*window, steps)
+    freq = C / lambda_nm
+    freq_interp = np.linspace(C / window[1], C / window[0], steps)
+
+    tmp = np.interp(freq_interp, freq[::-1], data[::-1])[::-1]
+    tmp2 = signal.savgol_filter(tmp, period, 1)
+    data_out = np.interp(freq[::-1], freq_interp, tmp2[::-1])[::-1]
+
+    return data_out
+
+
 def savgol_filter(data, period, window, steps):
     C = 2.99792458
     lambda_nm = np.linspace(*window, steps)

@@ -3,7 +3,7 @@ from collections import deque
 
 import numpy as np
 
-from .utils import find_edge, savgol_filter
+from .utils import find_edge, savgol_filter_1d
 
 edge_types = ["falling", "rising"]
 
@@ -82,8 +82,8 @@ class StreamAdapter:
             I0_deque.append(message.data.data[self.config["I0"]].value)
 
         if preproc_filter:
-            signal = savgol_filter(signal, savgol_period, savgol_window, savgol_steps)
-            ref = savgol_filter(ref, savgol_period, savgol_window, savgol_steps)
+            signal = savgol_filter_1d(signal, savgol_period, savgol_window, savgol_steps)
+            ref = savgol_filter_1d(ref, savgol_period, savgol_window, savgol_steps)
 
         if is_delayed:  # update background (signal roi is a background)
             # TODO: can the ref be used as a background too?
