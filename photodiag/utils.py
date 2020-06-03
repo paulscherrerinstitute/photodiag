@@ -67,9 +67,9 @@ def savgol_filter_1d(data, period, window, steps):
     freq = C / lambda_nm
     freq_interp = np.linspace(C / window[1], C / window[0], steps)
 
-    tmp = np.interp(freq_interp, freq[::-1], data[::-1])[::-1]
+    tmp = np.interp(freq_interp, freq[::-1], data[::-1])
     tmp2 = signal.savgol_filter(tmp, period, 1)
-    data_out = np.interp(freq[::-1], freq_interp, tmp2[::-1])[::-1]
+    data_out = np.interp(freq[::-1], freq_interp, tmp2)[::-1]
 
     return data_out
 
@@ -80,9 +80,9 @@ def savgol_filter(data, period, window, steps):
     freq = C / lambda_nm
     freq_interp = np.linspace(C / window[1], C / window[0], steps)
 
-    tmp = np.apply_along_axis(_interpolate_row, 0, data[::-1], freq[::-1], freq_interp)[::-1]
+    tmp = np.apply_along_axis(_interpolate_row, 0, data[::-1], freq[::-1], freq_interp)
     tmp2 = signal.savgol_filter(tmp, period, 1)
-    data_out = np.apply_along_axis(_interpolate_row, 0, tmp2[::-1], freq_interp, freq[::-1])[::-1]
+    data_out = np.apply_along_axis(_interpolate_row, 0, tmp2, freq_interp, freq[::-1])[::-1]
 
     return data_out
 
