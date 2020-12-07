@@ -8,21 +8,22 @@ source:
   path: ..
 
 build:
+  noarch: python
   number: 0
   entry_points:
     - photodiag = photodiag.cli:main
 
 requirements:
   build:
-    - python
+    - python >=3.6
     - setuptools
   run:
-    - python
-    - bokeh=2.0
-    - scipy>=0.17
+    - python >=3.6
+    - bokeh =2.0
+    - scipy >=0.17
     - pandas
     - h5py
-    - numpy>=1.15
+    - numpy >=1.15
 
 about:
   home: https://github.com/paulscherrerinstitute/photodiag
