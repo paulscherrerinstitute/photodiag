@@ -19,7 +19,7 @@ requirements:
     - setuptools
   run:
     - python >=3.6
-    - bokeh =2.0
+    - bokeh =2.3
     - scipy >=0.17
     - pandas
     - h5py
