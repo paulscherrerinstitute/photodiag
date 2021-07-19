@@ -273,7 +273,7 @@ def create(palm):
     def calibrate_button_callback():
         try:
             palm.calibrate_etof_eco(
-                eco_scan_filename=os.path.join(path_textinput.value, scans_dropdown.value)
+                eco_scan_filename=os.path.join(path_textinput.value, scans_dropdown.label)
             )
         except Exception:
             palm.calibrate_etof(folder_name=path_textinput.value)
@@ -389,10 +389,6 @@ def create(palm):
                 peak_pos_str=palm.etofs["1"].calib_data["calib_tpeak"].tolist(),
                 use_in_fit=palm.etofs["1"].calib_data["use_in_fit"].tolist(),
             )
-
-            # Drop selection, so that this callback can be triggered again on the same dropdown menu
-            # item from the user perspective
-            load_dropdown.value = ""
 
     def update_load_dropdown_menu():
         new_menu = []
